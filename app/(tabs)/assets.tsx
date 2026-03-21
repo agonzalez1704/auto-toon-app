@@ -8,14 +8,15 @@ import {
   ActivityIndicator,
   Alert,
   RefreshControl,
+  StatusBar,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Image } from 'expo-image'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import Colors from '@/constants/Colors'
-import { useThemeColors } from '@/lib/useThemeColors'
 import { getAssets, deleteAsset, type Asset } from '@/lib/api'
 import { queryKeys } from '@/lib/query'
+
+const BRAND = '#8B5CF6'
 
 type FilterType = 'all' | 'vignette' | 'elements' | 'poster' | '3x3'
 
@@ -28,7 +29,6 @@ const FILTERS: { value: FilterType; label: string }[] = [
 ]
 
 export default function AssetsScreen() {
-  const colors = useThemeColors()
   const queryClient = useQueryClient()
   const [filter, setFilter] = useState<FilterType>('all')
   const [deletingId, setDeletingId] = useState<string | null>(null)
@@ -56,7 +56,7 @@ export default function AssetsScreen() {
             try {
               await deleteAsset(asset.id)
               queryClient.invalidateQueries({ queryKey: queryKeys.assets })
-            } catch (err) {
+            } catch {
               Alert.alert('Error', 'Failed to delete asset')
             } finally {
               setDeletingId(null)
@@ -73,7 +73,7 @@ export default function AssetsScreen() {
 
     return (
       <TouchableOpacity
-        style={[styles.assetCard, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }]}
+        style={styles.assetCard}
         onLongPress={() => handleDelete(item)}
         activeOpacity={0.8}
       >
@@ -84,10 +84,10 @@ export default function AssetsScreen() {
           transition={200}
         />
         <View style={styles.assetInfo}>
-          <Text style={[styles.assetName, { color: colors.text }]} numberOfLines={1}>
+          <Text style={styles.assetName} numberOfLines={1}>
             {item.productName}
           </Text>
-          <Text style={[styles.assetType, { color: colors.textSecondary }]}>
+          <Text style={styles.assetType}>
             {item.secondImageType === '3x3' ? '3x3 Grid' :
              item.secondImageType.charAt(0).toUpperCase() + item.secondImageType.slice(1)}
           </Text>
@@ -99,124 +99,177 @@ export default function AssetsScreen() {
         )}
       </TouchableOpacity>
     )
-  }, [colors, deletingId, handleDelete])
+  }, [deletingId, handleDelete])
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Filter Bar */}
-      <View style={styles.filterBar}>
-        <ScrollableFilters colors={colors} filter={filter} setFilter={setFilter} />
-      </View>
-
-      {isLoading ? (
-        <View style={styles.centered}>
-          <ActivityIndicator color={colors.tint} size="large" />
+    <View style={styles.root}>
+      <StatusBar barStyle="light-content" />
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
+        {/* Header */}
+        <View style={styles.headerRow}>
+          <Text style={styles.pageTitle}>Assets</Text>
         </View>
-      ) : filteredAssets.length === 0 ? (
-        <View style={styles.centered}>
-          <Text style={[styles.emptyTitle, { color: colors.text }]}>
-            {filter === 'all' ? 'No assets yet' : 'No matching assets'}
-          </Text>
-          <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
-            {filter === 'all'
-              ? 'Generate your first product image to see it here.'
-              : 'Try a different filter.'}
-          </Text>
-        </View>
-      ) : (
-        <FlatList
-          data={filteredAssets}
-          keyExtractor={(item) => item.id}
-          renderItem={renderItem}
-          numColumns={2}
-          columnWrapperStyle={styles.row}
-          contentContainerStyle={styles.list}
-          showsVerticalScrollIndicator={false}
-          refreshControl={
-            <RefreshControl refreshing={false} onRefresh={() => refetch()} tintColor={colors.tint} />
-          }
-        />
-      )}
-    </SafeAreaView>
-  )
-}
 
-function ScrollableFilters({
-  colors,
-  filter,
-  setFilter,
-}: {
-  colors: (typeof Colors)['dark'] | (typeof Colors)['light']
-  filter: FilterType
-  setFilter: (f: FilterType) => void
-}) {
-  return (
-    <View style={styles.filterRow}>
-      {FILTERS.map((f) => {
-        const isActive = filter === f.value
-        return (
-          <TouchableOpacity
-            key={f.value}
-            style={[
-              styles.filterChip,
-              {
-                backgroundColor: isActive ? Colors.brand : colors.surface,
-                borderColor: isActive ? Colors.brand : colors.surfaceBorder,
-              },
-            ]}
-            onPress={() => setFilter(f.value)}
-            activeOpacity={0.7}
-          >
-            <Text
-              style={[
-                styles.filterLabel,
-                { color: isActive ? '#fff' : colors.text },
-              ]}
-            >
-              {f.label}
+        {/* Filter Bar */}
+        <View style={styles.filterBar}>
+          {FILTERS.map((f) => {
+            const isActive = filter === f.value
+            return (
+              <TouchableOpacity
+                key={f.value}
+                style={[
+                  styles.filterChip,
+                  isActive && styles.filterChipActive,
+                ]}
+                onPress={() => setFilter(f.value)}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.filterLabel, isActive && styles.filterLabelActive]}>
+                  {f.label}
+                </Text>
+              </TouchableOpacity>
+            )
+          })}
+        </View>
+
+        {isLoading ? (
+          <View style={styles.centered}>
+            <ActivityIndicator color={BRAND} size="large" />
+          </View>
+        ) : filteredAssets.length === 0 ? (
+          <View style={styles.centered}>
+            <Text style={styles.emptyTitle}>
+              {filter === 'all' ? 'No assets yet' : 'No matching assets'}
             </Text>
-          </TouchableOpacity>
-        )
-      })}
+            <Text style={styles.emptySubtitle}>
+              {filter === 'all'
+                ? 'Generate your first product image to see it here.'
+                : 'Try a different filter.'}
+            </Text>
+          </View>
+        ) : (
+          <FlatList
+            data={filteredAssets}
+            keyExtractor={(item) => item.id}
+            renderItem={renderItem}
+            numColumns={2}
+            columnWrapperStyle={styles.row}
+            contentContainerStyle={styles.list}
+            showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl refreshing={false} onRefresh={() => refetch()} tintColor={BRAND} />
+            }
+          />
+        )}
+      </SafeAreaView>
     </View>
   )
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  filterBar: { paddingHorizontal: 16, paddingVertical: 12 },
-  filterRow: { flexDirection: 'row', gap: 8 },
+  root: {
+    flex: 1,
+    backgroundColor: '#0a0a0f',
+  },
+  safeArea: { flex: 1 },
+
+  // Header
+  headerRow: {
+    paddingHorizontal: 20,
+    paddingTop: 8,
+    paddingBottom: 4,
+  },
+  pageTitle: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
+
+  // Filters
+  filterBar: {
+    flexDirection: 'row',
+    gap: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
   filterChip: {
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 8,
     borderWidth: 1,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderColor: 'rgba(255,255,255,0.08)',
   },
-  filterLabel: { fontSize: 13, fontWeight: '600' },
-  list: { padding: 12, paddingBottom: 40 },
-  row: { gap: 10, marginBottom: 10 },
+  filterChipActive: {
+    backgroundColor: BRAND,
+    borderColor: BRAND,
+  },
+  filterLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.6)',
+  },
+  filterLabelActive: {
+    color: '#FFFFFF',
+  },
+
+  // List
+  list: {
+    padding: 12,
+    paddingBottom: 40,
+  },
+  row: {
+    gap: 10,
+    marginBottom: 10,
+  },
   assetCard: {
     flex: 1,
-    borderRadius: 14,
+    borderRadius: 16,
     overflow: 'hidden',
     borderWidth: 1,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderColor: 'rgba(255,255,255,0.08)',
   },
-  assetImage: { width: '100%', aspectRatio: 3 / 4 },
-  assetInfo: { padding: 10 },
-  assetName: { fontSize: 13, fontWeight: '600' },
-  assetType: { fontSize: 11, marginTop: 2 },
+  assetImage: {
+    width: '100%',
+    aspectRatio: 3 / 4,
+  },
+  assetInfo: {
+    padding: 12,
+  },
+  assetName: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  assetType: {
+    fontSize: 11,
+    marginTop: 2,
+    color: 'rgba(255,255,255,0.45)',
+  },
   deleteOverlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'center',
     alignItems: 'center',
   },
+
+  // Empty
   centered: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 32,
   },
-  emptyTitle: { fontSize: 18, fontWeight: '700', marginBottom: 8 },
-  emptySubtitle: { fontSize: 14, textAlign: 'center' },
+  emptyTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: 8,
+    color: 'rgba(255,255,255,0.7)',
+  },
+  emptySubtitle: {
+    fontSize: 14,
+    textAlign: 'center',
+    color: 'rgba(255,255,255,0.4)',
+  },
 })
