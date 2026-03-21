@@ -43,8 +43,8 @@ export async function uploadImage(localUri: string): Promise<string> {
     uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
   })
 
-  // 6. Construct public URL and confirm upload
-  const publicUrl = uploadData.signedUrl.split('?')[0] // Remove query params from signed URL
+  // 6. Use server-provided public URL and confirm upload
+  const publicUrl = uploadData.publicUrl!
 
   if (uploadData.uploadMeta) {
     const { path: storagePath, ...rest } = uploadData.uploadMeta
@@ -55,5 +55,5 @@ export async function uploadImage(localUri: string): Promise<string> {
     })
   }
 
-  return uploadData.publicUrl || publicUrl
+  return publicUrl
 }

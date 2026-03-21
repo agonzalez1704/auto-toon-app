@@ -122,26 +122,6 @@ export default function SignInScreen() {
   const fadeAnim = useRef(new Animated.Value(0)).current
   const slideAnim = useRef(new Animated.Value(30)).current
 
-  useEffect(() => {
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 600,
-        useNativeDriver: true,
-      }),
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 600,
-        useNativeDriver: true,
-      }),
-    ]).start()
-  }, [fadeAnim, slideAnim])
-
-  if (isSignedIn) {
-    router.replace('/(tabs)')
-    return null
-  }
-
   const handleGoogleSSO = useCallback(async () => {
     try {
       const { createdSessionId, setActive } = await startSSOFlow({
@@ -167,6 +147,26 @@ export default function SignInScreen() {
       console.error('Apple SSO error:', err)
     }
   }, [startSSOFlow])
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+    ]).start()
+  }, [fadeAnim, slideAnim])
+
+  if (isSignedIn) {
+    router.replace('/(tabs)')
+    return null
+  }
 
   return (
     <View style={styles.root}>

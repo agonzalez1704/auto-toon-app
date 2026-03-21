@@ -240,8 +240,27 @@ export async function upscaleGrid(imageUrl: string, indices: number[], productNa
   return data
 }
 
-// Showcase (public, no auth required)
+// Showcase images — hardcoded to avoid dependency on API availability
+// (staging has Vercel SSO protection, production may not have the route deployed yet)
+const SHOWCASE_BASE = 'https://auto-toon.com'
+const SHOWCASE_PATHS = [
+  '/previews/professional_photo.png',
+  '/previews/vignette.png',
+  '/previews/elements.png',
+  '/previews/3x3.png',
+  '/previews/creative_elements.png',
+  '/previews/poster.png',
+  '/previews/instagram_feed.png',
+  '/previews/food_photography.png',
+  '/previews/product_advantages.png',
+  '/previews/printable_poster.png',
+  '/previews/fashion-editorial-1.png',
+  '/previews/fashion-editorial-2.png',
+  '/previews/fashion-editorial-3.png',
+  '/previews/fashion-editorial-4.png',
+  '/previews/generation.png',
+]
+
 export async function getShowcaseImages(): Promise<string[]> {
-  const { data } = await axios.get<{ images: string[] }>(`${CONFIG.API_BASE_URL}/api/showcase`)
-  return data.images
+  return SHOWCASE_PATHS.map((p) => `${SHOWCASE_BASE}${p}`)
 }
