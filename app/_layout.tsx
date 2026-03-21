@@ -1,57 +1,99 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
-import 'react-native-reanimated';
+import { useEffect } from 'react'
+import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native'
+import { useFonts } from 'expo-font'
+import { Stack, useRouter, useSegments } from 'expo-router'
+import * as SplashScreen from 'expo-splash-screen'
+import { ClerkProvider, ClerkLoaded, useAuth } from '@clerk/clerk-expo'
+import { QueryClientProvider } from '@tanstack/react-query'
+import { useColorScheme } from 'react-native'
 
-import { useColorScheme } from '@/components/useColorScheme';
+import { CONFIG } from '@/lib/config'
+import { tokenCache } from '@/lib/clerk-token-cache'
+import { setTokenGetter } from '@/lib/api'
+import { queryClient } from '@/lib/query'
+import { useOnboardingStore } from '@/stores/use-onboarding-store'
 
-export {
-  // Catch any errors thrown by the Layout component.
-  ErrorBoundary,
-} from 'expo-router';
+export { ErrorBoundary } from 'expo-router'
 
-export const unstable_settings = {
-  // Ensure that reloading on `/modal` keeps a back button present.
-  initialRouteName: '(tabs)',
-};
+SplashScreen.preventAutoHideAsync()
 
-// Prevent the splash screen from auto-hiding before asset loading is complete.
-SplashScreen.preventAutoHideAsync();
+function AuthGate({ children }: { children: React.ReactNode }) {
+  const { isLoaded, isSignedIn, getToken } = useAuth()
+  const segments = useSegments()
+  const router = useRouter()
+  const onboardingCompleted = useOnboardingStore((s) => s.completed)
 
-export default function RootLayout() {
-  const [loaded, error] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-  });
-
-  // Expo Router uses Error Boundaries to catch errors in the navigation tree.
+  // Wire Clerk's getToken to the API client
   useEffect(() => {
-    if (error) throw error;
-  }, [error]);
-
-  useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
+    if (isLoaded && isSignedIn) {
+      setTokenGetter(getToken)
     }
-  }, [loaded]);
+  }, [isLoaded, isSignedIn, getToken])
 
-  if (!loaded) {
-    return null;
-  }
+  // Redirect based on auth + onboarding state
+  useEffect(() => {
+    if (!isLoaded) return
 
-  return <RootLayoutNav />;
+    const inOnboarding = segments[0] === '(onboarding)'
+    const inAuthGroup = segments[0] === '(auth)'
+
+    if (!onboardingCompleted && !isSignedIn && !inOnboarding) {
+      // First launch — show onboarding
+      router.replace('/(onboarding)')
+    } else if (onboardingCompleted && !isSignedIn && !inAuthGroup) {
+      // Onboarding done but not signed in — go to auth
+      router.replace('/(auth)/sign-in')
+    } else if (isSignedIn && (inAuthGroup || inOnboarding)) {
+      // Signed in — go to main app
+      router.replace('/(tabs)')
+    }
+  }, [isLoaded, isSignedIn, onboardingCompleted, segments])
+
+  return <>{children}</>
 }
 
-function RootLayoutNav() {
-  const colorScheme = useColorScheme();
+export default function RootLayout() {
+  const colorScheme = useColorScheme()
+  const [fontsLoaded, fontError] = useFonts({
+    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
+  })
+
+  useEffect(() => {
+    if (fontError) throw fontError
+  }, [fontError])
+
+  useEffect(() => {
+    if (fontsLoaded) SplashScreen.hideAsync()
+  }, [fontsLoaded])
+
+  if (!fontsLoaded) return null
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
-      </Stack>
-    </ThemeProvider>
-  );
+    <ClerkProvider
+      publishableKey={CONFIG.CLERK_PUBLISHABLE_KEY}
+      tokenCache={tokenCache}
+    >
+      <ClerkLoaded>
+        <QueryClientProvider client={queryClient}>
+          <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+            <AuthGate>
+              <Stack screenOptions={{ headerShown: false }}>
+                <Stack.Screen name="(onboarding)" />
+                <Stack.Screen name="(auth)" />
+                <Stack.Screen name="(tabs)" />
+                <Stack.Screen
+                  name="create"
+                  options={{ headerShown: false, presentation: 'card' }}
+                />
+                <Stack.Screen
+                  name="account"
+                  options={{ headerShown: false, presentation: 'card' }}
+                />
+              </Stack>
+            </AuthGate>
+          </ThemeProvider>
+        </QueryClientProvider>
+      </ClerkLoaded>
+    </ClerkProvider>
+  )
 }

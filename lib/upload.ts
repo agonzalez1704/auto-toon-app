@@ -1,0 +1,59 @@
+import * as FileSystem from 'expo-file-system/legacy'
+import * as Crypto from 'expo-crypto'
+import { getUploadUrl, confirmUpload } from './api'
+
+/**
+ * Upload a local image to Supabase via the signed URL pipeline.
+ * Mirrors the web app's upload flow with hash-based deduplication.
+ */
+export async function uploadImage(localUri: string): Promise<string> {
+  // 1. Get file info
+  const fileInfo = await FileSystem.getInfoAsync(localUri)
+  if (!fileInfo.exists) throw new Error('File not found')
+
+  // 2. Read file and compute SHA-256 hash for dedup
+  const fileContent = await FileSystem.readAsStringAsync(localUri, {
+    encoding: 'base64',
+  })
+  const hash = await Crypto.digestStringAsync(
+    Crypto.CryptoDigestAlgorithm.SHA256,
+    fileContent
+  )
+
+  const filename = `mobile_${Date.now()}.jpg`
+  const fileSize = fileInfo.size ?? 0
+  const mimeType = 'image/jpeg'
+
+  // 3. Request signed upload URL (checks for dedup)
+  const uploadData = await getUploadUrl({ filename, hash, fileSize, mimeType })
+
+  // 4. If already exists, return cached public URL
+  if (uploadData.exists && uploadData.publicUrl) {
+    return uploadData.publicUrl
+  }
+
+  if (!uploadData.signedUrl || !uploadData.path) {
+    throw new Error('Failed to get upload URL')
+  }
+
+  // 5. Upload binary to Supabase signed URL
+  await FileSystem.uploadAsync(uploadData.signedUrl, localUri, {
+    httpMethod: 'PUT',
+    headers: { 'Content-Type': mimeType },
+    uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
+  })
+
+  // 6. Construct public URL and confirm upload
+  const publicUrl = uploadData.signedUrl.split('?')[0] // Remove query params from signed URL
+
+  if (uploadData.uploadMeta) {
+    const { path: storagePath, ...rest } = uploadData.uploadMeta
+    await confirmUpload({
+      ...rest,
+      storagePath,
+      publicUrl,
+    })
+  }
+
+  return uploadData.publicUrl || publicUrl
+}
