@@ -1,3 +1,7 @@
+import { useAuth, useSSO } from '@clerk/clerk-expo'
+import { LinearGradient } from 'expo-linear-gradient'
+import { useRouter } from 'expo-router'
+import * as WebBrowser from 'expo-web-browser'
 import { useCallback, useEffect, useRef } from 'react'
 import {
   Animated,
@@ -10,17 +14,13 @@ import {
   View,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { useSSO, useAuth } from '@clerk/clerk-expo'
-import { useRouter } from 'expo-router'
-import { LinearGradient } from 'expo-linear-gradient'
-import * as WebBrowser from 'expo-web-browser'
 import Svg, {
-  Path as SvgPath,
-  Defs,
-  LinearGradient as SvgLinearGradient,
-  Stop,
-  Rect,
   Circle,
+  Defs,
+  Rect,
+  Stop,
+  LinearGradient as SvgLinearGradient,
+  Path as SvgPath,
 } from 'react-native-svg'
 
 WebBrowser.maybeCompleteAuthSession()
@@ -354,14 +354,14 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.9)',
   },
   appleButton: {
-    backgroundColor: '#FFFFFF',
-    borderColor: '#FFFFFF',
+    backgroundColor: '#000000',
+    borderColor: '#0D0D0D',
   },
   appleIconWrap: {
     backgroundColor: 'rgba(0,0,0,0.1)',
   },
   appleButtonText: {
-    color: '#000000',
+    color: '#EFEFEF',
   },
 
   // Footer
