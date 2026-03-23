@@ -241,14 +241,27 @@ export default function DashboardScreen() {
             ) : recentImages && recentImages.length > 0 ? (
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.recentList}>
                 {recentImages.map((url, i) => (
-                  <View key={i} style={styles.recentCard}>
+                  <TouchableOpacity
+                    key={i}
+                    style={styles.recentCard}
+                    activeOpacity={0.8}
+                    onPress={() =>
+                      router.push({
+                        pathname: '/image-viewer',
+                        params: {
+                          urls: JSON.stringify([url]),
+                          title: 'Recent Creation',
+                        },
+                      })
+                    }
+                  >
                     <Image
                       source={{ uri: url }}
                       style={styles.recentImage}
                       contentFit="cover"
                       transition={200}
                     />
-                  </View>
+                  </TouchableOpacity>
                 ))}
               </ScrollView>
             ) : (

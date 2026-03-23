@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import {
   View,
   Text,
@@ -9,6 +9,11 @@ import {
   ActivityIndicator,
   Alert,
   StatusBar,
+  KeyboardAvoidingView,
+  Platform,
+  Modal,
+  FlatList,
+  Dimensions,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Image } from 'expo-image'
@@ -19,15 +24,54 @@ import Svg, {
   Path as SvgPath,
   Rect,
   Circle,
+  Defs,
+  Stop,
+  LinearGradient as SvgLinearGradient,
 } from 'react-native-svg'
-import { useProductEnhancerStore, GOAL_MAP, AI_MODELS, getModelCredits, type GoalId } from '@/stores/use-product-enhancer-store'
+import { useProductEnhancerStore, GOAL_MAP, AI_MODELS, getModelCredits, type GoalId, type ImageModelId } from '@/stores/use-product-enhancer-store'
 import { useCreditsStore } from '@/stores/use-credits-store'
 import { useTermsConsentStore } from '@/stores/use-terms-consent-store'
 import { uploadImage } from '@/lib/upload'
 import { analyzeProduct, enhanceProduct } from '@/lib/api'
+import { CONFIG } from '@/lib/config'
+import { ParticleSphere } from '@/components/particle-sphere'
 
 const BRAND = '#8B5CF6'
 const BRAND_CYAN = '#06B6D4'
+
+// Only show these two models to users
+const VISIBLE_MODELS: { id: ImageModelId; label: string }[] = [
+  { id: 'GEMINI_3_IMAGE', label: 'Pro' },
+  { id: 'GEMINI_3_1_FLASH_IMAGE', label: 'V2' },
+]
+
+const ASPECT_RATIOS = [
+  { value: '3:4', w: 12, h: 16 },
+  { value: '4:5', w: 10, h: 12 },
+  { value: '1:1', w: 12, h: 12 },
+  { value: '9:16', w: 9, h: 16 },
+  { value: '2:3', w: 10, h: 14 },
+  { value: '3:2', w: 14, h: 10 },
+  { value: '16:9', w: 16, h: 9 },
+] as const
+
+function AspectRatioIcon({ w, h, color = '#fff' }: { w: number; h: number; color?: string }) {
+  return (
+    <Svg width={20} height={20} viewBox="0 0 20 20">
+      <Rect
+        x={(20 - w) / 2}
+        y={(20 - h) / 2}
+        width={w}
+        height={h}
+        rx={1.5}
+        fill={color}
+        fillOpacity={0.15}
+        stroke={color}
+        strokeWidth={1.5}
+      />
+    </Svg>
+  )
+}
 
 // ─── SVG Icons for Goals ────────────────────────────────────────────────
 
@@ -116,6 +160,54 @@ function CameraUploadIcon() {
   )
 }
 
+function EditPencilIcon() {
+  return (
+    <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
+      <SvgPath
+        d="M17 3a2.83 2.83 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"
+        stroke="rgba(255,255,255,0.5)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+      />
+    </Svg>
+  )
+}
+
+function SparklesIcon({ size = 18, color = '#fff' }: { size?: number; color?: string }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <SvgPath
+        d="M12 2L14.09 8.26L20 9.27L15.55 13.97L16.91 20L12 16.9L7.09 20L8.45 13.97L4 9.27L9.91 8.26L12 2Z"
+        fill={color} stroke={color} strokeWidth="1" strokeLinejoin="round"
+      />
+    </Svg>
+  )
+}
+
+function GeminiIcon({ size = 14 }: { size?: number }) {
+  const d = "M20.616 10.835a14.147 14.147 0 01-4.45-3.001 14.111 14.111 0 01-3.678-6.452.503.503 0 00-.975 0 14.134 14.134 0 01-3.679 6.452 14.155 14.155 0 01-4.45 3.001c-.65.28-1.318.505-2.002.678a.502.502 0 000 .975c.684.172 1.35.397 2.002.677a14.147 14.147 0 014.45 3.001 14.112 14.112 0 013.679 6.453.502.502 0 00.975 0c.172-.685.397-1.351.677-2.003a14.145 14.145 0 013.001-4.45 14.113 14.113 0 016.453-3.678.503.503 0 000-.975 13.245 13.245 0 01-2.003-.678z"
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24">
+      <Defs>
+        <SvgLinearGradient id="gf0" x1="7" y1="15.5" x2="11" y2="12" gradientUnits="userSpaceOnUse">
+          <Stop offset="0" stopColor="#08B962" />
+          <Stop offset="1" stopColor="#08B962" stopOpacity={0} />
+        </SvgLinearGradient>
+        <SvgLinearGradient id="gf1" x1="8" y1="5.5" x2="11.5" y2="11" gradientUnits="userSpaceOnUse">
+          <Stop offset="0" stopColor="#F94543" />
+          <Stop offset="1" stopColor="#F94543" stopOpacity={0} />
+        </SvgLinearGradient>
+        <SvgLinearGradient id="gf2" x1="3.5" y1="13.5" x2="17.5" y2="12" gradientUnits="userSpaceOnUse">
+          <Stop offset="0" stopColor="#FABC12" />
+          <Stop offset="0.46" stopColor="#FABC12" stopOpacity={0} />
+        </SvgLinearGradient>
+      </Defs>
+      <SvgPath d={d} fill="#3186FF" />
+      <SvgPath d={d} fill="url(#gf0)" />
+      <SvgPath d={d} fill="url(#gf1)" />
+      <SvgPath d={d} fill="url(#gf2)" />
+    </Svg>
+  )
+}
+
 const GOAL_ICONS: Record<GoalId, () => React.JSX.Element> = {
   'instagram-feed': InstagramIcon,
   'product-advantages': SparkleGoalIcon,
@@ -125,20 +217,59 @@ const GOAL_ICONS: Record<GoalId, () => React.JSX.Element> = {
   'professional-photo': CameraGoalIcon,
 }
 
-const GOALS: { id: GoalId; label: string; description: string }[] = [
-  { id: 'instagram-feed', label: 'Instagram Feed', description: '3x3 grid for carousels' },
-  { id: 'product-advantages', label: 'Product Advantages', description: 'Highlight key features' },
-  { id: 'elements', label: 'Creative Elements', description: 'Artistic product composition' },
-  { id: 'printable-poster', label: 'Printable Poster', description: 'Print-ready poster design' },
-  { id: 'food-photography', label: 'Food Photography', description: 'Appetizing food shots' },
-  { id: 'professional-photo', label: 'Professional Photo', description: 'Clean product shot' },
+const { width: SCREEN_W } = Dimensions.get('window')
+const CARD_W = SCREEN_W * 0.72
+const CARD_GAP = 12
+const CARD_SNAP = CARD_W + CARD_GAP
+
+const GOALS: { id: GoalId; label: string; description: string; preview: string }[] = [
+  { id: 'instagram-feed', label: 'Instagram Feed', description: '3x3 grid for carousels', preview: 'instagram_feed.png' },
+  { id: 'product-advantages', label: 'Product Advantages', description: 'Highlight key features', preview: 'product_advantages.png' },
+  { id: 'elements', label: 'Creative Elements', description: 'Artistic product composition', preview: 'creative_elements.png' },
+  { id: 'printable-poster', label: 'Printable Poster', description: 'Print-ready poster design', preview: 'printable_poster.png' },
+  { id: 'food-photography', label: 'Food Photography', description: 'Appetizing food shots', preview: 'food_photography.png' },
+  { id: 'professional-photo', label: 'Professional Photo', description: 'Clean product shot', preview: 'professional_photo.png' },
 ]
+
+function ChevronDownIcon() {
+  return (
+    <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
+      <SvgPath d="M6 9l6 6 6-6" stroke="rgba(255,255,255,0.5)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  )
+}
+
+// ─── Generating Timer ───────────────────────────────────────────────────
+
+function GeneratingTimer({ phase }: { phase: string }) {
+  const [elapsed, setElapsed] = useState(0)
+  const startRef = useRef(Date.now())
+
+  useEffect(() => {
+    startRef.current = Date.now()
+    setElapsed(0)
+    const interval = setInterval(() => setElapsed(Math.floor((Date.now() - startRef.current) / 1000)), 1000)
+    return () => clearInterval(interval)
+  }, [phase])
+
+  return (
+    <Text style={styles.generatingTimer}>
+      {phase === 'uploading' ? 'Uploading...' : `Enhancing... ${elapsed}s`}
+    </Text>
+  )
+}
 
 // ─── Main Screen ────────────────────────────────────────────────────────
 
 export default function CreateScreen() {
   const router = useRouter()
   const [isPickingImage, setIsPickingImage] = useState(false)
+  const [goalModalVisible, setGoalModalVisible] = useState(false)
+  const [activeGoalIndex, setActiveGoalIndex] = useState(0)
+  const [configModalVisible, setConfigModalVisible] = useState(false)
+  const [newElement, setNewElement] = useState('')
+  const [newEnhancer, setNewEnhancer] = useState('')
+  const goalListRef = useRef<FlatList>(null)
 
   const store = useProductEnhancerStore()
   const { balance, fetchCredits, setShowExhaustionModal } = useCreditsStore()
@@ -273,8 +404,30 @@ export default function CreateScreen() {
     }
   }, [canGenerate, store, balance, creditCost, requireConsent, fetchCredits, setShowExhaustionModal])
 
+  // Collect result image URLs for the viewer
+  const resultUrls = [store.heroImageUrl, store.vignetteImageUrl].filter(Boolean) as string[]
+
+  // Generating screen — full-screen particle animation
+  if (store.generationPhase === 'generating' || store.generationPhase === 'uploading') {
+    return (
+      <View style={styles.root}>
+        <StatusBar barStyle="light-content" />
+        <SafeAreaView style={styles.safeArea} edges={['top']}>
+          <View style={styles.generatingScreen}>
+            <ParticleSphere width={160} height={160} phase="generating" />
+            <GeneratingTimer phase={store.generationPhase} />
+            <Text style={styles.generatingPhaseLabel}>
+              {store.generationPhase === 'uploading' ? 'Uploading image...' : 'Enhancing your product...'}
+            </Text>
+            <Text style={styles.generatingHint}>This usually takes 15-30 seconds</Text>
+          </View>
+        </SafeAreaView>
+      </View>
+    )
+  }
+
   // Result screen
-  if (store.generationPhase === 'complete' && (store.heroImageUrl || store.vignetteImageUrl)) {
+  if (store.generationPhase === 'complete' && resultUrls.length > 0) {
     return (
       <View style={styles.root}>
         <StatusBar barStyle="light-content" />
@@ -285,12 +438,23 @@ export default function CreateScreen() {
             {store.heroImageUrl && (
               <View style={styles.resultSection}>
                 <Text style={styles.resultLabel}>Hero Image</Text>
-                <Image
-                  source={{ uri: store.heroImageUrl }}
-                  style={styles.resultImage}
-                  contentFit="contain"
-                  transition={300}
-                />
+                <TouchableOpacity
+                  activeOpacity={0.9}
+                  onPress={() =>
+                    router.push({
+                      pathname: '/image-viewer',
+                      params: { urls: JSON.stringify(resultUrls), initialIndex: '0', title: store.productName },
+                    })
+                  }
+                >
+                  <Image
+                    source={{ uri: store.heroImageUrl }}
+                    style={styles.resultImage}
+                    contentFit="contain"
+                    transition={300}
+                  />
+                  <Text style={styles.tapHint}>Tap to zoom</Text>
+                </TouchableOpacity>
               </View>
             )}
 
@@ -302,12 +466,23 @@ export default function CreateScreen() {
                    store.selectedGoalId === 'printable-poster' ? 'Poster' :
                    'Styled Image'}
                 </Text>
-                <Image
-                  source={{ uri: store.vignetteImageUrl }}
-                  style={styles.resultImage}
-                  contentFit="contain"
-                  transition={300}
-                />
+                <TouchableOpacity
+                  activeOpacity={0.9}
+                  onPress={() =>
+                    router.push({
+                      pathname: '/image-viewer',
+                      params: { urls: JSON.stringify(resultUrls), initialIndex: store.heroImageUrl ? '1' : '0', title: store.productName },
+                    })
+                  }
+                >
+                  <Image
+                    source={{ uri: store.vignetteImageUrl }}
+                    style={styles.resultImage}
+                    contentFit="contain"
+                    transition={300}
+                  />
+                  <Text style={styles.tapHint}>Tap to zoom</Text>
+                </TouchableOpacity>
               </View>
             )}
 
@@ -334,168 +509,534 @@ export default function CreateScreen() {
     <View style={styles.root}>
       <StatusBar barStyle="light-content" />
       <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-          <Text style={styles.pageTitle}>Enhance Product</Text>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={{ flex: 1 }}
+        >
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
+            <Text style={styles.pageTitle}>Enhance Product</Text>
 
-          {/* Image Upload */}
-          <View style={styles.section}>
-            {store.localImageUri ? (
-              <TouchableOpacity onPress={pickImage} activeOpacity={0.8}>
+            {/* Image Upload + Product Name Overlay */}
+            <View style={styles.section}>
+              {store.localImageUri ? (
                 <View style={styles.imagePreview}>
-                  <Image
-                    source={{ uri: store.localImageUri }}
-                    style={styles.previewImage}
-                    contentFit="cover"
-                    transition={200}
-                  />
+                  <TouchableOpacity onPress={pickImage} activeOpacity={0.9} style={{ flex: 1 }}>
+                    <Image
+                      source={{ uri: store.localImageUri }}
+                      style={styles.previewImage}
+                      contentFit="cover"
+                      transition={200}
+                    />
+                  </TouchableOpacity>
+
+                  {/* Analyzing overlay */}
                   {store.isAnalyzing && (
                     <View style={styles.analyzeOverlay}>
                       <ActivityIndicator color="#fff" />
                       <Text style={styles.analyzeText}>Analyzing...</Text>
                     </View>
                   )}
+
+                  {/* Product name input overlaid at bottom */}
+                  <View style={styles.nameOverlay} pointerEvents="box-none">
+                    <LinearGradient
+                      colors={['transparent', 'rgba(0,0,0,0.7)']}
+                      style={StyleSheet.absoluteFillObject}
+                    />
+                    <View style={styles.nameRow}>
+                      <TextInput
+                        style={styles.nameInput}
+                        value={store.productName}
+                        onChangeText={store.setProductName}
+                        placeholder="Product name"
+                        placeholderTextColor="rgba(255,255,255,0.4)"
+                      />
+                      <EditPencilIcon />
+                    </View>
+                  </View>
                 </View>
-              </TouchableOpacity>
-            ) : (
-              <View style={styles.uploadRow}>
-                <TouchableOpacity
-                  style={styles.uploadButton}
-                  onPress={pickImage}
-                  disabled={isPickingImage}
-                  activeOpacity={0.7}
-                >
-                  <GalleryUploadIcon />
-                  <Text style={styles.uploadLabel}>Gallery</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.uploadButton}
-                  onPress={takePhoto}
-                  disabled={isPickingImage}
-                  activeOpacity={0.7}
-                >
-                  <CameraUploadIcon />
-                  <Text style={styles.uploadLabel}>Camera</Text>
-                </TouchableOpacity>
-              </View>
-            )}
-          </View>
-
-          {/* Product Name */}
-          <View style={styles.section}>
-            <Text style={styles.label}>Product Name</Text>
-            <TextInput
-              style={styles.input}
-              value={store.productName}
-              onChangeText={store.setProductName}
-              placeholder="e.g. Organic Face Cream"
-              placeholderTextColor="rgba(255,255,255,0.3)"
-            />
-          </View>
-
-          {/* Goal Selection */}
-          <View style={styles.section}>
-            <Text style={styles.label}>Goal</Text>
-            <View style={styles.goalGrid}>
-              {GOALS.map((goal) => {
-                const isSelected = store.selectedGoalId === goal.id
-                const IconComponent = GOAL_ICONS[goal.id]
-                return (
+              ) : (
+                <View style={styles.uploadRow}>
                   <TouchableOpacity
-                    key={goal.id}
-                    style={[
-                      styles.goalCard,
-                      isSelected && styles.goalCardSelected,
-                    ]}
-                    onPress={() => store.selectGoal(goal.id)}
+                    style={styles.uploadButton}
+                    onPress={pickImage}
+                    disabled={isPickingImage}
                     activeOpacity={0.7}
                   >
-                    <IconComponent />
-                    <Text style={[styles.goalLabel, isSelected && { color: '#FFFFFF' }]} numberOfLines={1}>
-                      {goal.label}
-                    </Text>
-                    <Text style={styles.goalDesc} numberOfLines={1}>
-                      {goal.description}
-                    </Text>
+                    <GalleryUploadIcon />
+                    <Text style={styles.uploadLabel}>Gallery</Text>
                   </TouchableOpacity>
-                )
-              })}
+                  <TouchableOpacity
+                    style={styles.uploadButton}
+                    onPress={takePhoto}
+                    disabled={isPickingImage}
+                    activeOpacity={0.7}
+                  >
+                    <CameraUploadIcon />
+                    <Text style={styles.uploadLabel}>Camera</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
             </View>
-          </View>
 
-          {/* AI Model Selector */}
-          <View style={styles.section}>
-            <Text style={styles.label}>AI Model</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              <View style={styles.modelRow}>
-                {(Object.entries(AI_MODELS) as [string, { name: string; credits: number }][]).map(
-                  ([id, model]) => {
-                    const isSelected = store.selectedModel === id
-                    return (
-                      <TouchableOpacity
-                        key={id}
-                        style={[
-                          styles.modelChip,
-                          isSelected && styles.modelChipSelected,
-                        ]}
-                        onPress={() => store.setSelectedModel(id as any)}
-                        activeOpacity={0.7}
-                      >
-                        <Text style={[styles.modelName, isSelected && { color: '#fff' }]}>
-                          {model.name}
-                        </Text>
-                        <Text style={[styles.modelCredits, isSelected && { color: 'rgba(255,255,255,0.8)' }]}>
-                          {model.credits}cr
-                        </Text>
-                      </TouchableOpacity>
-                    )
-                  }
+            {/* Product Name (shown only when no image) */}
+            {!store.localImageUri && (
+              <View style={styles.section}>
+                <Text style={styles.label}>Product Name</Text>
+                <TextInput
+                  style={styles.standaloneInput}
+                  value={store.productName}
+                  onChangeText={store.setProductName}
+                  placeholder="e.g. Organic Face Cream"
+                  placeholderTextColor="rgba(255,255,255,0.3)"
+                />
+              </View>
+            )}
+
+            {/* Goal Selector Button */}
+            <View style={styles.section}>
+              <Text style={styles.label}>Goal</Text>
+              <TouchableOpacity
+                style={styles.goalButton}
+                onPress={() => {
+                  const idx = GOALS.findIndex((g) => g.id === store.selectedGoalId)
+                  setActiveGoalIndex(idx >= 0 ? idx : 0)
+                  setGoalModalVisible(true)
+                  setTimeout(() => {
+                    goalListRef.current?.scrollToIndex({ index: idx >= 0 ? idx : 0, animated: false })
+                  }, 100)
+                }}
+                activeOpacity={0.7}
+              >
+                {store.selectedGoalId && GOAL_ICONS[store.selectedGoalId] ? (
+                  (() => { const Icon = GOAL_ICONS[store.selectedGoalId!]; return <Icon /> })()
+                ) : (
+                  <InstagramIcon />
                 )}
-              </View>
-            </ScrollView>
-          </View>
-
-          {/* Error */}
-          {store.error && (
-            <View style={styles.errorBox}>
-              <Text style={styles.errorText}>{store.error}</Text>
+                <Text style={styles.goalButtonLabel}>
+                  {GOALS.find((g) => g.id === store.selectedGoalId)?.label ?? 'Instagram Feed'}
+                </Text>
+                <ChevronDownIcon />
+              </TouchableOpacity>
             </View>
-          )}
 
-          {/* Generate Button */}
-          <TouchableOpacity
-            style={[
-              styles.generateButton,
-              !canGenerate && styles.generateButtonDisabled,
-              store.isGenerating && { opacity: 0.7 },
-            ]}
-            onPress={handleGenerate}
-            disabled={!canGenerate || store.isGenerating}
-            activeOpacity={0.8}
-          >
-            {canGenerate && !store.isGenerating && (
-              <LinearGradient
-                colors={[BRAND, '#7C3AED']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={StyleSheet.absoluteFillObject}
-              />
+            {/* Customize link — only for elements & poster */}
+            {(store.selectedGoalId === 'elements' || store.selectedGoalId === 'printable-poster') && (
+              <TouchableOpacity
+                style={styles.customizeLink}
+                onPress={() => setConfigModalVisible(true)}
+                activeOpacity={0.7}
+              >
+                <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
+                  <SvgPath d="M12 15.5A3.5 3.5 0 1012 8.5a3.5 3.5 0 000 7z" stroke={BRAND} strokeWidth="2" />
+                  <SvgPath d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" stroke={BRAND} strokeWidth="2" />
+                </Svg>
+                <Text style={styles.customizeLinkText}>
+                  Customize {store.selectedGoalId === 'elements' ? 'Elements' : 'Poster'}
+                </Text>
+              </TouchableOpacity>
             )}
-            {store.isGenerating ? (
-              <View style={styles.generatingRow}>
-                <ActivityIndicator color="#fff" size="small" />
-                <Text style={styles.generateButtonText}>Generating...</Text>
+
+            {/* Config Bottom Sheet */}
+            <Modal
+              visible={configModalVisible}
+              animationType="slide"
+              transparent
+              onRequestClose={() => setConfigModalVisible(false)}
+            >
+              <TouchableOpacity
+                style={styles.modalBackdrop}
+                activeOpacity={1}
+                onPress={() => setConfigModalVisible(false)}
+              >
+                <View />
+              </TouchableOpacity>
+              <View style={[styles.modalSheet, { maxHeight: '85%' }]}>
+                <View style={styles.modalHeader}>
+                  <Text style={styles.modalTitle}>
+                    {store.selectedGoalId === 'elements' ? 'Elements Config' : 'Poster Config'}
+                  </Text>
+                  <TouchableOpacity onPress={() => setConfigModalVisible(false)} hitSlop={12}>
+                    <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
+                      <SvgPath d="M18 6L6 18M6 6l12 12" stroke="rgba(255,255,255,0.6)" strokeWidth="2.5" strokeLinecap="round" />
+                    </Svg>
+                  </TouchableOpacity>
+                </View>
+
+                <ScrollView
+                  style={{ paddingHorizontal: 24 }}
+                  contentContainerStyle={{ paddingBottom: 40 }}
+                  showsVerticalScrollIndicator={false}
+                  keyboardShouldPersistTaps="handled"
+                >
+                  {store.selectedGoalId === 'elements' && store.secondImageConfig.elementsConfig && (
+                    <>
+                      {/* Key Elements */}
+                      <Text style={styles.cfgSectionTitle}>Key Elements</Text>
+                      <View style={styles.chipWrap}>
+                        {store.secondImageConfig.elementsConfig.keyElements.map((el, i) => (
+                          <View key={`ke-${i}`} style={styles.chip}>
+                            <Text style={styles.chipText} numberOfLines={1}>{el}</Text>
+                            <TouchableOpacity
+                              hitSlop={8}
+                              onPress={() => {
+                                const updated = [...store.secondImageConfig.elementsConfig!.keyElements]
+                                updated.splice(i, 1)
+                                store.setSecondImageConfig({
+                                  elementsConfig: { ...store.secondImageConfig.elementsConfig!, keyElements: updated },
+                                })
+                              }}
+                            >
+                              <Svg width={12} height={12} viewBox="0 0 24 24">
+                                <SvgPath d="M18 6L6 18M6 6l12 12" stroke="rgba(255,255,255,0.5)" strokeWidth="3" strokeLinecap="round" />
+                              </Svg>
+                            </TouchableOpacity>
+                          </View>
+                        ))}
+                      </View>
+                      <View style={styles.addRow}>
+                        <TextInput
+                          style={[styles.cfgInput, { flex: 1 }]}
+                          value={newElement}
+                          onChangeText={setNewElement}
+                          placeholder="Add element..."
+                          placeholderTextColor="rgba(255,255,255,0.3)"
+                        />
+                        <TouchableOpacity
+                          style={[styles.addBtn, !newElement.trim() && { opacity: 0.4 }]}
+                          disabled={!newElement.trim()}
+                          onPress={() => {
+                            store.setSecondImageConfig({
+                              elementsConfig: {
+                                ...store.secondImageConfig.elementsConfig!,
+                                keyElements: [...store.secondImageConfig.elementsConfig!.keyElements, newElement.trim()],
+                              },
+                            })
+                            setNewElement('')
+                          }}
+                        >
+                          <Text style={styles.addBtnText}>Add</Text>
+                        </TouchableOpacity>
+                      </View>
+
+                      {/* Enhancers */}
+                      <Text style={[styles.cfgSectionTitle, { marginTop: 24 }]}>Visual Enhancers</Text>
+                      <View style={styles.chipWrap}>
+                        {store.secondImageConfig.elementsConfig.enhancers.map((en, i) => (
+                          <View key={`en-${i}`} style={[styles.chip, { borderColor: 'rgba(6,182,212,0.3)' }]}>
+                            <Text style={styles.chipText} numberOfLines={1}>{en}</Text>
+                            <TouchableOpacity
+                              hitSlop={8}
+                              onPress={() => {
+                                const updated = [...store.secondImageConfig.elementsConfig!.enhancers]
+                                updated.splice(i, 1)
+                                store.setSecondImageConfig({
+                                  elementsConfig: { ...store.secondImageConfig.elementsConfig!, enhancers: updated },
+                                })
+                              }}
+                            >
+                              <Svg width={12} height={12} viewBox="0 0 24 24">
+                                <SvgPath d="M18 6L6 18M6 6l12 12" stroke="rgba(255,255,255,0.5)" strokeWidth="3" strokeLinecap="round" />
+                              </Svg>
+                            </TouchableOpacity>
+                          </View>
+                        ))}
+                      </View>
+                      <View style={styles.addRow}>
+                        <TextInput
+                          style={[styles.cfgInput, { flex: 1 }]}
+                          value={newEnhancer}
+                          onChangeText={setNewEnhancer}
+                          placeholder="Add enhancer..."
+                          placeholderTextColor="rgba(255,255,255,0.3)"
+                        />
+                        <TouchableOpacity
+                          style={[styles.addBtn, !newEnhancer.trim() && { opacity: 0.4 }]}
+                          disabled={!newEnhancer.trim()}
+                          onPress={() => {
+                            store.setSecondImageConfig({
+                              elementsConfig: {
+                                ...store.secondImageConfig.elementsConfig!,
+                                enhancers: [...store.secondImageConfig.elementsConfig!.enhancers, newEnhancer.trim()],
+                              },
+                            })
+                            setNewEnhancer('')
+                          }}
+                        >
+                          <Text style={styles.addBtnText}>Add</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </>
+                  )}
+
+                  {store.selectedGoalId === 'printable-poster' && store.secondImageConfig.posterConfig && (
+                    <>
+                      {/* Poster Text Fields */}
+                      <Text style={styles.cfgSectionTitle}>Top Label</Text>
+                      <TextInput
+                        style={styles.cfgInput}
+                        value={(store.secondImageConfig.posterConfig as any).topLabel ?? ''}
+                        onChangeText={(v) => store.setSecondImageConfig({
+                          posterConfig: { ...store.secondImageConfig.posterConfig!, topLabel: v } as any,
+                        })}
+                        placeholder="e.g. NEW, SALE, OFFER"
+                        placeholderTextColor="rgba(255,255,255,0.3)"
+                      />
+
+                      <Text style={[styles.cfgSectionTitle, { marginTop: 20 }]}>Headline</Text>
+                      <TextInput
+                        style={styles.cfgInput}
+                        value={(store.secondImageConfig.posterConfig as any).headline ?? ''}
+                        onChangeText={(v) => store.setSecondImageConfig({
+                          posterConfig: { ...store.secondImageConfig.posterConfig!, headline: v } as any,
+                        })}
+                        placeholder="Main title"
+                        placeholderTextColor="rgba(255,255,255,0.3)"
+                      />
+
+                      <Text style={[styles.cfgSectionTitle, { marginTop: 20 }]}>Tagline</Text>
+                      <TextInput
+                        style={[styles.cfgInput, { minHeight: 60 }]}
+                        value={(store.secondImageConfig.posterConfig as any).tagline ?? ''}
+                        onChangeText={(v) => store.setSecondImageConfig({
+                          posterConfig: { ...store.secondImageConfig.posterConfig!, tagline: v } as any,
+                        })}
+                        placeholder="Subtitle or slogan"
+                        placeholderTextColor="rgba(255,255,255,0.3)"
+                        multiline
+                      />
+
+                      <Text style={[styles.cfgSectionTitle, { marginTop: 20 }]}>Primary Color</Text>
+                      <TextInput
+                        style={styles.cfgInput}
+                        value={(store.secondImageConfig.posterConfig as any).primaryColor ?? ''}
+                        onChangeText={(v) => store.setSecondImageConfig({
+                          posterConfig: { ...store.secondImageConfig.posterConfig!, primaryColor: v } as any,
+                        })}
+                        placeholder="e.g. vibrant blue, deep red"
+                        placeholderTextColor="rgba(255,255,255,0.3)"
+                      />
+
+                      <Text style={[styles.cfgSectionTitle, { marginTop: 20 }]}>Font Style</Text>
+                      <View style={styles.chipWrap}>
+                        {(['sans-serif', 'serif', 'display', 'handwritten'] as const).map((fs) => {
+                          const active = (store.secondImageConfig.posterConfig as any)?.fontStyle === fs
+                          return (
+                            <TouchableOpacity
+                              key={fs}
+                              style={[styles.chip, active && { borderColor: BRAND, backgroundColor: 'rgba(139,92,246,0.15)' }]}
+                              onPress={() => store.setSecondImageConfig({
+                                posterConfig: { ...store.secondImageConfig.posterConfig!, fontStyle: fs } as any,
+                              })}
+                            >
+                              <Text style={[styles.chipText, active && { color: '#fff' }]}>{fs}</Text>
+                            </TouchableOpacity>
+                          )
+                        })}
+                      </View>
+                    </>
+                  )}
+                </ScrollView>
               </View>
-            ) : (
-              <Text style={styles.generateButtonText}>
-                Generate ({creditCost} credits)
-              </Text>
-            )}
-          </TouchableOpacity>
+            </Modal>
 
-          {balance !== null && (
-            <Text style={styles.balanceHint}>Balance: {balance} credits</Text>
-          )}
-        </ScrollView>
+            {/* Goal Picker Modal */}
+            <Modal
+              visible={goalModalVisible}
+              animationType="slide"
+              transparent
+              onRequestClose={() => setGoalModalVisible(false)}
+            >
+              <TouchableOpacity
+                style={styles.modalBackdrop}
+                activeOpacity={1}
+                onPress={() => setGoalModalVisible(false)}
+              >
+                <View />
+              </TouchableOpacity>
+              <View style={styles.modalSheet}>
+                {/* Header */}
+                <View style={styles.modalHeader}>
+                  <Text style={styles.modalTitle}>Choose Goal</Text>
+                  <TouchableOpacity onPress={() => setGoalModalVisible(false)} hitSlop={12}>
+                    <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
+                      <SvgPath d="M18 6L6 18M6 6l12 12" stroke="rgba(255,255,255,0.6)" strokeWidth="2.5" strokeLinecap="round" />
+                    </Svg>
+                  </TouchableOpacity>
+                </View>
+
+                {/* Carousel */}
+                <FlatList
+                  ref={goalListRef}
+                  data={GOALS}
+                  horizontal
+                  pagingEnabled={false}
+                  snapToInterval={CARD_SNAP}
+                  snapToAlignment="start"
+                  decelerationRate="fast"
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={{ paddingHorizontal: (SCREEN_W - CARD_W) / 2 }}
+                  ItemSeparatorComponent={() => <View style={{ width: CARD_GAP }} />}
+                  getItemLayout={(_, index) => ({
+                    length: CARD_SNAP,
+                    offset: CARD_SNAP * index,
+                    index,
+                  })}
+                  onMomentumScrollEnd={(e) => {
+                    const idx = Math.round(e.nativeEvent.contentOffset.x / CARD_SNAP)
+                    setActiveGoalIndex(Math.max(0, Math.min(idx, GOALS.length - 1)))
+                  }}
+                  keyExtractor={(item) => item.id}
+                  renderItem={({ item }) => {
+                    const isSelected = store.selectedGoalId === item.id
+                    return (
+                      <View style={[styles.goalCardModal, isSelected && styles.goalCardModalSelected]}>
+                        <Image
+                          source={{ uri: `${CONFIG.API_BASE_URL}/previews/${item.preview}` }}
+                          style={styles.goalPreviewImage}
+                          contentFit="cover"
+                          transition={200}
+                        />
+                        <View style={styles.goalCardInfo}>
+                          <Text style={styles.goalCardTitle}>{item.label}</Text>
+                          <Text style={styles.goalCardDesc}>{item.description}</Text>
+                        </View>
+                        <TouchableOpacity
+                          style={[styles.goalSelectBtn, isSelected && styles.goalSelectBtnActive]}
+                          onPress={() => {
+                            store.selectGoal(item.id)
+                            setGoalModalVisible(false)
+                          }}
+                          activeOpacity={0.8}
+                        >
+                          {isSelected ? (
+                            <Text style={styles.goalSelectBtnText}>Selected</Text>
+                          ) : (
+                            <>
+                              <LinearGradient
+                                colors={[BRAND, '#7C3AED']}
+                                start={{ x: 0, y: 0 }}
+                                end={{ x: 1, y: 0 }}
+                                style={StyleSheet.absoluteFillObject}
+                              />
+                              <Text style={styles.goalSelectBtnText}>Select</Text>
+                            </>
+                          )}
+                        </TouchableOpacity>
+                      </View>
+                    )
+                  }}
+                />
+
+                {/* Dot indicators */}
+                <View style={styles.dotsRow}>
+                  {GOALS.map((g, i) => (
+                    <View key={g.id} style={[styles.dot, i === activeGoalIndex && styles.dotActive]} />
+                  ))}
+                </View>
+              </View>
+            </Modal>
+
+            {/* Error */}
+            {store.error && (
+              <View style={styles.errorBox}>
+                <Text style={styles.errorText}>{store.error}</Text>
+              </View>
+            )}
+
+            {/* Model Toggle + Generate */}
+            <View style={styles.bottomSection}>
+              {/* Minimal model pill toggle */}
+              <View style={styles.modelToggle}>
+                {VISIBLE_MODELS.map(({ id, label }) => {
+                  const isSelected = store.selectedModel === id
+                  return (
+                    <TouchableOpacity
+                      key={id}
+                      style={[styles.modelPill, isSelected && styles.modelPillSelected]}
+                      onPress={() => store.setSelectedModel(id)}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={[styles.modelPillText, isSelected && styles.modelPillTextSelected]}>
+                        {label}
+                      </Text>
+                    </TouchableOpacity>
+                  )
+                })}
+              </View>
+
+              {/* Aspect Ratio Selector */}
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.aspectRow}>
+                {ASPECT_RATIOS.map((ratio) => {
+                  const isSelected = store.seedreamConfig.aspect_ratio === ratio.value
+                  return (
+                    <TouchableOpacity
+                      key={ratio.value}
+                      style={[styles.aspectPill, isSelected && styles.aspectPillSelected]}
+                      onPress={() => store.setSeedreamConfig({ aspect_ratio: ratio.value })}
+                      activeOpacity={0.7}
+                    >
+                      <AspectRatioIcon w={ratio.w} h={ratio.h} color={isSelected ? BRAND : 'rgba(255,255,255,0.5)'} />
+                      <Text style={[styles.aspectPillText, isSelected && styles.aspectPillTextSelected]}>
+                        {ratio.value}
+                      </Text>
+                    </TouchableOpacity>
+                  )
+                })}
+              </ScrollView>
+
+              {/* Powered by label */}
+              <View style={styles.poweredByRow}>
+                <GeminiIcon size={13} />
+                <Text style={styles.poweredByText}>
+                  Powered by {store.selectedModel === 'GEMINI_3_IMAGE' ? 'Nano Banana Pro' : 'Nano Banana 2'}
+                </Text>
+              </View>
+
+              {/* Generate Button */}
+              <TouchableOpacity
+                style={[
+                  styles.generateButton,
+                  !canGenerate && styles.generateButtonDisabled,
+                  store.isGenerating && { opacity: 0.7 },
+                ]}
+                onPress={handleGenerate}
+                disabled={!canGenerate || store.isGenerating}
+                activeOpacity={0.8}
+              >
+                {canGenerate && !store.isGenerating && (
+                  <LinearGradient
+                    colors={[BRAND, '#7C3AED']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={StyleSheet.absoluteFillObject}
+                  />
+                )}
+                {store.isGenerating ? (
+                  <View style={styles.generatingRow}>
+                    <ActivityIndicator color="#fff" size="small" />
+                    <Text style={styles.generateButtonText}>Generating...</Text>
+                  </View>
+                ) : (
+                  <View style={styles.generatingRow}>
+                    <SparklesIcon size={20} color="#fff" />
+                    <Text style={styles.generateButtonText}>
+                      Generate ({creditCost} credits)
+                    </Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+
+              {balance !== null && (
+                <Text style={styles.balanceHint}>Balance: {balance} credits</Text>
+              )}
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
       </SafeAreaView>
     </View>
   )
@@ -549,7 +1090,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
 
-  // Image preview
+  // Image preview with overlay
   imagePreview: {
     width: '100%',
     aspectRatio: 3 / 4,
@@ -567,8 +1108,35 @@ const styles = StyleSheet.create({
   },
   analyzeText: { color: '#fff', fontSize: 14, marginTop: 8, fontWeight: '500' },
 
-  // Input
-  input: {
+  // Product name overlay on image
+  nameOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    paddingTop: 40,
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+  },
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    gap: 8,
+  },
+  nameInput: {
+    flex: 1,
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    padding: 0,
+  },
+
+  // Standalone input (when no image)
+  standaloneInput: {
     paddingHorizontal: 16,
     paddingVertical: 14,
     borderRadius: 12,
@@ -579,64 +1147,268 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.1)',
   },
 
-  // Goals
-  goalGrid: {
+  // Customize link
+  customizeLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    gap: 6,
+    marginTop: -12,
+    marginBottom: 8,
+    paddingVertical: 6,
+  },
+  customizeLinkText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: BRAND,
+  },
+
+  // Config modal form
+  cfgSectionTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: 'rgba(255,255,255,0.7)',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 10,
+  },
+  cfgInput: {
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+    fontSize: 15,
+    color: '#FFFFFF',
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  chipWrap: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
+    marginBottom: 12,
   },
-  goalCard: {
-    width: '48.5%',
-    padding: 14,
-    borderRadius: 14,
-    borderWidth: 1,
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    borderColor: 'rgba(255,255,255,0.08)',
-  },
-  goalCardSelected: {
-    backgroundColor: 'rgba(139,92,246,0.12)',
-    borderColor: BRAND,
-    borderWidth: 1.5,
-  },
-  goalLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    marginTop: 8,
-    marginBottom: 2,
-    color: 'rgba(255,255,255,0.85)',
-  },
-  goalDesc: {
-    fontSize: 11,
-    lineHeight: 14,
-    color: 'rgba(255,255,255,0.4)',
-  },
-
-  // Models
-  modelRow: { flexDirection: 'row', gap: 8 },
-  modelChip: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 10,
-    borderWidth: 1,
+  chip: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(139,92,246,0.3)',
+    backgroundColor: 'rgba(255,255,255,0.06)',
+  },
+  chipText: {
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.7)',
+    maxWidth: 180,
+  },
+  addRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  addBtn: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 10,
+    backgroundColor: BRAND,
+    justifyContent: 'center',
+  },
+  addBtnText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#fff',
+  },
+
+  // Goal selector button
+  goalButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderRadius: 14,
+    borderWidth: 1,
     backgroundColor: 'rgba(255,255,255,0.05)',
     borderColor: 'rgba(255,255,255,0.1)',
   },
-  modelChipSelected: {
-    backgroundColor: BRAND,
+  goalButtonLabel: {
+    flex: 1,
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+
+  // Goal picker modal
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+  },
+  modalSheet: {
+    backgroundColor: '#1a1a2e',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingBottom: 40,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 24,
+    paddingTop: 20,
+    paddingBottom: 16,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+
+  // Goal carousel cards
+  goalCardModal: {
+    width: CARD_W,
+    borderRadius: 18,
+    overflow: 'hidden',
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.08)',
+  },
+  goalCardModalSelected: {
     borderColor: BRAND,
   },
-  modelName: {
+  goalPreviewImage: {
+    width: '100%',
+    aspectRatio: 3 / 4,
+  },
+  goalCardInfo: {
+    paddingHorizontal: 16,
+    paddingTop: 14,
+    paddingBottom: 8,
+  },
+  goalCardTitle: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 4,
+  },
+  goalCardDesc: {
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.5)',
+    lineHeight: 18,
+  },
+  goalSelectBtn: {
+    marginHorizontal: 16,
+    marginBottom: 16,
+    marginTop: 8,
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: 'center',
+    overflow: 'hidden',
+    backgroundColor: 'rgba(255,255,255,0.1)',
+  },
+  goalSelectBtnActive: {
+    backgroundColor: 'rgba(139,92,246,0.15)',
+    borderWidth: 1,
+    borderColor: BRAND,
+  },
+  goalSelectBtnText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+
+  // Dot indicators
+  dotsRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 6,
+    paddingTop: 16,
+  },
+  dot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+  },
+  dotActive: {
+    backgroundColor: BRAND,
+    width: 18,
+    borderRadius: 3,
+  },
+
+  // Bottom section
+  bottomSection: {
+    marginTop: 4,
+  },
+
+  // Model pill toggle
+  modelToggle: {
+    flexDirection: 'row',
+    alignSelf: 'center',
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderRadius: 8,
+    padding: 3,
+    marginBottom: 16,
+  },
+  modelPill: {
+    paddingHorizontal: 20,
+    paddingVertical: 6,
+    borderRadius: 6,
+  },
+  modelPillSelected: {
+    backgroundColor: 'rgba(139,92,246,0.25)',
+  },
+  modelPillText: {
     fontSize: 13,
     fontWeight: '600',
-    color: 'rgba(255,255,255,0.8)',
-  },
-  modelCredits: {
-    fontSize: 12,
-    fontWeight: '500',
     color: 'rgba(255,255,255,0.4)',
+  },
+  modelPillTextSelected: {
+    color: '#FFFFFF',
+  },
+  aspectRow: {
+    flexDirection: 'row',
+    gap: 8,
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+    marginBottom: 12,
+  },
+  aspectPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    minHeight: 44,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  aspectPillSelected: {
+    borderColor: 'rgba(139,92,246,0.6)',
+    backgroundColor: 'rgba(139,92,246,0.15)',
+  },
+  aspectPillText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.4)',
+  },
+  aspectPillTextSelected: {
+    color: '#FFFFFF',
+  },
+  poweredByRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 5,
+    marginBottom: 16,
+  },
+  poweredByText: {
+    fontSize: 11,
+    color: 'rgba(255,255,255,0.35)',
+    fontWeight: '500',
   },
 
   // Error
@@ -688,5 +1460,36 @@ const styles = StyleSheet.create({
     width: '100%',
     aspectRatio: 3 / 4,
     borderRadius: 16,
+  },
+  tapHint: {
+    textAlign: 'center',
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.35)',
+    marginTop: 6,
+  },
+
+  // Generating screen
+  generatingScreen: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 16,
+    paddingBottom: 60,
+  },
+  generatingTimer: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    marginTop: 8,
+  },
+  generatingPhaseLabel: {
+    fontSize: 15,
+    fontWeight: '500',
+    color: 'rgba(255,255,255,0.7)',
+  },
+  generatingHint: {
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.35)',
+    marginTop: 4,
   },
 })

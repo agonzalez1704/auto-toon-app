@@ -12,6 +12,7 @@ import { tokenCache } from '@/lib/clerk-token-cache'
 import { setTokenGetter } from '@/lib/api'
 import { queryClient } from '@/lib/query'
 import { useOnboardingStore } from '@/stores/use-onboarding-store'
+import { useSignUpStore } from '@/stores/use-signup-store'
 
 export { ErrorBoundary } from 'expo-router'
 
@@ -22,6 +23,8 @@ function AuthGate({ children }: { children: React.ReactNode }) {
   const segments = useSegments()
   const router = useRouter()
   const onboardingCompleted = useOnboardingStore((s) => s.completed)
+  const justSignedUp = useSignUpStore((s) => s.justSignedUp)
+  const setJustSignedUp = useSignUpStore((s) => s.setJustSignedUp)
 
   // Wire Clerk's getToken to the API client
   useEffect(() => {
@@ -36,6 +39,7 @@ function AuthGate({ children }: { children: React.ReactNode }) {
 
     const inOnboarding = segments[0] === '(onboarding)'
     const inAuthGroup = segments[0] === '(auth)'
+    const inWelcome = segments[0] === 'welcome'
 
     if (!onboardingCompleted && !isSignedIn && !inOnboarding) {
       // First launch — show onboarding
@@ -44,8 +48,14 @@ function AuthGate({ children }: { children: React.ReactNode }) {
       // Onboarding done but not signed in — go to auth
       router.replace('/(auth)/sign-in')
     } else if (isSignedIn && (inAuthGroup || inOnboarding)) {
-      // Signed in — go to main app
-      router.replace('/(tabs)')
+      if (justSignedUp) {
+        // New user — show welcome screen
+        setJustSignedUp(false)
+        router.replace('/welcome')
+      } else if (!inWelcome) {
+        // Returning user — go to main app
+        router.replace('/(tabs)')
+      }
     }
   }, [isLoaded, isSignedIn, onboardingCompleted, segments])
 
@@ -84,6 +94,18 @@ export default function RootLayout() {
                 <Stack.Screen
                   name="account"
                   options={{ headerShown: false, presentation: 'card' }}
+                />
+                <Stack.Screen
+                  name="grid-upscale"
+                  options={{ headerShown: false, presentation: 'modal' }}
+                />
+                <Stack.Screen
+                  name="image-viewer"
+                  options={{ headerShown: false, presentation: 'modal', animation: 'fade' }}
+                />
+                <Stack.Screen
+                  name="welcome"
+                  options={{ headerShown: false, presentation: 'modal', animation: 'fade', gestureEnabled: false }}
                 />
               </Stack>
             </AuthGate>

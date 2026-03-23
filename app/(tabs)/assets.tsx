@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import {
   View,
   Text,
@@ -13,12 +13,14 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Image } from 'expo-image'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useRouter } from 'expo-router'
+import Svg, { Path as SvgPath } from 'react-native-svg'
 import { getAssets, deleteAsset, type Asset } from '@/lib/api'
 import { queryKeys } from '@/lib/query'
 
 const BRAND = '#8B5CF6'
 
-type FilterType = 'all' | 'vignette' | 'elements' | 'poster' | '3x3'
+type FilterType = 'all' | 'vignette' | 'elements' | 'poster' | '3x3' | 'upscaled'
 
 const FILTERS: { value: FilterType; label: string }[] = [
   { value: 'all', label: 'All' },
@@ -26,10 +28,39 @@ const FILTERS: { value: FilterType; label: string }[] = [
   { value: 'elements', label: 'Elements' },
   { value: 'poster', label: 'Poster' },
   { value: '3x3', label: '3x3' },
+  { value: 'upscaled', label: 'Upscaled' },
 ]
+
+// A display item is either a regular asset or an individual image from an upscale_batch
+interface DisplayItem {
+  key: string
+  imageUrl: string
+  productName: string
+  label: string
+  // For upscale_batch items: all URLs in the batch + index for swipe navigation
+  batchUrls?: string[]
+  batchIndex?: number
+  // For regular assets: the asset for delete/navigation
+  asset?: Asset
+}
+
+function UpscaleSmallIcon() {
+  return (
+    <Svg width={10} height={10} viewBox="0 0 24 24" fill="none">
+      <SvgPath
+        d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"
+        stroke="rgba(255,255,255,0.5)"
+        strokeWidth={2.5}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  )
+}
 
 export default function AssetsScreen() {
   const queryClient = useQueryClient()
+  const router = useRouter()
   const [filter, setFilter] = useState<FilterType>('all')
   const [deletingId, setDeletingId] = useState<string | null>(null)
 
@@ -38,79 +69,158 @@ export default function AssetsScreen() {
     queryFn: getAssets,
   })
 
-  const filteredAssets = filter === 'all'
-    ? assets
-    : assets.filter((a) => a.secondImageType === filter)
+  // Flatten assets: upscale_batch assets become individual image cards
+  const displayItems: DisplayItem[] = useMemo(() => {
+    const items: DisplayItem[] = []
+    for (const asset of assets) {
+      if (asset.secondImageType === 'upscale_batch' && asset.upscaledUrls?.length > 0) {
+        for (let i = 0; i < asset.upscaledUrls.length; i++) {
+          items.push({
+            key: `${asset.id}_upscaled_${i}`,
+            imageUrl: asset.upscaledUrls[i],
+            productName: asset.productName,
+            label: 'Upscaled',
+            batchUrls: asset.upscaledUrls,
+            batchIndex: i,
+            asset,
+          })
+        }
+      } else {
+        const imageUrl = asset.heroImageUrl || asset.vignetteImageUrl
+        if (imageUrl) {
+          items.push({
+            key: asset.id,
+            imageUrl,
+            productName: asset.productName,
+            label:
+              asset.secondImageType === '3x3'
+                ? '3x3 Grid'
+                : asset.secondImageType.charAt(0).toUpperCase() +
+                  asset.secondImageType.slice(1),
+            asset,
+          })
+        }
+      }
+    }
+    return items
+  }, [assets])
 
-  const handleDelete = useCallback(async (asset: Asset) => {
-    Alert.alert(
-      'Delete Asset',
-      `Delete "${asset.productName}"? This cannot be undone.`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            setDeletingId(asset.id)
-            try {
-              await deleteAsset(asset.id)
-              queryClient.invalidateQueries({ queryKey: queryKeys.assets })
-            } catch {
-              Alert.alert('Error', 'Failed to delete asset')
-            } finally {
-              setDeletingId(null)
-            }
+  const filteredItems = useMemo(() => {
+    if (filter === 'all') return displayItems
+    if (filter === 'upscaled') return displayItems.filter((d) => !!d.batchUrls)
+    return displayItems.filter(
+      (d) => !d.batchUrls && d.asset?.secondImageType === filter
+    )
+  }, [displayItems, filter])
+
+  const handleDelete = useCallback(
+    async (asset: Asset) => {
+      Alert.alert(
+        'Delete Asset',
+        `Delete "${asset.productName}"? This cannot be undone.`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Delete',
+            style: 'destructive',
+            onPress: async () => {
+              setDeletingId(asset.id)
+              try {
+                await deleteAsset(asset.id)
+                queryClient.invalidateQueries({ queryKey: queryKeys.assets })
+              } catch {
+                Alert.alert('Error', 'Failed to delete asset')
+              } finally {
+                setDeletingId(null)
+              }
+            },
           },
-        },
-      ]
-    )
-  }, [queryClient])
+        ]
+      )
+    },
+    [queryClient]
+  )
 
-  const renderItem = useCallback(({ item }: { item: Asset }) => {
-    const imageUrl = item.heroImageUrl || item.vignetteImageUrl
-    if (!imageUrl) return null
+  const handlePress = useCallback(
+    (item: DisplayItem) => {
+      if (item.batchUrls) {
+        router.push({
+          pathname: '/image-viewer',
+          params: {
+            urls: JSON.stringify(item.batchUrls),
+            initialIndex: String(item.batchIndex ?? 0),
+            title: item.productName,
+          },
+        })
+      } else if (item.asset?.secondImageType === '3x3') {
+        router.push({
+          pathname: '/grid-upscale',
+          params: {
+            imageUrl: item.imageUrl,
+            productName: item.productName,
+            aspectRatio: '2:3',
+          },
+        })
+      } else if (item.asset) {
+        router.push({
+          pathname: '/image-viewer',
+          params: {
+            urls: JSON.stringify([item.imageUrl]),
+            title: item.productName,
+          },
+        })
+      }
+    },
+    [router]
+  )
 
-    return (
-      <TouchableOpacity
-        style={styles.assetCard}
-        onLongPress={() => handleDelete(item)}
-        activeOpacity={0.8}
-      >
-        <Image
-          source={{ uri: imageUrl }}
-          style={styles.assetImage}
-          contentFit="cover"
-          transition={200}
-        />
-        <View style={styles.assetInfo}>
-          <Text style={styles.assetName} numberOfLines={1}>
-            {item.productName}
-          </Text>
-          <Text style={styles.assetType}>
-            {item.secondImageType === '3x3' ? '3x3 Grid' :
-             item.secondImageType.charAt(0).toUpperCase() + item.secondImageType.slice(1)}
-          </Text>
-        </View>
-        {deletingId === item.id && (
-          <View style={styles.deleteOverlay}>
-            <ActivityIndicator color="#fff" />
+  const renderItem = useCallback(
+    ({ item }: { item: DisplayItem }) => {
+      const isDeleting = item.asset && deletingId === item.asset.id
+
+      return (
+        <TouchableOpacity
+          style={styles.assetCard}
+          onPress={() => handlePress(item)}
+          onLongPress={() => item.asset && handleDelete(item.asset)}
+          activeOpacity={0.8}
+        >
+          <Image
+            source={{ uri: item.imageUrl }}
+            style={styles.assetImage}
+            contentFit="cover"
+            transition={200}
+          />
+          {item.batchUrls && (
+            <View style={styles.upscaleBadge}>
+              <UpscaleSmallIcon />
+            </View>
+          )}
+          <View style={styles.assetInfo}>
+            <Text style={styles.assetName} numberOfLines={1}>
+              {item.productName}
+            </Text>
+            <Text style={styles.assetType}>{item.label}</Text>
           </View>
-        )}
-      </TouchableOpacity>
-    )
-  }, [deletingId, handleDelete])
+          {isDeleting && (
+            <View style={styles.deleteOverlay}>
+              <ActivityIndicator color="#fff" />
+            </View>
+          )}
+        </TouchableOpacity>
+      )
+    },
+    [deletingId, handleDelete, handlePress]
+  )
 
   return (
     <View style={styles.root}>
       <StatusBar barStyle="light-content" />
       <SafeAreaView style={styles.safeArea} edges={['top']}>
-        {/* Header */}
         <View style={styles.headerRow}>
           <Text style={styles.pageTitle}>Assets</Text>
         </View>
 
-        {/* Filter Bar */}
         <View style={styles.filterBar}>
           {FILTERS.map((f) => {
             const isActive = filter === f.value
@@ -124,7 +234,12 @@ export default function AssetsScreen() {
                 onPress={() => setFilter(f.value)}
                 activeOpacity={0.7}
               >
-                <Text style={[styles.filterLabel, isActive && styles.filterLabelActive]}>
+                <Text
+                  style={[
+                    styles.filterLabel,
+                    isActive && styles.filterLabelActive,
+                  ]}
+                >
                   {f.label}
                 </Text>
               </TouchableOpacity>
@@ -136,7 +251,7 @@ export default function AssetsScreen() {
           <View style={styles.centered}>
             <ActivityIndicator color={BRAND} size="large" />
           </View>
-        ) : filteredAssets.length === 0 ? (
+        ) : filteredItems.length === 0 ? (
           <View style={styles.centered}>
             <Text style={styles.emptyTitle}>
               {filter === 'all' ? 'No assets yet' : 'No matching assets'}
@@ -149,15 +264,19 @@ export default function AssetsScreen() {
           </View>
         ) : (
           <FlatList
-            data={filteredAssets}
-            keyExtractor={(item) => item.id}
+            data={filteredItems}
+            keyExtractor={(item) => item.key}
             renderItem={renderItem}
             numColumns={2}
             columnWrapperStyle={styles.row}
             contentContainerStyle={styles.list}
             showsVerticalScrollIndicator={false}
             refreshControl={
-              <RefreshControl refreshing={false} onRefresh={() => refetch()} tintColor={BRAND} />
+              <RefreshControl
+                refreshing={false}
+                onRefresh={() => refetch()}
+                tintColor={BRAND}
+              />
             }
           />
         )}
@@ -173,7 +292,6 @@ const styles = StyleSheet.create({
   },
   safeArea: { flex: 1 },
 
-  // Header
   headerRow: {
     paddingHorizontal: 20,
     paddingTop: 8,
@@ -185,7 +303,6 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
 
-  // Filters
   filterBar: {
     flexDirection: 'row',
     gap: 8,
@@ -213,7 +330,6 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
 
-  // List
   list: {
     padding: 12,
     paddingBottom: 40,
@@ -233,6 +349,17 @@ const styles = StyleSheet.create({
   assetImage: {
     width: '100%',
     aspectRatio: 3 / 4,
+  },
+  upscaleBadge: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   assetInfo: {
     padding: 12,
@@ -254,7 +381,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 
-  // Empty
   centered: {
     flex: 1,
     justifyContent: 'center',

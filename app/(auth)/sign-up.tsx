@@ -1,25 +1,28 @@
-import { useCallback, useEffect, useRef } from 'react'
+import { useSignUp, useSSO } from '@clerk/clerk-expo'
+import { LinearGradient } from 'expo-linear-gradient'
+import { useRouter } from 'expo-router'
+import { useSignUpStore } from '@/stores/use-signup-store'
+import * as WebBrowser from 'expo-web-browser'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import {
+  ActivityIndicator,
   Animated,
+  KeyboardAvoidingView,
   Platform,
   StatusBar,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { useSSO } from '@clerk/clerk-expo'
-import { useRouter } from 'expo-router'
-import { LinearGradient } from 'expo-linear-gradient'
-import * as WebBrowser from 'expo-web-browser'
 import Svg, {
-  Path as SvgPath,
   Defs,
-  LinearGradient as SvgLinearGradient,
-  Stop,
-  Circle,
   Rect,
+  Stop,
+  LinearGradient as SvgLinearGradient,
+  Path as SvgPath,
 } from 'react-native-svg'
 
 WebBrowser.maybeCompleteAuthSession()
@@ -73,9 +76,17 @@ function SparkleIcon() {
         </SvgLinearGradient>
       </Defs>
       <Rect x="4" y="4" width="40" height="40" rx="12" fill="url(#sparkleGrad)" />
-      {/* Plus / create icon */}
       <Rect x="22" y="14" width="4" height="20" rx="2" fill="#FFFFFF" opacity={0.9} />
       <Rect x="14" y="22" width="20" height="4" rx="2" fill="#FFFFFF" opacity={0.9} />
+    </Svg>
+  )
+}
+
+function MailIcon() {
+  return (
+    <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
+      <Rect x="2" y="4" width="20" height="16" rx="3" stroke="rgba(255,255,255,0.7)" strokeWidth="2" fill="none" />
+      <SvgPath d="M2 7l10 7 10-7" stroke="rgba(255,255,255,0.7)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
     </Svg>
   )
 }
@@ -85,6 +96,15 @@ function SparkleIcon() {
 export default function SignUpScreen() {
   const router = useRouter()
   const { startSSOFlow } = useSSO()
+  const { signUp, setActive, isLoaded } = useSignUp()
+  const markSignedUp = useSignUpStore((s) => s.setJustSignedUp)
+
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [code, setCode] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [pendingVerification, setPendingVerification] = useState(false)
 
   // Entrance animations
   const fadeAnim = useRef(new Animated.Value(0)).current
@@ -107,29 +127,141 @@ export default function SignUpScreen() {
 
   const handleGoogleSSO = useCallback(async () => {
     try {
-      const { createdSessionId, setActive } = await startSSOFlow({
+      const { createdSessionId, setActive: setActiveSSO } = await startSSOFlow({
         strategy: 'oauth_google',
       })
-      if (createdSessionId && setActive) {
-        await setActive({ session: createdSessionId })
+      if (createdSessionId && setActiveSSO) {
+        await setActiveSSO({ session: createdSessionId })
+        markSignedUp(true)
       }
     } catch (err) {
       console.error('Google SSO error:', err)
     }
-  }, [startSSOFlow])
+  }, [startSSOFlow, markSignedUp])
 
   const handleAppleSSO = useCallback(async () => {
     try {
-      const { createdSessionId, setActive } = await startSSOFlow({
+      const { createdSessionId, setActive: setActiveSSO } = await startSSOFlow({
         strategy: 'oauth_apple',
       })
-      if (createdSessionId && setActive) {
-        await setActive({ session: createdSessionId })
+      if (createdSessionId && setActiveSSO) {
+        await setActiveSSO({ session: createdSessionId })
+        markSignedUp(true)
       }
     } catch (err) {
       console.error('Apple SSO error:', err)
     }
-  }, [startSSOFlow])
+  }, [startSSOFlow, markSignedUp])
+
+  const handleEmailSignUp = useCallback(async () => {
+    if (!isLoaded || !signUp) return
+    setError('')
+    setLoading(true)
+    try {
+      await signUp.create({
+        emailAddress: email.trim(),
+        password,
+      })
+      await signUp.prepareEmailAddressVerification({ strategy: 'email_code' })
+      setPendingVerification(true)
+    } catch (err: any) {
+      const msg = err?.errors?.[0]?.longMessage || err?.errors?.[0]?.message || 'Sign up failed'
+      setError(msg)
+    } finally {
+      setLoading(false)
+    }
+  }, [isLoaded, signUp, email, password])
+
+  const handleVerify = useCallback(async () => {
+    if (!isLoaded || !signUp) return
+    setError('')
+    setLoading(true)
+    try {
+      const result = await signUp.attemptEmailAddressVerification({ code })
+      if (result.status === 'complete' && setActive) {
+        await setActive({ session: result.createdSessionId })
+        markSignedUp(true)
+      }
+    } catch (err: any) {
+      const msg = err?.errors?.[0]?.longMessage || err?.errors?.[0]?.message || 'Verification failed'
+      setError(msg)
+    } finally {
+      setLoading(false)
+    }
+  }, [isLoaded, signUp, setActive, code])
+
+  // ─── Verification Screen ──────────────────────────────────────────────
+
+  if (pendingVerification) {
+    return (
+      <View style={styles.root}>
+        <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+        <LinearGradient
+          colors={['#0a0a0a', '#0f0520', '#0a0a0a']}
+          locations={[0, 0.5, 1]}
+          style={StyleSheet.absoluteFillObject}
+        />
+        <View style={styles.glowOrb} />
+
+        <SafeAreaView style={styles.safeArea}>
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+            style={{ flex: 1 }}
+          >
+            <View style={styles.verifyContent}>
+              <View style={styles.authCard}>
+                <Text style={styles.authCardTitle}>Check your email</Text>
+                <Text style={styles.authCardSubtitle}>
+                  We sent a verification code to {email}
+                </Text>
+
+                <TextInput
+                  style={[styles.input, styles.codeInput]}
+                  placeholder="Verification code"
+                  placeholderTextColor="rgba(255,255,255,0.3)"
+                  value={code}
+                  onChangeText={setCode}
+                  keyboardType="number-pad"
+                  textContentType="oneTimeCode"
+                  autoFocus
+                />
+
+                {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
+                <TouchableOpacity
+                  style={[styles.emailButton, loading && { opacity: 0.6 }]}
+                  onPress={handleVerify}
+                  activeOpacity={0.7}
+                  disabled={loading || !code}
+                >
+                  {loading ? (
+                    <ActivityIndicator color="#FFFFFF" size="small" />
+                  ) : (
+                    <Text style={styles.emailButtonText}>Verify Email</Text>
+                  )}
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={() => {
+                    setPendingVerification(false)
+                    setCode('')
+                    setError('')
+                  }}
+                  style={{ marginTop: 16, alignItems: 'center' }}
+                >
+                  <Text style={styles.linkText}>
+                    <Text style={styles.linkAccent}>Go back</Text>
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </KeyboardAvoidingView>
+        </SafeAreaView>
+      </View>
+    )
+  }
+
+  // ─── Sign Up Screen ───────────────────────────────────────────────────
 
   return (
     <View style={styles.root}>
@@ -140,72 +272,123 @@ export default function SignUpScreen() {
         style={StyleSheet.absoluteFillObject}
       />
 
-      {/* Subtle brand glow */}
       <View style={styles.glowOrb} />
 
       <SafeAreaView style={styles.safeArea}>
-        <Animated.View
-          style={[
-            styles.content,
-            { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
-          ]}
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={{ flex: 1 }}
         >
-          {/* Header */}
-          <View style={styles.header}>
-            <SparkleIcon />
-            <Text style={styles.title}>Create Account</Text>
-            <Text style={styles.subtitle}>
-              Start enhancing your product photos with AI
-            </Text>
-          </View>
+          <Animated.ScrollView
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+            style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}
+          >
+            {/* Header */}
+            <View style={styles.header}>
+              <SparkleIcon />
+              <Text style={styles.title}>Create Account</Text>
+              <Text style={styles.subtitle}>
+                Start enhancing your product photos with AI
+              </Text>
+            </View>
 
-          {/* Auth card */}
-          <View style={styles.authCard}>
-            <Text style={styles.authCardTitle}>Get started for free</Text>
-            <Text style={styles.authCardSubtitle}>
-              10 free credits included with signup
-            </Text>
+            {/* Auth card */}
+            <View style={styles.authCard}>
+              <Text style={styles.authCardTitle}>Get started for free</Text>
+              <Text style={styles.authCardSubtitle2}>
+                10 free credits included with signup
+              </Text>
 
-            <View style={styles.buttons}>
-              {/* Google */}
+              {/* SSO buttons */}
+              <View style={styles.buttons}>
+                <TouchableOpacity
+                  style={styles.ssoButton}
+                  onPress={handleGoogleSSO}
+                  activeOpacity={0.7}
+                >
+                  <View style={styles.ssoIconWrap}>
+                    <GoogleIcon />
+                  </View>
+                  <Text style={styles.ssoButtonText}>Sign up with Google</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.ssoButton, styles.appleButton]}
+                  onPress={handleAppleSSO}
+                  activeOpacity={0.7}
+                >
+                  <View style={[styles.ssoIconWrap, styles.appleIconWrap]}>
+                    <AppleIcon />
+                  </View>
+                  <Text style={[styles.ssoButtonText, styles.appleButtonText]}>
+                    Sign up with Apple
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Divider */}
+              <View style={styles.divider}>
+                <View style={styles.dividerLine} />
+                <Text style={styles.dividerText}>or</Text>
+                <View style={styles.dividerLine} />
+              </View>
+
+              {/* Email / Password */}
+              <View style={styles.inputGroup}>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Email address"
+                  placeholderTextColor="rgba(255,255,255,0.3)"
+                  value={email}
+                  onChangeText={setEmail}
+                  autoCapitalize="none"
+                  keyboardType="email-address"
+                  textContentType="emailAddress"
+                />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Password"
+                  placeholderTextColor="rgba(255,255,255,0.3)"
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry
+                  textContentType="newPassword"
+                />
+              </View>
+
+              {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
               <TouchableOpacity
-                style={styles.ssoButton}
-                onPress={handleGoogleSSO}
+                style={[styles.emailButton, loading && { opacity: 0.6 }]}
+                onPress={handleEmailSignUp}
                 activeOpacity={0.7}
+                disabled={loading || !email || !password}
               >
-                <View style={styles.ssoIconWrap}>
-                  <GoogleIcon />
-                </View>
-                <Text style={styles.ssoButtonText}>Sign up with Google</Text>
-              </TouchableOpacity>
-
-              {/* Apple */}
-              <TouchableOpacity
-                style={[styles.ssoButton, styles.appleButton]}
-                onPress={handleAppleSSO}
-                activeOpacity={0.7}
-              >
-                <View style={[styles.ssoIconWrap, styles.appleIconWrap]}>
-                  <AppleIcon />
-                </View>
-                <Text style={[styles.ssoButtonText, styles.appleButtonText]}>
-                  Sign up with Apple
-                </Text>
+                {loading ? (
+                  <ActivityIndicator color="#FFFFFF" size="small" />
+                ) : (
+                  <>
+                    <MailIcon />
+                    <Text style={styles.emailButtonText}>Sign up with Email</Text>
+                  </>
+                )}
               </TouchableOpacity>
             </View>
-          </View>
 
-          {/* Footer link */}
-          <TouchableOpacity
-            onPress={() => router.back()}
-            style={styles.linkWrap}
-          >
-            <Text style={styles.linkText}>
-              Already have an account?{' '}
-              <Text style={styles.linkAccent}>Sign in</Text>
-            </Text>
-          </TouchableOpacity>
-        </Animated.View>
+            {/* Footer link */}
+            <TouchableOpacity
+              onPress={() => router.back()}
+              style={styles.linkWrap}
+            >
+              <Text style={styles.linkText}>
+                Already have an account?{' '}
+                <Text style={styles.linkAccent}>Sign in</Text>
+              </Text>
+            </TouchableOpacity>
+          </Animated.ScrollView>
+        </KeyboardAvoidingView>
       </SafeAreaView>
     </View>
   )
@@ -241,7 +424,13 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
   },
-  content: {
+  scrollContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    paddingHorizontal: 28,
+    paddingVertical: 20,
+  },
+  verifyContent: {
     flex: 1,
     justifyContent: 'center',
     paddingHorizontal: 28,
@@ -284,13 +473,19 @@ const styles = StyleSheet.create({
   },
   authCardSubtitle: {
     fontSize: 14,
+    color: 'rgba(255,255,255,0.5)',
+    textAlign: 'center',
+    marginBottom: 24,
+  },
+  authCardSubtitle2: {
+    fontSize: 14,
     color: BRAND_CYAN,
     textAlign: 'center',
     marginBottom: 24,
     fontWeight: '500',
   },
 
-  // Buttons
+  // SSO Buttons
   buttons: {
     gap: 12,
   },
@@ -319,14 +514,74 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.9)',
   },
   appleButton: {
-    backgroundColor: '#FFFFFF',
-    borderColor: '#FFFFFF',
+    backgroundColor: '#050505',
+    borderColor: '#131313',
   },
   appleIconWrap: {
     backgroundColor: 'rgba(0,0,0,0.1)',
   },
   appleButtonText: {
-    color: '#000000',
+    color: '#EFEFEF',
+  },
+
+  // Divider
+  divider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 20,
+    gap: 12,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+  },
+  dividerText: {
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.35)',
+    fontWeight: '500',
+  },
+
+  // Inputs
+  inputGroup: {
+    gap: 12,
+    marginBottom: 12,
+  },
+  input: {
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    fontSize: 16,
+    color: '#FFFFFF',
+  },
+  codeInput: {
+    textAlign: 'center',
+    fontSize: 24,
+    letterSpacing: 8,
+    marginBottom: 12,
+  },
+  errorText: {
+    fontSize: 13,
+    color: '#EF4444',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  emailButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 15,
+    borderRadius: 14,
+    backgroundColor: BRAND,
+    gap: 10,
+  },
+  emailButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
 
   // Footer

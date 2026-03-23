@@ -141,8 +141,8 @@ export interface AnalysisResult {
   confidence: number
 }
 export async function analyzeProduct(imageUrl: string) {
-  const { data } = await api.post<AnalysisResult>('/api/analyze-product', { imageUrl })
-  return data
+  const { data } = await api.post<{ success: boolean; result: AnalysisResult }>('/api/analyze-product', { imageUrl })
+  return data.result
 }
 
 // Enhance product

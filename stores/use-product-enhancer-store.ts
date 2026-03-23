@@ -211,6 +211,7 @@ interface ProductEnhancerState {
   setSelectedModel: (model: ImageModelId) => void
   setPromptCustomizations: (customizations: PromptCustomizations) => void
   setSecondImageConfig: (config: Partial<SecondImageConfig>) => void
+  setSeedreamConfig: (config: Partial<SeedreamConfig>) => void
   setSelectedStyleVariant: (variant: string | null) => void
   applyAnalysisSuggestions: (analysis: AnalysisResult) => void
   setAnalysisState: (analyzing: boolean, result?: AnalysisResult | null) => void
@@ -294,6 +295,9 @@ export const useProductEnhancerStore = create<ProductEnhancerState>()(
           secondImageConfig: { ...state.secondImageConfig, ...config },
         })),
 
+      setSeedreamConfig: (config) =>
+        set((state) => ({ seedreamConfig: { ...state.seedreamConfig, ...config } })),
+
       setSelectedStyleVariant: (variant) =>
         set({ selectedStyleVariant: variant }),
 
@@ -341,6 +345,26 @@ export const useProductEnhancerStore = create<ProductEnhancerState>()(
               },
             }
           }
+          // Merge poster config
+          if (analysis.suggestedPosterConfig) {
+            const pc = analysis.suggestedPosterConfig as Record<string, unknown>
+            updates.secondImageConfig = {
+              ...(updates.secondImageConfig ?? state.secondImageConfig),
+              posterConfig: {
+                ...DEFAULT_POSTER_CONFIG,
+                ...(pc.headline ? { headline: pc.headline as string } : {}),
+                ...(pc.tagline ? { tagline: pc.tagline as string } : {}),
+                ...(pc.primaryColor ? { primaryColor: pc.primaryColor as string } : {}),
+                ...(pc.fontFamily ? { fontFamily: pc.fontFamily as string } : {}),
+                ...(pc.decorativeElements ? {
+                  decorativeElements: {
+                    ...DEFAULT_POSTER_CONFIG.decorativeElements,
+                    ...(pc.decorativeElements as Record<string, unknown>),
+                  },
+                } : {}),
+              },
+            }
+          }
         }
 
         set(updates)
@@ -375,7 +399,7 @@ export const useProductEnhancerStore = create<ProductEnhancerState>()(
       },
 
       setGenerationResult: (hero, vignette) =>
-        set({ heroImageUrl: hero, vignetteImageUrl: vignette, generationPhase: 'complete' }),
+        set({ heroImageUrl: hero, vignetteImageUrl: vignette, generationPhase: 'complete', isGenerating: false, isUploading: false }),
 
       setError: (error) => set({ error, generationPhase: error ? 'error' : 'idle' }),
 
@@ -387,6 +411,8 @@ export const useProductEnhancerStore = create<ProductEnhancerState>()(
           vignetteImageUrl: null,
           error: null,
           generationPhase: 'idle',
+          isGenerating: false,
+          isUploading: false,
           isAnalyzing: false,
           analysisResult: null,
           hasAppliedSuggestions: false,
