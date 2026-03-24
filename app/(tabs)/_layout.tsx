@@ -1,6 +1,7 @@
 import { Tabs } from 'expo-router'
 import { Platform } from 'react-native'
 import Svg, { Path as SvgPath, Circle, Rect } from 'react-native-svg'
+import { TermsConsentModal } from '@/components/terms-consent-modal'
 
 const BRAND = '#8B5CF6'
 const INACTIVE = '#64748b'
@@ -38,6 +39,7 @@ function GalleryIcon({ color }: { color: string }) {
 
 export default function TabLayout() {
   return (
+    <>
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: BRAND,
@@ -85,5 +87,7 @@ export default function TabLayout() {
         }}
       />
     </Tabs>
+    <TermsConsentModal />
+    </>
   )
 }

@@ -401,7 +401,7 @@ export const useProductEnhancerStore = create<ProductEnhancerState>()(
       setGenerationResult: (hero, vignette) =>
         set({ heroImageUrl: hero, vignetteImageUrl: vignette, generationPhase: 'complete', isGenerating: false, isUploading: false }),
 
-      setError: (error) => set({ error, generationPhase: error ? 'error' : 'idle' }),
+      setError: (error) => set({ error, generationPhase: error ? 'error' : 'idle', isGenerating: false, isUploading: false }),
 
       resetForNewGeneration: () =>
         set({

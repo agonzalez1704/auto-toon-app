@@ -47,7 +47,6 @@ const VISIBLE_MODELS: { id: ImageModelId; label: string }[] = [
 
 const ASPECT_RATIOS = [
   { value: '3:4', w: 12, h: 16 },
-  { value: '4:5', w: 10, h: 12 },
   { value: '1:1', w: 12, h: 12 },
   { value: '9:16', w: 9, h: 16 },
   { value: '2:3', w: 10, h: 14 },
@@ -492,7 +491,7 @@ export default function CreateScreen() {
               activeOpacity={0.8}
             >
               <LinearGradient
-                colors={[BRAND, '#7C3AED']}
+                colors={['#7C3AED', '#06B6D4']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={StyleSheet.absoluteFillObject}
@@ -918,7 +917,7 @@ export default function CreateScreen() {
                           ) : (
                             <>
                               <LinearGradient
-                                colors={[BRAND, '#7C3AED']}
+                                colors={['#7C3AED', '#06B6D4']}
                                 start={{ x: 0, y: 0 }}
                                 end={{ x: 1, y: 0 }}
                                 style={StyleSheet.absoluteFillObject}
@@ -1010,7 +1009,7 @@ export default function CreateScreen() {
               >
                 {canGenerate && !store.isGenerating && (
                   <LinearGradient
-                    colors={[BRAND, '#7C3AED']}
+                    colors={['#7C3AED', '#06B6D4']}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
                     style={StyleSheet.absoluteFillObject}
