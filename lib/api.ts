@@ -192,7 +192,7 @@ export interface Asset {
   heroImageUrl: string | null
   vignetteImageUrl: string | null
   upscaledUrls: string[]
-  secondImageType: 'vignette' | 'elements' | 'poster' | '3x3' | 'upscale_batch'
+  secondImageType: 'vignette' | 'elements' | 'poster' | '3x3' | 'food' | 'none' | 'upscale_batch'
   createdAt: string
 }
 export async function getAssets() {

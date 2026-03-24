@@ -20,7 +20,7 @@ import { queryKeys } from '@/lib/query'
 
 const BRAND = '#8B5CF6'
 
-type FilterType = 'all' | 'vignette' | 'elements' | 'poster' | '3x3' | 'upscaled'
+type FilterType = 'all' | 'vignette' | 'elements' | 'poster' | '3x3' | 'food' | 'upscaled'
 
 const FILTERS: { value: FilterType; label: string }[] = [
   { value: 'all', label: 'All' },
@@ -28,8 +28,19 @@ const FILTERS: { value: FilterType; label: string }[] = [
   { value: 'elements', label: 'Elements' },
   { value: 'poster', label: 'Poster' },
   { value: '3x3', label: '3x3' },
+  { value: 'food', label: 'Food' },
   { value: 'upscaled', label: 'Upscaled' },
 ]
+
+const TYPE_LABELS: Record<string, string> = {
+  vignette: 'Vignette',
+  elements: 'Elements',
+  poster: 'Poster',
+  '3x3': '3x3 Grid',
+  food: 'Food',
+  upscale_batch: 'Upscaled',
+  none: 'Photo',
+}
 
 // A display item is either a regular asset or an individual image from an upscale_batch
 interface DisplayItem {
@@ -92,11 +103,7 @@ export default function AssetsScreen() {
             key: asset.id,
             imageUrl,
             productName: asset.productName,
-            label:
-              asset.secondImageType === '3x3'
-                ? '3x3 Grid'
-                : asset.secondImageType.charAt(0).toUpperCase() +
-                  asset.secondImageType.slice(1),
+            label: TYPE_LABELS[asset.secondImageType] ?? asset.secondImageType.charAt(0).toUpperCase() + asset.secondImageType.slice(1).replace(/_/g, ' '),
             asset,
           })
         }
