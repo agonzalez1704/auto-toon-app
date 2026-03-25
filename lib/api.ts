@@ -185,6 +185,22 @@ export async function enhanceProduct(data: EnhanceRequest) {
   return result
 }
 
+// Restore
+export interface RestoreRequest {
+  imageUrl: string
+  aiModel?: string
+  resolution: '2K' | '4K'
+}
+export interface RestoreResponse {
+  success: boolean
+  restoredImageUrl: string
+  creditsRemaining: number
+}
+export async function restoreImage(data: RestoreRequest) {
+  const { data: result } = await api.post<RestoreResponse>('/api/restore', data)
+  return result
+}
+
 // Assets
 export interface Asset {
   id: string

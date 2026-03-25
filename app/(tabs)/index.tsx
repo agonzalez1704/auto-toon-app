@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import {
   Animated,
+  Platform,
   ScrollView,
   StatusBar,
   StyleSheet,
@@ -27,15 +28,46 @@ import { useCreditsStore } from '@/stores/use-credits-store'
 import { useSubscriptionStore } from '@/stores/use-subscription-store'
 import { getRecentCreations } from '@/lib/api'
 import { queryKeys } from '@/lib/query'
+import { CONFIG } from '@/lib/config'
 
 const BRAND = '#8B5CF6'
 const BRAND_CYAN = '#06B6D4'
+
+// ─── Helpers ─────────────────────────────────────────────────────────────
+
+function getGreeting(): string {
+  const hour = new Date().getHours()
+  if (hour < 12) return 'Good morning'
+  if (hour < 18) return 'Good afternoon'
+  return 'Good evening'
+}
+
+const FEATURES = [
+  {
+    title: 'Instagram Feed',
+    description: 'Generate a 3x3 grid for carousels',
+    preview: 'instagram_feed.png',
+    route: '/(tabs)/create' as const,
+  },
+  {
+    title: 'Image Restore',
+    description: 'Upscale and repair old photos',
+    preview: 'pro-photo.png',
+    route: '/(tabs)/restore' as const,
+  },
+  {
+    title: 'Creative Elements',
+    description: 'Artistic product compositions',
+    preview: 'elements-image.png',
+    route: '/(tabs)/create' as const,
+  },
+]
 
 // ─── SVG Icons ──────────────────────────────────────────────────────────
 
 function CreditIcon() {
   return (
-    <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
+    <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
       <Defs>
         <SvgLinearGradient id="creditGrad" x1="0" y1="0" x2="1" y2="1">
           <Stop offset="0" stopColor="#FBBF24" />
@@ -81,12 +113,12 @@ function CameraIcon() {
   )
 }
 
-function TipBulbIcon() {
+function RestoreCTAIcon() {
   return (
-    <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
+    <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
       <SvgPath
-        d="M9 21h6M12 3a6 6 0 014 10.5V17H8v-3.5A6 6 0 0112 3z"
-        fill="none" stroke="#FBBF24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+        d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+        fill="#FFFFFF" stroke="#FFFFFF" strokeWidth="1"
       />
     </Svg>
   )
@@ -100,6 +132,20 @@ function ChevronRight({ color = 'rgba(255,255,255,0.4)' }: { color?: string }) {
   )
 }
 
+function ProBadge({ label }: { label: string }) {
+  return (
+    <View style={styles.proBadge}>
+      <LinearGradient
+        colors={[BRAND_CYAN, '#0891B2']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={StyleSheet.absoluteFillObject}
+      />
+      <Text style={styles.proBadgeText}>{label}</Text>
+    </View>
+  )
+}
+
 // ─── Main Screen ────────────────────────────────────────────────────────
 
 export default function DashboardScreen() {
@@ -109,14 +155,14 @@ export default function DashboardScreen() {
   const { plan, fetchSubscription } = useSubscriptionStore()
 
   const fadeAnim = useRef(new Animated.Value(0)).current
-  const slideAnim = useRef(new Animated.Value(20)).current
+  const slideAnim = useRef(new Animated.Value(30)).current
 
   useEffect(() => {
     fetchCredits()
     fetchSubscription()
     Animated.parallel([
-      Animated.timing(fadeAnim, { toValue: 1, duration: 500, useNativeDriver: true }),
-      Animated.timing(slideAnim, { toValue: 0, duration: 500, useNativeDriver: true }),
+      Animated.timing(fadeAnim, { toValue: 1, duration: 600, useNativeDriver: true }),
+      Animated.timing(slideAnim, { toValue: 0, duration: 600, useNativeDriver: true }),
     ]).start()
   }, [])
 
@@ -140,7 +186,7 @@ export default function DashboardScreen() {
           {/* Welcome Header */}
           <View style={styles.header}>
             <View>
-              <Text style={styles.greeting}>Welcome back</Text>
+              <Text style={styles.greeting}>{getGreeting()},</Text>
               <Text style={styles.userName}>{firstName}</Text>
             </View>
             <TouchableOpacity
@@ -171,11 +217,17 @@ export default function DashboardScreen() {
               onPress={() => router.push('/account/credits')}
               activeOpacity={0.7}
             >
-              <View style={styles.statIconWrap}>
+              <LinearGradient
+                colors={['rgba(251,191,36,0.06)', 'transparent']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={StyleSheet.absoluteFillObject}
+              />
+              <View style={styles.statIconWrapCredits}>
                 <CreditIcon />
               </View>
               <Text style={styles.statLabel}>Credits</Text>
-              <Text style={styles.statValue}>
+              <Text style={styles.statValueLarge}>
                 {balance !== null ? balance : '--'}
               </Text>
               <View style={styles.statAction}>
@@ -189,42 +241,68 @@ export default function DashboardScreen() {
               onPress={() => router.push('/account/pricing')}
               activeOpacity={0.7}
             >
+              <LinearGradient
+                colors={['rgba(6,182,212,0.06)', 'transparent']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={StyleSheet.absoluteFillObject}
+              />
               <View style={[styles.statIconWrap, { backgroundColor: 'rgba(6,182,212,0.12)' }]}>
                 <PlanIcon />
               </View>
               <Text style={styles.statLabel}>Plan</Text>
-              <Text style={styles.statValue}>{planLabel}</Text>
-              {plan === 'FREE' && (
-                <View style={styles.statAction}>
-                  <Text style={[styles.statActionText, { color: BRAND_CYAN }]}>Upgrade</Text>
-                  <ChevronRight color={BRAND_CYAN} />
-                </View>
+              {plan === 'FREE' ? (
+                <Text style={styles.statValue}>{planLabel}</Text>
+              ) : (
+                <ProBadge label={planLabel} />
               )}
+              <View style={styles.statAction}>
+                <Text style={[styles.statActionText, { color: BRAND_CYAN }]}>
+                  {plan === 'FREE' ? 'Upgrade' : 'Manage'}
+                </Text>
+                <ChevronRight color={BRAND_CYAN} />
+              </View>
             </TouchableOpacity>
           </View>
 
-          {/* Quick Create CTA */}
-          <TouchableOpacity
-            style={styles.ctaCard}
-            onPress={() => router.push('/(tabs)/create')}
-            activeOpacity={0.8}
-          >
-            <LinearGradient
-              colors={[BRAND, '#7C3AED']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={StyleSheet.absoluteFillObject}
-            />
-            <View style={styles.ctaContent}>
-              <View style={styles.ctaIconWrap}>
+          {/* Quick Actions */}
+          <View style={styles.quickActionsRow}>
+            <TouchableOpacity
+              style={styles.quickActionCard}
+              onPress={() => router.push('/(tabs)/create')}
+              activeOpacity={0.8}
+            >
+              <LinearGradient
+                colors={[BRAND, '#7C3AED']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={StyleSheet.absoluteFillObject}
+              />
+              <View style={styles.quickActionIconWrap}>
                 <CameraIcon />
               </View>
-              <View style={styles.ctaTextWrap}>
-                <Text style={styles.ctaTitle}>Enhance a Product</Text>
-                <Text style={styles.ctaSub}>Upload a photo to get started</Text>
+              <Text style={styles.quickActionTitle}>Enhance Product</Text>
+              <Text style={styles.quickActionSub}>AI-powered photos</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.quickActionCard}
+              onPress={() => router.push('/(tabs)/restore')}
+              activeOpacity={0.8}
+            >
+              <LinearGradient
+                colors={[BRAND_CYAN, '#0891B2']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={StyleSheet.absoluteFillObject}
+              />
+              <View style={styles.quickActionIconWrap}>
+                <RestoreCTAIcon />
               </View>
-            </View>
-          </TouchableOpacity>
+              <Text style={styles.quickActionTitle}>Restore Image</Text>
+              <Text style={styles.quickActionSub}>Upscale & enhance</Text>
+            </TouchableOpacity>
+          </View>
 
           {/* Recent Creations */}
           <View style={styles.section}>
@@ -261,6 +339,10 @@ export default function DashboardScreen() {
                       contentFit="cover"
                       transition={200}
                     />
+                    <LinearGradient
+                      colors={['transparent', 'rgba(0,0,0,0.5)']}
+                      style={styles.recentOverlay}
+                    />
                   </TouchableOpacity>
                 ))}
               </ScrollView>
@@ -269,37 +351,44 @@ export default function DashboardScreen() {
                 <SparkleIcon />
                 <Text style={styles.emptyTitle}>No creations yet</Text>
                 <Text style={styles.emptySubtitle}>
-                  Tap Enhance a Product above to get started
+                  Tap Enhance or Restore above to get started
                 </Text>
               </View>
             )}
           </View>
 
-          {/* Tips */}
+          {/* Explore Features */}
           <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { marginBottom: 14 }]}>Pro Tips</Text>
-            <View style={styles.tipCard}>
-              <View style={styles.tipIconWrap}>
-                <TipBulbIcon />
-              </View>
-              <View style={styles.tipTextWrap}>
-                <Text style={styles.tipTitle}>Use a clean background</Text>
-                <Text style={styles.tipSub}>
-                  Products on white or plain backgrounds get the best results.
-                </Text>
-              </View>
-            </View>
-            <View style={styles.tipCard}>
-              <View style={styles.tipIconWrap}>
-                <TipBulbIcon />
-              </View>
-              <View style={styles.tipTextWrap}>
-                <Text style={styles.tipTitle}>Try Instagram Feed</Text>
-                <Text style={styles.tipSub}>
-                  Generate a 3x3 grid perfect for social media carousels.
-                </Text>
-              </View>
-            </View>
+            <Text style={[styles.sectionTitle, { marginBottom: 14 }]}>Explore Features</Text>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.featureList}
+            >
+              {FEATURES.map((feature, i) => (
+                <TouchableOpacity
+                  key={i}
+                  style={styles.featureCard}
+                  onPress={() => router.push(feature.route)}
+                  activeOpacity={0.8}
+                >
+                  <Image
+                    source={{ uri: `${CONFIG.API_BASE_URL}/previews/${feature.preview}` }}
+                    style={styles.featureImage}
+                    contentFit="cover"
+                    transition={200}
+                  />
+                  <LinearGradient
+                    colors={['transparent', 'rgba(0,0,0,0.75)']}
+                    style={styles.featureOverlay}
+                  />
+                  <View style={styles.featureInfo}>
+                    <Text style={styles.featureTitle}>{feature.title}</Text>
+                    <Text style={styles.featureDesc}>{feature.description}</Text>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
           </View>
         </Animated.ScrollView>
       </SafeAreaView>
@@ -378,6 +467,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.08)',
     padding: 16,
+    overflow: 'hidden',
   },
   statIconWrap: {
     width: 36,
@@ -388,6 +478,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 12,
   },
+  statIconWrapCredits: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: 'rgba(251,191,36,0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 12,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#FBBF24',
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+      },
+      android: { elevation: 4 },
+    }),
+  },
   statLabel: {
     fontSize: 12,
     fontWeight: '500',
@@ -396,6 +504,11 @@ const styles = StyleSheet.create({
   },
   statValue: {
     fontSize: 28,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
+  statValueLarge: {
+    fontSize: 32,
     fontWeight: '800',
     color: '#FFFFFF',
   },
@@ -411,36 +524,52 @@ const styles = StyleSheet.create({
     color: BRAND,
   },
 
-  // CTA
-  ctaCard: {
-    borderRadius: 18,
+  // Pro Badge
+  proBadge: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
     overflow: 'hidden',
+    marginTop: 4,
+  },
+  proBadgeText: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    letterSpacing: 1,
+  },
+
+  // Quick Actions
+  quickActionsRow: {
+    flexDirection: 'row',
+    gap: 12,
     marginBottom: 28,
   },
-  ctaContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 20,
-    gap: 16,
+  quickActionCard: {
+    flex: 1,
+    borderRadius: 18,
+    overflow: 'hidden',
+    padding: 18,
+    minHeight: 140,
+    justifyContent: 'flex-end',
   },
-  ctaIconWrap: {
-    width: 48,
-    height: 48,
-    borderRadius: 14,
+  quickActionIconWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
     backgroundColor: 'rgba(255,255,255,0.2)',
     justifyContent: 'center',
     alignItems: 'center',
+    marginBottom: 14,
   },
-  ctaTextWrap: {
-    flex: 1,
-  },
-  ctaTitle: {
-    fontSize: 18,
+  quickActionTitle: {
+    fontSize: 16,
     fontWeight: '700',
     color: '#FFFFFF',
   },
-  ctaSub: {
-    fontSize: 13,
+  quickActionSub: {
+    fontSize: 12,
     color: 'rgba(255,255,255,0.75)',
     marginTop: 2,
   },
@@ -471,8 +600,8 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   recentCard: {
-    width: 130,
-    height: 170,
+    width: 140,
+    height: 185,
     borderRadius: 14,
     overflow: 'hidden',
     borderWidth: 1,
@@ -481,6 +610,13 @@ const styles = StyleSheet.create({
   recentImage: {
     width: '100%',
     height: '100%',
+  },
+  recentOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 50,
   },
 
   // Empty
@@ -507,39 +643,44 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
 
-  // Tips
-  tipCard: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
-    padding: 14,
-    marginBottom: 8,
+  // Explore Features
+  featureList: {
     gap: 12,
   },
-  tipIconWrap: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    backgroundColor: 'rgba(251,191,36,0.12)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 2,
+  featureCard: {
+    width: 200,
+    height: 260,
+    borderRadius: 16,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
   },
-  tipTextWrap: {
-    flex: 1,
+  featureImage: {
+    width: '100%',
+    height: '100%',
   },
-  tipTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: 'rgba(255,255,255,0.9)',
+  featureOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 100,
   },
-  tipSub: {
+  featureInfo: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: 14,
+  },
+  featureTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  featureDesc: {
     fontSize: 12,
-    color: 'rgba(255,255,255,0.45)',
-    lineHeight: 17,
+    color: 'rgba(255,255,255,0.65)',
     marginTop: 2,
   },
 })

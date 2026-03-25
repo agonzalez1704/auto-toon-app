@@ -132,8 +132,12 @@ export default function SignInScreen() {
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [code, setCode] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [pendingVerification, setPendingVerification] = useState(false)
+
+  const otpInputRef = useRef<TextInput>(null)
 
   // Entrance animations
   const fadeAnim = useRef(new Animated.Value(0)).current
@@ -170,13 +174,47 @@ export default function SignInScreen() {
     setError('')
     setLoading(true)
     try {
+      // Start sign-in with just the identifier to discover available strategies
       const result = await signIn.create({
         identifier: email.trim(),
-        password,
       })
+
       if (result.status === 'complete' && setActive) {
         await setActive({ session: result.createdSessionId })
+        return
       }
+
+      if (result.status === 'needs_first_factor') {
+        const factors = result.supportedFirstFactors ?? []
+
+        // Prefer email_code verification
+        const emailCodeFactor = factors.find(
+          (f: any) => f.strategy === 'email_code'
+        )
+        if (emailCodeFactor && 'emailAddressId' in emailCodeFactor) {
+          await signIn.prepareFirstFactor({
+            strategy: 'email_code',
+            emailAddressId: emailCodeFactor.emailAddressId,
+          })
+          setPendingVerification(true)
+          return
+        }
+
+        // Fallback: try password if supported
+        const hasPassword = factors.some((f: any) => f.strategy === 'password')
+        if (hasPassword && password) {
+          const pwResult = await signIn.attemptFirstFactor({
+            strategy: 'password',
+            password,
+          })
+          if (pwResult.status === 'complete' && setActive) {
+            await setActive({ session: pwResult.createdSessionId })
+            return
+          }
+        }
+      }
+
+      setError('Unable to complete sign in. Try Google or Apple instead.')
     } catch (err: any) {
       const msg = err?.errors?.[0]?.longMessage || err?.errors?.[0]?.message || 'Sign in failed'
       setError(msg)
@@ -184,6 +222,28 @@ export default function SignInScreen() {
       setLoading(false)
     }
   }, [isLoaded, signIn, setActive, email, password])
+
+  const handleVerifyCode = useCallback(async () => {
+    if (!isLoaded || !signIn) return
+    setError('')
+    setLoading(true)
+    try {
+      const result = await signIn.attemptFirstFactor({
+        strategy: 'email_code',
+        code,
+      })
+      if (result.status === 'complete' && setActive) {
+        await setActive({ session: result.createdSessionId })
+      } else {
+        setError('Verification failed. Please try again.')
+      }
+    } catch (err: any) {
+      const msg = err?.errors?.[0]?.longMessage || err?.errors?.[0]?.message || 'Verification failed'
+      setError(msg)
+    } finally {
+      setLoading(false)
+    }
+  }, [isLoaded, signIn, setActive, code])
 
   useEffect(() => {
     if (isSignedIn) {
@@ -208,6 +268,95 @@ export default function SignInScreen() {
 
   if (isSignedIn) {
     return null
+  }
+
+  if (pendingVerification) {
+    return (
+      <View style={styles.root}>
+        <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+        <LinearGradient
+          colors={['#0a0a0a', '#0f0520', '#0a0a0a']}
+          locations={[0, 0.5, 1]}
+          style={StyleSheet.absoluteFillObject}
+        />
+        <View style={styles.glowOrb} />
+
+        <SafeAreaView style={styles.safeArea}>
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+            style={{ flex: 1 }}
+          >
+            <View style={styles.verifyContent}>
+              <View style={styles.authCard}>
+                <Text style={styles.authCardTitle}>Check your email</Text>
+                <Text style={styles.authCardSubtitle}>
+                  We sent a verification code to {email}
+                </Text>
+
+                <View style={otpStyles.container}>
+                  <TextInput
+                    ref={otpInputRef}
+                    style={otpStyles.hiddenInput}
+                    value={code}
+                    onChangeText={(text) => setCode(text.replace(/[^0-9]/g, '').slice(0, 6))}
+                    keyboardType="number-pad"
+                    textContentType="oneTimeCode"
+                    autoFocus
+                    maxLength={6}
+                  />
+                  <View style={otpStyles.boxes}>
+                    {[0, 1, 2, 3, 4, 5].map((i) => (
+                      <TouchableOpacity
+                        key={i}
+                        style={[
+                          otpStyles.box,
+                          code.length === i && otpStyles.boxFocused,
+                          code.length > i && otpStyles.boxFilled,
+                        ]}
+                        activeOpacity={1}
+                        onPress={() => otpInputRef.current?.focus()}
+                      >
+                        <Text style={[otpStyles.digit, code.length > i && otpStyles.digitFilled]}>
+                          {code[i] || ''}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+
+                {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
+                <TouchableOpacity
+                  style={[styles.emailButton, loading && { opacity: 0.6 }]}
+                  onPress={handleVerifyCode}
+                  activeOpacity={0.7}
+                  disabled={loading || !code}
+                >
+                  {loading ? (
+                    <ActivityIndicator color="#FFFFFF" size="small" />
+                  ) : (
+                    <Text style={styles.emailButtonText}>Verify & Sign In</Text>
+                  )}
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={() => {
+                    setPendingVerification(false)
+                    setCode('')
+                    setError('')
+                  }}
+                  style={{ marginTop: 16, alignItems: 'center' }}
+                >
+                  <Text style={styles.linkText}>
+                    <Text style={styles.linkAccent}>Go back</Text>
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </KeyboardAvoidingView>
+        </SafeAreaView>
+      </View>
+    )
   }
 
   return (
@@ -377,6 +526,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 28,
     paddingVertical: 20,
   },
+  verifyContent: {
+    flex: 1,
+    justifyContent: 'center',
+    paddingHorizontal: 28,
+  },
 
   // Header
   header: {
@@ -491,6 +645,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#FFFFFF',
   },
+  codeInput: {
+    textAlign: 'center',
+    fontSize: 24,
+    letterSpacing: 8,
+    marginBottom: 12,
+  },
   errorText: {
     fontSize: 13,
     color: '#EF4444',
@@ -525,5 +685,48 @@ const styles = StyleSheet.create({
   linkAccent: {
     color: BRAND,
     fontWeight: '600',
+  },
+})
+
+const otpStyles = StyleSheet.create({
+  container: {
+    marginBottom: 16,
+  },
+  hiddenInput: {
+    position: 'absolute',
+    opacity: 0,
+    height: 0,
+    width: 0,
+  },
+  boxes: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  box: {
+    width: 44,
+    height: 52,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.12)',
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  boxFocused: {
+    borderColor: BRAND,
+    backgroundColor: 'rgba(139,92,246,0.08)',
+  },
+  boxFilled: {
+    borderColor: 'rgba(255,255,255,0.25)',
+    backgroundColor: 'rgba(255,255,255,0.08)',
+  },
+  digit: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  digitFilled: {
+    color: '#FFFFFF',
   },
 })

@@ -1,40 +1,41 @@
-import { useState, useCallback, useRef, useEffect } from 'react'
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  TextInput,
-  StyleSheet,
-  ActivityIndicator,
-  Alert,
-  StatusBar,
-  KeyboardAvoidingView,
-  Platform,
-  Modal,
-  FlatList,
-  Dimensions,
-} from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import { Image } from 'expo-image'
-import { LinearGradient } from 'expo-linear-gradient'
-import * as ImagePicker from 'expo-image-picker'
-import { useRouter } from 'expo-router'
-import Svg, {
-  Path as SvgPath,
-  Rect,
-  Circle,
-  Defs,
-  Stop,
-  LinearGradient as SvgLinearGradient,
-} from 'react-native-svg'
-import { useProductEnhancerStore, GOAL_MAP, AI_MODELS, getModelCredits, type GoalId, type ImageModelId } from '@/stores/use-product-enhancer-store'
-import { useCreditsStore } from '@/stores/use-credits-store'
-import { useTermsConsentStore } from '@/stores/use-terms-consent-store'
-import { uploadImage } from '@/lib/upload'
+import { CreateIntroModal } from '@/components/create-intro-modal'
+import { ParticleSphere } from '@/components/particle-sphere'
 import { analyzeProduct, enhanceProduct } from '@/lib/api'
 import { CONFIG } from '@/lib/config'
-import { ParticleSphere } from '@/components/particle-sphere'
+import { uploadImage } from '@/lib/upload'
+import { useCreditsStore } from '@/stores/use-credits-store'
+import { AI_MODELS, getModelCredits, GOAL_MAP, useProductEnhancerStore, type GoalId, type ImageModelId } from '@/stores/use-product-enhancer-store'
+import { useTermsConsentStore } from '@/stores/use-terms-consent-store'
+import { Image } from 'expo-image'
+import * as ImagePicker from 'expo-image-picker'
+import { LinearGradient } from 'expo-linear-gradient'
+import { useRouter } from 'expo-router'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import {
+  ActivityIndicator,
+  Alert,
+  Dimensions,
+  FlatList,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
+import Svg, {
+  Circle,
+  Defs,
+  Rect,
+  Stop,
+  LinearGradient as SvgLinearGradient,
+  Path as SvgPath,
+} from 'react-native-svg'
 
 const BRAND = '#8B5CF6'
 const BRAND_CYAN = '#06B6D4'
@@ -224,10 +225,10 @@ const CARD_SNAP = CARD_W + CARD_GAP
 const GOALS: { id: GoalId; label: string; description: string; preview: string }[] = [
   { id: 'instagram-feed', label: 'Instagram Feed', description: '3x3 grid for carousels', preview: 'instagram_feed.png' },
   { id: 'product-advantages', label: 'Product Advantages', description: 'Highlight key features', preview: 'product_advantages.png' },
-  { id: 'elements', label: 'Creative Elements', description: 'Artistic product composition', preview: 'creative_elements.png' },
-  { id: 'printable-poster', label: 'Printable Poster', description: 'Print-ready poster design', preview: 'printable_poster.png' },
+  { id: 'elements', label: 'Creative Elements', description: 'Artistic product composition', preview: 'elements-image.png' },
+  { id: 'printable-poster', label: 'Printable Poster', description: 'Print-ready poster design', preview: 'poster.png' },
   { id: 'food-photography', label: 'Food Photography', description: 'Appetizing food shots', preview: 'food_photography.png' },
-  { id: 'professional-photo', label: 'Professional Photo', description: 'Clean product shot', preview: 'professional_photo.png' },
+  { id: 'professional-photo', label: 'Professional Photo', description: 'Clean product shot', preview: 'pro-photo.png' },
 ]
 
 function ChevronDownIcon() {
@@ -370,10 +371,10 @@ export default function CreateScreen() {
         generationMode: store.generationMode,
         secondImageConfig: goalConfig?.secondImageType
           ? {
-              type: goalConfig.secondImageType,
-              elementsConfig: store.secondImageConfig.elementsConfig,
-              posterConfig: store.secondImageConfig.posterConfig as Record<string, unknown> | undefined,
-            }
+            type: goalConfig.secondImageType,
+            elementsConfig: store.secondImageConfig.elementsConfig,
+            posterConfig: store.secondImageConfig.posterConfig as Record<string, unknown> | undefined,
+          }
           : undefined,
         promptCustomizations: store.promptCustomizations,
         seedreamConfig: store.seedreamConfig,
@@ -461,9 +462,9 @@ export default function CreateScreen() {
               <View style={styles.resultSection}>
                 <Text style={styles.resultLabel}>
                   {store.selectedGoalId === 'instagram-feed' ? '3x3 Grid' :
-                   store.selectedGoalId === 'elements' ? 'Elements' :
-                   store.selectedGoalId === 'printable-poster' ? 'Poster' :
-                   'Styled Image'}
+                    store.selectedGoalId === 'elements' ? 'Elements' :
+                      store.selectedGoalId === 'printable-poster' ? 'Poster' :
+                        'Styled Image'}
                 </Text>
                 <TouchableOpacity
                   activeOpacity={0.9}
@@ -506,6 +507,7 @@ export default function CreateScreen() {
 
   return (
     <View style={styles.root}>
+      <CreateIntroModal />
       <StatusBar barStyle="light-content" />
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         <KeyboardAvoidingView
