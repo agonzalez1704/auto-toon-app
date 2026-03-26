@@ -207,8 +207,9 @@ export interface Asset {
   productName: string
   heroImageUrl: string | null
   vignetteImageUrl: string | null
+  originalImageUrl?: string | null // original image for restore before/after
   upscaledUrls: string[]
-  secondImageType: 'vignette' | 'elements' | 'poster' | '3x3' | 'food' | 'none' | 'upscale_batch'
+  secondImageType: 'vignette' | 'elements' | 'poster' | '3x3' | 'food' | 'none' | 'upscale_batch' | 'restore'
   createdAt: string
 }
 export async function getAssets() {

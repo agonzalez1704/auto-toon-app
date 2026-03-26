@@ -1,53 +1,78 @@
-import { useCallback, useRef, useState } from 'react'
-import { View, StyleSheet, Dimensions, PanResponder, LayoutChangeEvent } from 'react-native'
+import { useCallback, useRef, useMemo } from 'react'
+import { View, StyleSheet, LayoutChangeEvent, PanResponder } from 'react-native'
 import { Image } from 'expo-image'
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
-  withSpring,
+  withDelay,
+  withTiming,
+  withSequence,
+  cancelAnimation,
+  Easing,
 } from 'react-native-reanimated'
 import Svg, { Path as SvgPath } from 'react-native-svg'
 
 const HANDLE_SIZE = 40
-const MIN_PCT = 0.1
-const MAX_PCT = 0.9
+const HANDLE_HALF = HANDLE_SIZE / 2
 
 interface BeforeAfterSliderProps {
   beforeUri: string
   afterUri: string
   height?: number
+  /** Animate slider from right→left on mount to reveal the "after" image */
+  revealOnMount?: boolean
 }
 
-export function BeforeAfterSlider({ beforeUri, afterUri, height: propHeight }: BeforeAfterSliderProps) {
-  const [containerWidth, setContainerWidth] = useState(Dimensions.get('window').width - 32)
-  const [containerHeight, setContainerHeight] = useState(propHeight ?? 400)
-  const sliderX = useSharedValue(containerWidth * 0.5)
+export function BeforeAfterSlider({ beforeUri, afterUri, height: propHeight, revealOnMount }: BeforeAfterSliderProps) {
+  const widthRef = useRef(300)
+  const sliderX = useSharedValue(150)
+  const didReveal = useRef(false)
 
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: () => true,
-      onPanResponderGrant: () => {},
-      onPanResponderMove: (_evt, gestureState) => {
-        const newX = Math.max(
-          containerWidth * MIN_PCT,
-          Math.min(containerWidth * MAX_PCT, gestureState.moveX - 16) // 16 = horizontal padding
-        )
-        sliderX.value = newX
-      },
-      onPanResponderRelease: () => {},
-    })
-  ).current
+  const clamp = useCallback((x: number) => {
+    const w = widthRef.current
+    return Math.max(HANDLE_HALF, Math.min(w - HANDLE_HALF, x))
+  }, [])
+
+  // PanResponder with native gesture blocking — created once, reads from refs
+  const panResponder = useMemo(() => PanResponder.create({
+    onStartShouldSetPanResponder: () => true,
+    onMoveShouldSetPanResponder: () => true,
+    onPanResponderTerminationRequest: () => false,
+    onShouldBlockNativeResponder: () => true,
+    onPanResponderGrant: (e) => {
+      cancelAnimation(sliderX)
+      sliderX.value = clamp(e.nativeEvent.locationX)
+    },
+    onPanResponderMove: (e) => {
+      sliderX.value = clamp(e.nativeEvent.locationX)
+    },
+  }), [sliderX, clamp])
 
   const onLayout = useCallback(
     (e: LayoutChangeEvent) => {
-      const { width, height } = e.nativeEvent.layout
-      setContainerWidth(width)
-      setContainerHeight(propHeight ?? height)
-      sliderX.value = width * 0.5
+      const { width } = e.nativeEvent.layout
+      widthRef.current = width
+
+      if (revealOnMount && !didReveal.current) {
+        didReveal.current = true
+        sliderX.value = width - HANDLE_HALF
+        sliderX.value = withDelay(
+          400,
+          withSequence(
+            withTiming(HANDLE_HALF, { duration: 1000, easing: Easing.out(Easing.cubic) }),
+            withDelay(300,
+              withTiming(width * 0.5, { duration: 500, easing: Easing.inOut(Easing.quad) })
+            )
+          )
+        )
+      } else if (!didReveal.current) {
+        sliderX.value = width * 0.5
+      }
     },
-    [propHeight, sliderX]
+    [sliderX, revealOnMount]
   )
+
+  const containerHeight = propHeight ?? 400
 
   const clipStyle = useAnimatedStyle(() => ({
     width: sliderX.value,
@@ -58,19 +83,22 @@ export function BeforeAfterSlider({ beforeUri, afterUri, height: propHeight }: B
   }))
 
   const handleStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: sliderX.value - HANDLE_SIZE / 2 }],
+    transform: [{ translateX: sliderX.value - HANDLE_HALF }],
   }))
 
   const beforeLabelStyle = useAnimatedStyle(() => ({
-    opacity: sliderX.value > containerWidth * 0.25 ? 1 : 0,
+    opacity: sliderX.value > widthRef.current * 0.25 ? 1 : 0,
   }))
 
   const afterLabelStyle = useAnimatedStyle(() => ({
-    opacity: sliderX.value < containerWidth * 0.75 ? 1 : 0,
+    opacity: sliderX.value < widthRef.current * 0.75 ? 1 : 0,
   }))
 
   return (
-    <View style={[styles.container, { height: containerHeight }]} onLayout={onLayout}>
+    <View
+      style={[styles.container, { height: containerHeight }]}
+      onLayout={onLayout}
+    >
       {/* After image (full, underneath) */}
       <Image source={{ uri: afterUri }} style={styles.image} contentFit="cover" transition={200} />
 
@@ -78,7 +106,7 @@ export function BeforeAfterSlider({ beforeUri, afterUri, height: propHeight }: B
       <Animated.View style={[styles.clipContainer, clipStyle]}>
         <Image
           source={{ uri: beforeUri }}
-          style={[styles.image, { width: containerWidth }]}
+          style={[styles.image, { width: widthRef.current }]}
           contentFit="cover"
           transition={200}
         />
@@ -89,8 +117,7 @@ export function BeforeAfterSlider({ beforeUri, afterUri, height: propHeight }: B
 
       {/* Drag handle */}
       <Animated.View
-        style={[styles.handleContainer, { top: containerHeight / 2 - HANDLE_SIZE / 2 }, handleStyle]}
-        {...panResponder.panHandlers}
+        style={[styles.handleContainer, { top: containerHeight / 2 - HANDLE_HALF }, handleStyle]}
       >
         <View style={styles.handle}>
           <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
@@ -105,6 +132,9 @@ export function BeforeAfterSlider({ beforeUri, afterUri, height: propHeight }: B
       {/* Labels */}
       <Animated.Text style={[styles.label, styles.labelBefore, beforeLabelStyle]}>Before</Animated.Text>
       <Animated.Text style={[styles.label, styles.labelAfter, afterLabelStyle]}>After</Animated.Text>
+
+      {/* Touch capture overlay — above everything, captures all touches */}
+      <View style={styles.touchOverlay} {...panResponder.panHandlers} />
     </View>
   )
 }
@@ -147,7 +177,7 @@ const styles = StyleSheet.create({
   handle: {
     width: HANDLE_SIZE,
     height: HANDLE_SIZE,
-    borderRadius: HANDLE_SIZE / 2,
+    borderRadius: HANDLE_HALF,
     backgroundColor: 'rgba(0,0,0,0.6)',
     borderWidth: 2,
     borderColor: '#FFFFFF',
@@ -172,5 +202,9 @@ const styles = StyleSheet.create({
   },
   labelAfter: {
     right: 12,
+  },
+  touchOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 20,
   },
 })

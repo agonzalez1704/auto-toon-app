@@ -20,10 +20,11 @@ import { queryKeys } from '@/lib/query'
 
 const BRAND = '#8B5CF6'
 
-type FilterType = 'all' | 'vignette' | 'elements' | 'poster' | '3x3' | 'food' | 'upscaled'
+type FilterType = 'all' | 'vignette' | 'elements' | 'poster' | '3x3' | 'food' | 'upscaled' | 'restored'
 
 const FILTERS: { value: FilterType; label: string }[] = [
   { value: 'all', label: 'All' },
+  { value: 'restored', label: 'Restored' },
   { value: 'vignette', label: 'Vignette' },
   { value: 'elements', label: 'Elements' },
   { value: 'poster', label: 'Poster' },
@@ -39,6 +40,7 @@ const TYPE_LABELS: Record<string, string> = {
   '3x3': '3x3 Grid',
   food: 'Food',
   upscale_batch: 'Upscaled',
+  restore: 'Restored',
   none: 'Photo',
 }
 
@@ -115,6 +117,7 @@ export default function AssetsScreen() {
   const filteredItems = useMemo(() => {
     if (filter === 'all') return displayItems
     if (filter === 'upscaled') return displayItems.filter((d) => !!d.batchUrls)
+    if (filter === 'restored') return displayItems.filter((d) => d.asset?.secondImageType === 'restore')
     return displayItems.filter(
       (d) => !d.batchUrls && d.asset?.secondImageType === filter
     )
@@ -156,6 +159,15 @@ export default function AssetsScreen() {
           params: {
             urls: JSON.stringify(item.batchUrls),
             initialIndex: String(item.batchIndex ?? 0),
+            title: item.productName,
+          },
+        })
+      } else if (item.asset?.secondImageType === 'restore' && item.asset.originalImageUrl) {
+        router.push({
+          pathname: '/restore-viewer',
+          params: {
+            beforeUrl: item.asset.originalImageUrl,
+            afterUrl: item.imageUrl,
             title: item.productName,
           },
         })
