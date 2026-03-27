@@ -2,6 +2,9 @@ import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import type { AnalysisResult } from '@/lib/api'
+import { AI_MODELS } from '@/lib/ai-models'
+
+export { AI_MODELS }
 
 // ─── Types ──────────────────────────────────────────────────────────
 
@@ -150,19 +153,8 @@ export const DEFAULT_POSTER_CONFIG: PosterConfig = {
   textAlignment: 'center',
 }
 
-export const AI_MODELS: Record<ImageModelId, {
-  id: string
-  name: string
-  credits: number
-}> = {
-  GEMINI_3_IMAGE: { id: 'gemini-3-pro-image-preview', name: 'Nano Banana Pro', credits: 3 },
-  GEMINI_3_1_FLASH_IMAGE: { id: 'gemini-3.1-flash-image-preview', name: 'Nano Banana 2', credits: 3 },
-  SEEDREAM_4_5: { id: 'bytedance/seedream-4.5', name: 'SeeDream 4.5', credits: 1 },
-  SEEDREAM_5_LITE: { id: 'bytedance/seedream-5-lite', name: 'SeeDream 5 Lite', credits: 2 },
-}
-
-export function getModelCredits(modelId: ImageModelId): number {
-  return AI_MODELS[modelId]?.credits ?? 3
+export function getModelCredits(modelKey: ImageModelId): number {
+  return AI_MODELS[modelKey].credits ?? 3
 }
 
 // ─── Store ──────────────────────────────────────────────────────────

@@ -39,6 +39,21 @@ function RestoreIcon({ color }: { color: string }) {
   )
 }
 
+function ModelIcon({ color }: { color: string }) {
+  return (
+    <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
+      {/* Head */}
+      <Circle cx="12" cy="7" r="4" fill={color} opacity={color === BRAND ? 1 : 0.7} />
+      {/* Body */}
+      <SvgPath
+        d="M5.5 21c0-3.59 2.91-6.5 6.5-6.5s6.5 2.91 6.5 6.5"
+        fill={color}
+        opacity={color === BRAND ? 1 : 0.7}
+      />
+    </Svg>
+  )
+}
+
 function GalleryIcon({ color }: { color: string }) {
   return (
     <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
@@ -96,6 +111,14 @@ export default function TabLayout() {
           title: 'Restore',
           headerShown: false,
           tabBarIcon: ({ color }) => <RestoreIcon color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="models"
+        options={{
+          title: 'Models',
+          headerShown: false,
+          tabBarIcon: ({ color }) => <ModelIcon color={color} />,
         }}
       />
       <Tabs.Screen

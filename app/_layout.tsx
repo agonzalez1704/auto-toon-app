@@ -108,6 +108,14 @@ export default function RootLayout() {
                   options={{ headerShown: false, presentation: 'modal', animation: 'fade', gestureEnabled: false }}
                 />
                 <Stack.Screen
+                  name="model-wizard"
+                  options={{ headerShown: false, presentation: 'modal', animation: 'slide_from_bottom' }}
+                />
+                <Stack.Screen
+                  name="model-result"
+                  options={{ headerShown: false, presentation: 'modal', animation: 'fade' }}
+                />
+                <Stack.Screen
                   name="welcome"
                   options={{ headerShown: false, presentation: 'modal', animation: 'fade', gestureEnabled: false }}
                 />

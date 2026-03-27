@@ -257,6 +257,64 @@ export async function upscaleGrid(imageUrl: string, indices: number[], productNa
   return data
 }
 
+// Generate fashion model
+export interface GenerateModelRequest {
+  prompt: string
+  width?: number
+  height?: number
+  output_format?: 'jpg' | 'png' | 'webp'
+  guidance_scale?: number
+  output_quality?: number
+  num_inference_steps?: number
+  aiModelId?: string
+  image?: string
+  imageBase64?: string
+}
+export interface GenerateModelResponse {
+  imageUrl: string
+  creditsRemaining: number
+  success: boolean
+}
+export async function generateFashionModel(data: GenerateModelRequest) {
+  const { data: result } = await api.post<GenerateModelResponse>(
+    '/api/generate-fashion-model',
+    data
+  )
+  return result
+}
+
+// Analyze face photo (OpenAI Vision)
+export interface FaceAnalysisResponse {
+  subjectDescriptor: string
+  phenotype: string
+  style: string
+  fullPrompt: string
+}
+export async function analyzeFacePhoto(imageBase64: string) {
+  const { data } = await api.post<{ analysis: string }>(
+    '/api/fashion-model/analyze-photo',
+    { imageBase64 }
+  )
+  return JSON.parse(data.analysis) as FaceAnalysisResponse
+}
+
+// Analyze body photo (Gemini Vision)
+export interface BodyAnalysisResponse {
+  isPerson: boolean
+  bodyType: string
+  clothing: string
+  pose: string
+  accessories: string
+  footwear: string
+}
+export async function analyzeBodyPhoto(imageBase64: string) {
+  const { data } = await api.post<{ analysis: BodyAnalysisResponse }>(
+    '/api/fashion-model/analyze-body',
+    { imageBase64 }
+  )
+  return data.analysis
+}
+
 // Showcase images — hardcoded to avoid dependency on API availability
 // (staging has Vercel SSO protection, production may not have the route deployed yet)
 const SHOWCASE_BASE = 'https://auto-toon.com'
