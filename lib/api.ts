@@ -283,6 +283,33 @@ export async function generateFashionModel(data: GenerateModelRequest) {
   return result
 }
 
+// Generate character sheet
+export interface CharacterSheetRequest {
+  referenceImageUrl: string
+  modelName?: string
+  prompt: string
+  config?: Record<string, unknown>
+}
+export interface CharacterSheetResponse {
+  model: {
+    id: string
+    name: string
+    imageUrl: string
+    characterSheetUrl: string
+    prompt: string
+    config?: Record<string, unknown>
+  }
+  creditsRemaining: number
+}
+export async function generateCharacterSheet(data: CharacterSheetRequest) {
+  const { data: result } = await api.post<CharacterSheetResponse>(
+    '/api/fashion-model/generate-character-sheet',
+    data,
+    { timeout: 300_000 } // 5 min timeout for character sheet generation
+  )
+  return result
+}
+
 // Analyze face photo (OpenAI Vision)
 export interface FaceAnalysisResponse {
   subjectDescriptor: string

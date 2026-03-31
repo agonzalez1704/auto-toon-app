@@ -21,7 +21,8 @@ const GRID_GAP = 12
 const GRID_COLS = 2
 const CARD_W = (SCREEN_W - 32 - GRID_GAP) / GRID_COLS
 
-const BRAND = '#8B5CF6'
+const AURORA_NAVY = '#193153'
+const AURORA_MAGENTA = '#EB96FF'
 
 function PlusIcon() {
   return (
@@ -180,7 +181,7 @@ export default function ModelsScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#0a0a0f',
+    backgroundColor: AURORA_NAVY,
   },
   safeArea: {
     flex: 1,
@@ -201,7 +202,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: BRAND,
+    backgroundColor: AURORA_MAGENTA,
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 12,
@@ -234,7 +235,7 @@ const styles = StyleSheet.create({
   },
   ctaButton: {
     marginTop: 24,
-    backgroundColor: BRAND,
+    backgroundColor: AURORA_MAGENTA,
     paddingHorizontal: 24,
     paddingVertical: 14,
     borderRadius: 14,
@@ -271,7 +272,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     padding: 10,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(25,49,83,0.85)',
   },
   cardName: {
     fontSize: 13,

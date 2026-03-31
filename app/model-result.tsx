@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useState, useRef, useEffect } from 'react'
 import {
   View,
   Text,
@@ -20,11 +20,17 @@ import { useLocalSearchParams, useRouter } from 'expo-router'
 import * as FileSystem from 'expo-file-system/legacy'
 import * as MediaLibrary from 'expo-media-library'
 import Svg, { Path as SvgPath } from 'react-native-svg'
+import { LinearGradient } from 'expo-linear-gradient'
 import { useModelFactoryStore } from '@/stores/use-model-factory-store'
+import { useCreditsStore } from '@/stores/use-credits-store'
+import { generateCharacterSheet } from '@/lib/api'
+import { ParticleSphere } from '@/components/particle-sphere'
 
 const { width: SCREEN_W } = Dimensions.get('window')
 
-const BRAND = '#8B5CF6'
+const AURORA_NAVY = '#193153'
+const AURORA_MAGENTA = '#EB96FF'
+const AURORA_TEAL = '#0B5777'
 
 function CloseIcon() {
   return (
@@ -54,6 +60,25 @@ function DownloadIcon() {
   )
 }
 
+// ─── Character sheet timer ──────────────────────────────────────────
+
+function SheetTimer() {
+  const [elapsed, setElapsed] = useState(0)
+  const startRef = useRef(Date.now())
+
+  useEffect(() => {
+    startRef.current = Date.now()
+    setElapsed(0)
+    const interval = setInterval(
+      () => setElapsed(Math.floor((Date.now() - startRef.current) / 1000)),
+      1000
+    )
+    return () => clearInterval(interval)
+  }, [])
+
+  return <Text style={styles.sheetTimerText}>Generating character sheet... {elapsed}s</Text>
+}
+
 export default function ModelResultScreen() {
   const router = useRouter()
   const params = useLocalSearchParams<{
@@ -66,11 +91,13 @@ export default function ModelResultScreen() {
   const [isSaving, setIsSaving] = useState(false)
   const [showSaveDialog, setShowSaveDialog] = useState(false)
   const [modelName, setModelName] = useState(title || '')
+  const [isGeneratingSheet, setIsGeneratingSheet] = useState(false)
 
   const saveModel = useModelFactoryStore((s) => s.saveModel)
   const faceAnalysis = useModelFactoryStore((s) => s.faceAnalysis)
   const facePhotoUrl = useModelFactoryStore((s) => s.faceUploadedUrl)
   const bodyPhotoUrl = useModelFactoryStore((s) => s.bodyUploadedUrl)
+  const fetchCredits = useCreditsStore((s) => s.fetchCredits)
 
   const saveToPhotos = useCallback(async () => {
     if (!imageUrl) return
@@ -121,11 +148,14 @@ export default function ModelResultScreen() {
     setShowSaveDialog(true)
   }, [])
 
-  const confirmSaveToGallery = useCallback(() => {
+  const confirmSaveToGallery = useCallback(async () => {
     if (!imageUrl) return
     const name = modelName.trim() || 'Untitled Model'
+
+    // Save locally first (without character sheet)
+    const modelId = Date.now().toString()
     saveModel({
-      id: Date.now().toString(),
+      id: modelId,
       name,
       imageUrl,
       prompt: faceAnalysis?.fullPrompt || '',
@@ -134,17 +164,69 @@ export default function ModelResultScreen() {
       createdAt: new Date().toISOString(),
     })
     setShowSaveDialog(false)
-    Alert.alert('Saved', `"${name}" has been added to your models gallery.`)
-  }, [imageUrl, modelName, faceAnalysis, facePhotoUrl, bodyPhotoUrl, saveModel])
+
+    // Now trigger character sheet generation in background
+    setIsGeneratingSheet(true)
+    try {
+      const result = await generateCharacterSheet({
+        referenceImageUrl: imageUrl,
+        modelName: name,
+        prompt: faceAnalysis?.fullPrompt || '',
+      })
+
+      // Update the saved model with character sheet URL
+      const store = useModelFactoryStore.getState()
+      const updated = store.savedModels.map((m) =>
+        m.id === modelId
+          ? { ...m, characterSheetUrl: result.model.characterSheetUrl }
+          : m
+      )
+      useModelFactoryStore.setState({ savedModels: updated })
+
+      // Update credits
+      useCreditsStore.getState().setCredits(result.creditsRemaining)
+      fetchCredits()
+
+      Alert.alert(
+        'Model Saved',
+        `"${name}" has been saved with a character reference sheet for consistent generations.`
+      )
+    } catch (error: any) {
+      // Model is already saved locally — character sheet just failed
+      Alert.alert(
+        'Saved (Partial)',
+        `"${name}" has been saved, but the character sheet could not be generated. You can regenerate it later.\n\n${error?.message || ''}`
+      )
+    } finally {
+      setIsGeneratingSheet(false)
+    }
+  }, [imageUrl, modelName, faceAnalysis, facePhotoUrl, bodyPhotoUrl, saveModel, fetchCredits])
 
   const handleRefine = useCallback(() => {
-    // Form is already loaded in store from the generation, just go back to wizard
     router.push('/model-wizard')
   }, [router])
 
   if (!imageUrl) {
     router.back()
     return null
+  }
+
+  // Character sheet generation loading screen
+  if (isGeneratingSheet) {
+    return (
+      <View style={styles.root}>
+        <StatusBar barStyle="light-content" />
+        <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+          <View style={styles.sheetLoadingScreen}>
+            <ParticleSphere width={140} height={140} phase="generating" />
+            <SheetTimer />
+            <Text style={styles.sheetLoadingHint}>
+              Creating multi-angle reference sheet for consistent future generations
+            </Text>
+          </View>
+        </SafeAreaView>
+      </View>
+    )
   }
 
   const imageHeight = (SCREEN_W - 32) * (4 / 3)
@@ -198,6 +280,12 @@ export default function ModelResultScreen() {
             onPress={handleSaveToGallery}
             activeOpacity={0.7}
           >
+            <LinearGradient
+              colors={[AURORA_MAGENTA, '#9333EA', AURORA_TEAL]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={StyleSheet.absoluteFillObject}
+            />
             <Text style={[styles.actionButtonText, styles.actionButtonTextPrimary]}>
               Save to Models
             </Text>
@@ -213,6 +301,9 @@ export default function ModelResultScreen() {
         >
           <View style={styles.dialogBox}>
             <Text style={styles.dialogTitle}>Save Model</Text>
+            <Text style={styles.dialogSubtitle}>
+              A character reference sheet will be generated automatically for face consistency.
+            </Text>
             <TextInput
               style={styles.dialogInput}
               value={modelName}
@@ -232,6 +323,12 @@ export default function ModelResultScreen() {
                 style={[styles.dialogButton, styles.dialogButtonPrimary]}
                 onPress={confirmSaveToGallery}
               >
+                <LinearGradient
+                  colors={[AURORA_MAGENTA, '#9333EA']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={[StyleSheet.absoluteFillObject, { borderRadius: 12 }]}
+                />
                 <Text style={[styles.dialogButtonText, styles.dialogButtonTextPrimary]}>
                   Save
                 </Text>
@@ -254,7 +351,7 @@ export default function ModelResultScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#0a0a0f',
+    backgroundColor: AURORA_NAVY,
   },
   safeArea: {
     flex: 1,
@@ -302,9 +399,11 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     backgroundColor: 'rgba(255,255,255,0.1)',
     alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
   },
   actionButtonPrimary: {
-    backgroundColor: BRAND,
+    backgroundColor: AURORA_MAGENTA,
   },
   actionButtonText: {
     fontSize: 15,
@@ -318,30 +417,36 @@ const styles = StyleSheet.create({
   // Save dialog
   dialogOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.7)',
+    backgroundColor: 'rgba(25,49,83,0.85)',
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 32,
   },
   dialogBox: {
     width: '100%',
-    backgroundColor: '#1a1a24',
+    backgroundColor: '#162844',
     borderRadius: 20,
     padding: 24,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    borderColor: 'rgba(235,150,255,0.15)',
   },
   dialogTitle: {
     fontSize: 18,
     fontWeight: '700',
     color: '#FFFFFF',
+    marginBottom: 6,
+  },
+  dialogSubtitle: {
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.45)',
     marginBottom: 16,
+    lineHeight: 18,
   },
   dialogInput: {
     backgroundColor: 'rgba(255,255,255,0.06)',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    borderColor: 'rgba(235,150,255,0.15)',
     paddingHorizontal: 14,
     paddingVertical: 12,
     fontSize: 15,
@@ -358,9 +463,11 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     backgroundColor: 'rgba(255,255,255,0.1)',
     alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
   },
   dialogButtonPrimary: {
-    backgroundColor: BRAND,
+    backgroundColor: AURORA_MAGENTA,
   },
   dialogButtonText: {
     fontSize: 15,
@@ -374,7 +481,7 @@ const styles = StyleSheet.create({
   // Saving overlay
   savingOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.6)',
+    backgroundColor: 'rgba(25,49,83,0.8)',
     justifyContent: 'center',
     alignItems: 'center',
     gap: 12,
@@ -383,5 +490,27 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
     color: '#FFFFFF',
+  },
+
+  // Character sheet loading
+  sheetLoadingScreen: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 16,
+    paddingHorizontal: 32,
+  },
+  sheetTimerText: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginTop: 16,
+    textAlign: 'center',
+  },
+  sheetLoadingHint: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.4)',
+    textAlign: 'center',
+    lineHeight: 20,
   },
 })

@@ -25,5 +25,6 @@ export interface SavedModel {
   prompt: string
   facePhotoUrl?: string
   bodyPhotoUrl?: string
+  characterSheetUrl?: string
   createdAt: string
 }

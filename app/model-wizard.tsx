@@ -29,7 +29,9 @@ import {
 import { ParticleSphere } from '@/components/particle-sphere'
 import { AI_MODELS, getModelCredits } from '@/lib/ai-models'
 
-const BRAND = '#8B5CF6'
+const AURORA_NAVY = '#193153'
+const AURORA_MAGENTA = '#EB96FF'
+const AURORA_TEAL = '#0B5777'
 
 // ─── Icons ──────────────────────────────────────────────────────────
 
@@ -480,7 +482,7 @@ export default function ModelWizardScreen() {
               <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
                 <SvgPath
                   d="M12 2L15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2z"
-                  fill="#FFD700"
+                  fill={AURORA_MAGENTA}
                 />
               </Svg>
               <Text style={styles.creditsText}>{balance}</Text>
@@ -589,7 +591,7 @@ export default function ModelWizardScreen() {
           >
             {canGenerate && (
               <LinearGradient
-                colors={['#7C3AED', '#06B6D4']}
+                colors={[AURORA_MAGENTA, '#9333EA', AURORA_TEAL]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={StyleSheet.absoluteFillObject}
@@ -623,7 +625,7 @@ export default function ModelWizardScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#0a0a0f',
+    backgroundColor: AURORA_NAVY,
   },
   safeArea: {
     flex: 1,
@@ -661,7 +663,7 @@ const styles = StyleSheet.create({
   creditsText: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#FFD700',
+    color: AURORA_MAGENTA,
   },
   scrollContent: {
     padding: 20,
@@ -724,7 +726,7 @@ const styles = StyleSheet.create({
   },
   uploadOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(25,49,83,0.7)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -741,7 +743,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: 'rgba(0,0,0,0.6)',
+    backgroundColor: 'rgba(25,49,83,0.8)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -778,8 +780,8 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   modeCardSelected: {
-    borderColor: BRAND,
-    backgroundColor: 'rgba(139,92,246,0.08)',
+    borderColor: AURORA_MAGENTA,
+    backgroundColor: 'rgba(235,150,255,0.1)',
   },
   modeRadio: {
     width: 20,
@@ -794,7 +796,7 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: BRAND,
+    backgroundColor: AURORA_MAGENTA,
   },
   modeTextContainer: {
     flex: 1,
