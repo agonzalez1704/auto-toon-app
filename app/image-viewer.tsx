@@ -19,7 +19,9 @@ import { Image } from 'expo-image'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import * as FileSystem from 'expo-file-system/legacy'
 import * as MediaLibrary from 'expo-media-library'
-import Svg, { Path as SvgPath } from 'react-native-svg'
+import Svg, { Path as SvgPath, Rect } from 'react-native-svg'
+import { LinearGradient } from 'expo-linear-gradient'
+import { useVideoStore } from '@/stores/use-video-store'
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window')
 
@@ -35,6 +37,15 @@ function CloseIcon() {
         strokeLinecap="round"
         strokeLinejoin="round"
       />
+    </Svg>
+  )
+}
+
+function VideoIcon() {
+  return (
+    <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
+      <Rect x="2" y="4" width="15" height="16" rx="2" stroke="#FFFFFF" strokeWidth={2} fill="none" />
+      <SvgPath d="M17 9l5-3v12l-5-3V9z" stroke="#FFFFFF" strokeWidth={2} fill="none" strokeLinejoin="round" />
     </Svg>
   )
 }
@@ -257,9 +268,26 @@ export default function ImageViewerScreen() {
         </View>
       </SafeAreaView>
 
-      {/* Hint text at bottom */}
-      <SafeAreaView style={styles.bottomOverlay} edges={['bottom']} pointerEvents="none">
-        <Text style={styles.hintText}>Hold image to save or share</Text>
+      {/* Bottom overlay: Create Video + hint */}
+      <SafeAreaView style={styles.bottomOverlay} edges={['bottom']} pointerEvents="box-none">
+        <TouchableOpacity
+          style={styles.createVideoButton}
+          onPress={() => {
+            useVideoStore.getState().setSourceImage(urls[currentIndex], urls, title)
+            router.push('/video-generator')
+          }}
+          activeOpacity={0.8}
+        >
+          <LinearGradient
+            colors={['#EB96FF', '#9333EA', '#0B5777']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={StyleSheet.absoluteFillObject}
+          />
+          <VideoIcon />
+          <Text style={styles.createVideoText}>Create Video</Text>
+        </TouchableOpacity>
+        <Text style={styles.hintText} pointerEvents="none">Hold image to save or share</Text>
       </SafeAreaView>
 
       {/* Saving overlay */}
@@ -358,6 +386,21 @@ const styles = StyleSheet.create({
     right: 0,
     alignItems: 'center',
     paddingBottom: 8,
+    gap: 10,
+  },
+  createVideoButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+    borderRadius: 14,
+    overflow: 'hidden',
+  },
+  createVideoText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
   hintText: {
     fontSize: 13,

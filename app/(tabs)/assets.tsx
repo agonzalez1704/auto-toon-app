@@ -15,15 +15,17 @@ import { Image } from 'expo-image'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useRouter } from 'expo-router'
 import Svg, { Path as SvgPath } from 'react-native-svg'
-import { getAssets, deleteAsset, type Asset } from '@/lib/api'
+import { getAssets, getUserVideos, deleteAsset, type Asset, type VideoGeneration } from '@/lib/api'
 import { queryKeys } from '@/lib/query'
 
-const BRAND = '#8B5CF6'
+const AURORA_NAVY = '#193153'
+const AURORA_MAGENTA = '#EB96FF'
 
-type FilterType = 'all' | 'vignette' | 'elements' | 'poster' | '3x3' | 'food' | 'upscaled' | 'restored'
+type FilterType = 'all' | 'vignette' | 'elements' | 'poster' | '3x3' | 'food' | 'upscaled' | 'restored' | 'video'
 
 const FILTERS: { value: FilterType; label: string }[] = [
   { value: 'all', label: 'All' },
+  { value: 'video', label: 'Videos' },
   { value: 'restored', label: 'Restored' },
   { value: 'vignette', label: 'Vignette' },
   { value: 'elements', label: 'Elements' },
@@ -42,14 +44,17 @@ const TYPE_LABELS: Record<string, string> = {
   upscale_batch: 'Upscaled',
   restore: 'Restored',
   none: 'Photo',
+  video: 'Video',
 }
 
-// A display item is either a regular asset or an individual image from an upscale_batch
+// A display item is either a regular asset, an individual image from an upscale_batch, or a video
 interface DisplayItem {
   key: string
   imageUrl: string
   productName: string
   label: string
+  isVideo?: boolean
+  videoUrl?: string
   // For upscale_batch items: all URLs in the batch + index for swipe navigation
   batchUrls?: string[]
   batchIndex?: number
@@ -71,20 +76,60 @@ function UpscaleSmallIcon() {
   )
 }
 
+function PlaySmallIcon() {
+  return (
+    <Svg width={12} height={12} viewBox="0 0 24 24" fill="none">
+      <SvgPath
+        d="M5 3l14 9-14 9V3z"
+        fill="rgba(255,255,255,0.9)"
+        stroke="none"
+      />
+    </Svg>
+  )
+}
+
 export default function AssetsScreen() {
   const queryClient = useQueryClient()
   const router = useRouter()
   const [filter, setFilter] = useState<FilterType>('all')
   const [deletingId, setDeletingId] = useState<string | null>(null)
 
-  const { data: assets = [], isLoading, refetch } = useQuery({
+  const { data: assets = [], isLoading: assetsLoading, refetch: refetchAssets } = useQuery({
     queryKey: queryKeys.assets,
     queryFn: getAssets,
   })
 
-  // Flatten assets: upscale_batch assets become individual image cards
+  const { data: videos = [], isLoading: videosLoading, refetch: refetchVideos } = useQuery({
+    queryKey: queryKeys.videos,
+    queryFn: getUserVideos,
+  })
+
+  const isLoading = assetsLoading || videosLoading
+
+  const refetch = useCallback(() => {
+    refetchAssets()
+    refetchVideos()
+  }, [refetchAssets, refetchVideos])
+
+  // Flatten assets + videos into display items
   const displayItems: DisplayItem[] = useMemo(() => {
     const items: DisplayItem[] = []
+
+    // Add videos first
+    for (const video of videos) {
+      if (video.status === 'completed' && video.videoUrl) {
+        items.push({
+          key: `video_${video.id}`,
+          imageUrl: video.sourceImageUrl,
+          productName: video.motionPrompt ? `Video - ${video.motionPrompt.slice(0, 30)}` : 'Video',
+          label: 'Video',
+          isVideo: true,
+          videoUrl: video.videoUrl,
+        })
+      }
+    }
+
+    // Add assets
     for (const asset of assets) {
       if (asset.secondImageType === 'upscale_batch' && asset.upscaledUrls?.length > 0) {
         for (let i = 0; i < asset.upscaledUrls.length; i++) {
@@ -112,14 +157,15 @@ export default function AssetsScreen() {
       }
     }
     return items
-  }, [assets])
+  }, [assets, videos])
 
   const filteredItems = useMemo(() => {
     if (filter === 'all') return displayItems
+    if (filter === 'video') return displayItems.filter((d) => d.isVideo)
     if (filter === 'upscaled') return displayItems.filter((d) => !!d.batchUrls)
     if (filter === 'restored') return displayItems.filter((d) => d.asset?.secondImageType === 'restore')
     return displayItems.filter(
-      (d) => !d.batchUrls && d.asset?.secondImageType === filter
+      (d) => !d.batchUrls && !d.isVideo && d.asset?.secondImageType === filter
     )
   }, [displayItems, filter])
 
@@ -153,7 +199,15 @@ export default function AssetsScreen() {
 
   const handlePress = useCallback(
     (item: DisplayItem) => {
-      if (item.batchUrls) {
+      if (item.isVideo && item.videoUrl) {
+        router.push({
+          pathname: '/video-player',
+          params: {
+            videoUrl: item.videoUrl,
+            title: item.productName,
+          },
+        })
+      } else if (item.batchUrls) {
         router.push({
           pathname: '/image-viewer',
           params: {
@@ -215,6 +269,11 @@ export default function AssetsScreen() {
               <UpscaleSmallIcon />
             </View>
           )}
+          {item.isVideo && (
+            <View style={styles.videoBadge}>
+              <PlaySmallIcon />
+            </View>
+          )}
           <View style={styles.assetInfo}>
             <Text style={styles.assetName} numberOfLines={1}>
               {item.productName}
@@ -240,65 +299,67 @@ export default function AssetsScreen() {
           <Text style={styles.pageTitle}>Assets</Text>
         </View>
 
-        <View style={styles.filterBar}>
-          {FILTERS.map((f) => {
-            const isActive = filter === f.value
-            return (
-              <TouchableOpacity
-                key={f.value}
-                style={[
-                  styles.filterChip,
-                  isActive && styles.filterChipActive,
-                ]}
-                onPress={() => setFilter(f.value)}
-                activeOpacity={0.7}
-              >
-                <Text
-                  style={[
-                    styles.filterLabel,
-                    isActive && styles.filterLabelActive,
-                  ]}
-                >
-                  {f.label}
+        <FlatList
+          data={filteredItems}
+          keyExtractor={(item) => item.key}
+          renderItem={renderItem}
+          numColumns={2}
+          columnWrapperStyle={styles.row}
+          contentContainerStyle={styles.list}
+          showsVerticalScrollIndicator={false}
+          ListHeaderComponent={
+            <View style={styles.filterBar}>
+              {FILTERS.map((f) => {
+                const isActive = filter === f.value
+                return (
+                  <TouchableOpacity
+                    key={f.value}
+                    style={[
+                      styles.filterChip,
+                      isActive && styles.filterChipActive,
+                    ]}
+                    onPress={() => setFilter(f.value)}
+                    activeOpacity={0.7}
+                  >
+                    <Text
+                      style={[
+                        styles.filterLabel,
+                        isActive && styles.filterLabelActive,
+                      ]}
+                    >
+                      {f.label}
+                    </Text>
+                  </TouchableOpacity>
+                )
+              })}
+            </View>
+          }
+          ListEmptyComponent={
+            isLoading ? (
+              <View style={styles.centered}>
+                <ActivityIndicator color={AURORA_MAGENTA} size="large" />
+              </View>
+            ) : (
+              <View style={styles.centered}>
+                <Text style={styles.emptyTitle}>
+                  {filter === 'all' ? 'No assets yet' : 'No matching assets'}
                 </Text>
-              </TouchableOpacity>
+                <Text style={styles.emptySubtitle}>
+                  {filter === 'all'
+                    ? 'Generate your first product image to see it here.'
+                    : 'Try a different filter.'}
+                </Text>
+              </View>
             )
-          })}
-        </View>
-
-        {isLoading ? (
-          <View style={styles.centered}>
-            <ActivityIndicator color={BRAND} size="large" />
-          </View>
-        ) : filteredItems.length === 0 ? (
-          <View style={styles.centered}>
-            <Text style={styles.emptyTitle}>
-              {filter === 'all' ? 'No assets yet' : 'No matching assets'}
-            </Text>
-            <Text style={styles.emptySubtitle}>
-              {filter === 'all'
-                ? 'Generate your first product image to see it here.'
-                : 'Try a different filter.'}
-            </Text>
-          </View>
-        ) : (
-          <FlatList
-            data={filteredItems}
-            keyExtractor={(item) => item.key}
-            renderItem={renderItem}
-            numColumns={2}
-            columnWrapperStyle={styles.row}
-            contentContainerStyle={styles.list}
-            showsVerticalScrollIndicator={false}
-            refreshControl={
-              <RefreshControl
-                refreshing={false}
-                onRefresh={() => refetch()}
-                tintColor={BRAND}
-              />
-            }
-          />
-        )}
+          }
+          refreshControl={
+            <RefreshControl
+              refreshing={false}
+              onRefresh={refetch}
+              tintColor={AURORA_MAGENTA}
+            />
+          }
+        />
       </SafeAreaView>
     </View>
   )
@@ -307,7 +368,7 @@ export default function AssetsScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#0a0a0f',
+    backgroundColor: AURORA_NAVY,
   },
   safeArea: { flex: 1 },
 
@@ -317,15 +378,15 @@ const styles = StyleSheet.create({
     paddingBottom: 4,
   },
   pageTitle: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: '800',
     color: '#FFFFFF',
   },
 
   filterBar: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 8,
-    paddingHorizontal: 16,
     paddingVertical: 12,
   },
   filterChip: {
@@ -337,8 +398,8 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.08)',
   },
   filterChipActive: {
-    backgroundColor: BRAND,
-    borderColor: BRAND,
+    backgroundColor: 'rgba(235,150,255,0.15)',
+    borderColor: AURORA_MAGENTA,
   },
   filterLabel: {
     fontSize: 13,
@@ -351,7 +412,7 @@ const styles = StyleSheet.create({
 
   list: {
     padding: 12,
-    paddingBottom: 40,
+    paddingBottom: 100,
   },
   row: {
     gap: 10,
@@ -380,6 +441,18 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  videoBadge: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: 'rgba(235,150,255,0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingLeft: 2,
+  },
   assetInfo: {
     padding: 12,
   },
@@ -405,6 +478,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 32,
+    paddingTop: 80,
   },
   emptyTitle: {
     fontSize: 18,

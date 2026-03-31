@@ -342,6 +342,195 @@ export async function analyzeBodyPhoto(imageBase64: string) {
   return data.analysis
 }
 
+// Video analysis (AI-driven prompt generation)
+export interface VideoAnalysisResult {
+  productName: string
+  productCategory: string
+  motionPrompt: string
+  cameraPreset: string
+  duration: 5 | 10
+  aspectRatio: '16:9' | '9:16' | '1:1'
+  creativeBrief: string
+  confidence: number
+}
+
+export async function analyzeProductForVideo(
+  imageUrl: string,
+  productName?: string,
+  productCategory?: string
+) {
+  const { data } = await api.post<{ success: boolean; result: VideoAnalysisResult }>(
+    '/api/fashion-editorial/video/analyze',
+    { imageUrl, productName, productCategory }
+  )
+  return data.result
+}
+
+// Video generation
+export interface VideoGenerateRequest {
+  sourceImageUrl: string
+  tailImageUrl?: string
+  motionPrompt?: string
+  duration?: 5 | 10
+  aspectRatio?: '16:9' | '9:16' | '1:1'
+  cameraPreset?: string
+  aiModel?: string
+}
+
+export interface VideoProgressEvent {
+  type: 'progress'
+  message: string
+  percent: number
+}
+
+export interface VideoSuccessEvent {
+  type: 'success'
+  videoUrl: string
+  videoGenerationId: string
+  lastFrameUrl: string | null
+  provider: string
+}
+
+export interface VideoErrorEvent {
+  type: 'error'
+  message: string
+}
+
+export interface VideoGeneration {
+  id: string
+  status: 'processing' | 'completed' | 'failed'
+  sourceImageUrl: string
+  videoUrl: string | null
+  duration: number
+  aspectRatio: string
+  motionPrompt: string | null
+  creditsCharged: number
+  createdAt: string
+}
+
+/**
+ * Start video generation via SSE stream.
+ * Uses XMLHttpRequest for React Native SSE compatibility.
+ * Returns an abort controller to cancel the request.
+ */
+export function generateVideoSSE(
+  params: VideoGenerateRequest,
+  callbacks: {
+    onProgress: (event: VideoProgressEvent) => void
+    onSuccess: (event: VideoSuccessEvent) => void
+    onError: (message: string) => void
+    onComplete?: () => void
+  }
+): { abort: () => void } {
+  const xhr = new XMLHttpRequest()
+  let buffer = ''
+
+  const parseSSEBuffer = () => {
+    const lines = buffer.split('\n')
+    buffer = lines.pop() || '' // Keep incomplete line in buffer
+
+    for (const line of lines) {
+      const trimmed = line.trim()
+      if (!trimmed.startsWith('data: ')) continue
+
+      try {
+        const data = JSON.parse(trimmed.slice(6))
+        if (data.type === 'progress') {
+          callbacks.onProgress(data as VideoProgressEvent)
+        } else if (data.type === 'success') {
+          callbacks.onSuccess(data as VideoSuccessEvent)
+        } else if (data.type === 'error') {
+          callbacks.onError((data as VideoErrorEvent).message)
+        } else if (data.type === 'complete') {
+          callbacks.onComplete?.()
+        }
+      } catch {
+        // Ignore malformed JSON lines
+      }
+    }
+  }
+
+  // We need to get the auth token before opening the request
+  const startRequest = async () => {
+    let authToken: string | null = null
+    if (tokenGetter) {
+      authToken = await tokenGetter()
+    }
+
+    xhr.open('POST', `${CONFIG.API_BASE_URL}/api/fashion-editorial/video/generate`)
+    xhr.setRequestHeader('Content-Type', 'application/json')
+    if (authToken) {
+      xhr.setRequestHeader('Authorization', `Bearer ${authToken}`)
+    }
+
+    let lastIndex = 0
+    let errorHandled = false
+
+    xhr.onreadystatechange = () => {
+      // When request completes, check for non-SSE error responses
+      if (xhr.readyState === 4 && !errorHandled) {
+        if (xhr.status !== 200) {
+          errorHandled = true
+          let message = 'Video generation failed'
+          try {
+            const body = JSON.parse(xhr.responseText)
+            message = body.error || message
+          } catch {
+            // Not JSON — use status text
+            if (xhr.statusText) message = xhr.statusText
+          }
+          callbacks.onError(`${message} (${xhr.status})`)
+          return
+        }
+      }
+
+      // Stream SSE data as it arrives
+      if (xhr.readyState >= 3 && xhr.responseText) {
+        const newText = xhr.responseText.substring(lastIndex)
+        lastIndex = xhr.responseText.length
+        if (newText) {
+          buffer += newText
+          parseSSEBuffer()
+        }
+      }
+    }
+
+    xhr.onerror = () => {
+      if (!errorHandled) {
+        errorHandled = true
+        callbacks.onError('Network error during video generation')
+      }
+    }
+
+    xhr.ontimeout = () => {
+      if (!errorHandled) {
+        errorHandled = true
+        callbacks.onError('Video generation request timed out')
+      }
+    }
+
+    xhr.timeout = 600_000 // 10 min timeout
+
+    xhr.send(JSON.stringify(params))
+  }
+
+  startRequest().catch((err) => {
+    callbacks.onError(err?.message || 'Failed to start video generation')
+  })
+
+  return {
+    abort: () => {
+      try { xhr.abort() } catch { /* ignore */ }
+    },
+  }
+}
+
+// Get user's generated videos
+export async function getUserVideos() {
+  const { data } = await api.get<{ videos: VideoGeneration[] }>('/api/fashion-editorial/videos')
+  return data.videos ?? []
+}
+
 // Showcase images — hardcoded to avoid dependency on API availability
 // (staging has Vercel SSO protection, production may not have the route deployed yet)
 const SHOWCASE_BASE = 'https://auto-toon.com'

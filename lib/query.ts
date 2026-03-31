@@ -16,4 +16,5 @@ export const queryKeys = {
   subscription: ['subscription'] as const,
   assets: ['assets'] as const,
   recentCreations: ['recent-creations'] as const,
+  videos: ['videos'] as const,
 }
