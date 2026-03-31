@@ -20,12 +20,16 @@ import Svg, {
 } from 'react-native-svg'
 
 const { width: SCREEN_W } = Dimensions.get('window')
-const BRAND = '#8B5CF6'
-const BRAND_CYAN = '#06B6D4'
+
+// Aurora Blossom palette
+const AURORA_NAVY = '#193153'
+const AURORA_TEAL = '#0B5777'
+const AURORA_MAGENTA = '#EB96FF'
+const AURORA_PINK = '#F9D4E0'
 
 // ─── Confetti Particle ──────────────────────────────────────────────────
 
-const CONFETTI_COLORS = ['#8B5CF6', '#06B6D4', '#FBBF24', '#F472B6', '#34D399', '#FB923C']
+const CONFETTI_COLORS = [AURORA_MAGENTA, AURORA_TEAL, '#FBBF24', AURORA_PINK, '#34D399', '#9333EA']
 
 function ConfettiParticle({ delay, color, left }: { delay: number; color: string; left: number }) {
   const translateY = useRef(new Animated.Value(-20)).current
@@ -75,8 +79,8 @@ function CreditsBadge() {
           <Stop offset="1" stopColor="#F59E0B" />
         </SvgLinearGradient>
         <SvgLinearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
-          <Stop offset="0" stopColor={BRAND} />
-          <Stop offset="1" stopColor={BRAND_CYAN} />
+          <Stop offset="0" stopColor={AURORA_MAGENTA} />
+          <Stop offset="1" stopColor={AURORA_TEAL} />
         </SvgLinearGradient>
       </Defs>
       {/* Outer glow ring */}
@@ -128,7 +132,7 @@ function SparkleSmall({ x, y, size, delay: d }: { x: number; y: number; size: nu
       <Svg width={size} height={size} viewBox="0 0 24 24">
         <SvgPath
           d="M12 2L13.5 9L20 10.5L13.5 12L12 19L10.5 12L4 10.5L10.5 9L12 2Z"
-          fill="#FBBF24"
+          fill={AURORA_PINK}
         />
       </Svg>
     </Animated.View>
@@ -190,8 +194,8 @@ export default function WelcomeScreen() {
   return (
     <View style={styles.root}>
       <LinearGradient
-        colors={['#0a0a0f', '#120825', '#0a0a0f']}
-        locations={[0, 0.45, 1]}
+        colors={[AURORA_NAVY, '#0D2E4A', '#1C1240', AURORA_NAVY]}
+        locations={[0, 0.35, 0.65, 1]}
         style={StyleSheet.absoluteFillObject}
       />
 
@@ -255,10 +259,10 @@ export default function WelcomeScreen() {
           <TouchableOpacity
             style={styles.ctaButton}
             onPress={() => router.replace('/(tabs)')}
-            activeOpacity={0.8}
+            activeOpacity={0.85}
           >
             <LinearGradient
-              colors={[BRAND, '#7C3AED']}
+              colors={[AURORA_MAGENTA, '#9333EA', AURORA_TEAL]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={StyleSheet.absoluteFillObject}
@@ -276,7 +280,7 @@ export default function WelcomeScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#0a0a0f',
+    backgroundColor: AURORA_NAVY,
   },
   confettiContainer: {
     ...StyleSheet.absoluteFillObject,
@@ -289,11 +293,11 @@ const styles = StyleSheet.create({
     width: 240,
     height: 240,
     borderRadius: 120,
-    backgroundColor: BRAND,
+    backgroundColor: AURORA_MAGENTA,
     opacity: 0.08,
     ...Platform.select({
       ios: {
-        shadowColor: BRAND,
+        shadowColor: AURORA_MAGENTA,
         shadowOffset: { width: 0, height: 0 },
         shadowOpacity: 0.5,
         shadowRadius: 100,
@@ -313,7 +317,7 @@ const styles = StyleSheet.create({
     marginBottom: 28,
     ...Platform.select({
       ios: {
-        shadowColor: '#FBBF24',
+        shadowColor: AURORA_MAGENTA,
         shadowOffset: { width: 0, height: 6 },
         shadowOpacity: 0.35,
         shadowRadius: 20,

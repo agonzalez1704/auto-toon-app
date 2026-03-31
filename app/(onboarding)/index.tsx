@@ -27,8 +27,13 @@ import Svg, {
 } from 'react-native-svg'
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window')
-const BRAND = '#8B5CF6'
-const BRAND_CYAN = '#06B6D4'
+
+// Aurora Blossom palette (from reference)
+const AURORA_NAVY = '#193153'
+const AURORA_TEAL = '#0B5777'
+const AURORA_MAGENTA = '#EB96FF'
+const AURORA_PINK = '#F9D4E0'
+
 const COLUMN_COUNT = 3
 const IMAGE_GAP = 4
 const COLUMN_WIDTH = (SCREEN_W - IMAGE_GAP * (COLUMN_COUNT + 1)) / COLUMN_COUNT
@@ -88,7 +93,7 @@ export default function OnboardingScreen() {
   )
 }
 
-// ─── Page Dots ──────────────────────────────────────────────────────────
+// ─── Page Dots (modern pill indicator) ──────────────────────────────────
 function PageDots({ current }: { current: number }) {
   return (
     <View style={styles.dotsContainer}>
@@ -97,11 +102,38 @@ function PageDots({ current }: { current: number }) {
           key={i}
           style={[
             styles.dot,
-            { backgroundColor: i === current ? '#fff' : 'rgba(255,255,255,0.35)' },
+            {
+              backgroundColor: i === current ? AURORA_PINK : 'rgba(255,255,255,0.2)',
+              width: i === current ? 24 : 8,
+            },
           ]}
         />
       ))}
     </View>
+  )
+}
+
+// ─── Gradient CTA Button ────────────────────────────────────────────────
+function GradientCTA({
+  onPress,
+  label,
+  large,
+}: {
+  onPress: () => void
+  label: string
+  large?: boolean
+}) {
+  return (
+    <TouchableOpacity onPress={onPress} activeOpacity={0.85}>
+      <LinearGradient
+        colors={[AURORA_MAGENTA, '#9333EA', AURORA_TEAL]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={[styles.ctaButton, large && styles.ctaLarge]}
+      >
+        <Text style={[styles.ctaText, large && styles.ctaTextLarge]}>{label}</Text>
+      </LinearGradient>
+    </TouchableOpacity>
   )
 }
 
@@ -133,10 +165,15 @@ function HeroScreen({
           transition={400}
         />
       )}
-      {/* Gradient overlay */}
+      {/* Aurora gradient overlay */}
       <LinearGradient
-        colors={['transparent', 'rgba(0,0,0,0.45)', 'rgba(0,0,0,0.85)']}
-        locations={[0.3, 0.6, 1]}
+        colors={[
+          'transparent',
+          'rgba(25,49,83,0.25)',
+          'rgba(11,87,119,0.55)',
+          'rgba(25,49,83,0.92)',
+        ]}
+        locations={[0.15, 0.4, 0.65, 1]}
         style={StyleSheet.absoluteFillObject}
       />
       {/* Content */}
@@ -145,9 +182,7 @@ function HeroScreen({
         <Text style={styles.heroSubheadline}>
           AI-powered product photography in seconds
         </Text>
-        <TouchableOpacity style={styles.ctaButton} onPress={onNext} activeOpacity={0.8}>
-          <Text style={styles.ctaText}>Get Started</Text>
-        </TouchableOpacity>
+        <GradientCTA onPress={onNext} label="Get Started" />
         <Text style={styles.legalText}>
           By tapping Get Started, you agree to our{' '}
           <Text style={styles.legalLink} onPress={openTerms}>
@@ -187,9 +222,14 @@ function GalleryScreen({
         <KodakColumn images={col2} ratios={ratios.slice(1)} offset={60} />
         <KodakColumn images={col3} ratios={ratios.slice(2)} offset={30} />
       </View>
-      {/* Overlay gradient + text */}
+      {/* Aurora overlay gradient */}
       <LinearGradient
-        colors={['rgba(0,0,0,0.5)', 'transparent', 'transparent', 'rgba(0,0,0,0.7)']}
+        colors={[
+          'rgba(25,49,83,0.65)',
+          'rgba(11,87,119,0.15)',
+          'rgba(11,87,119,0.15)',
+          'rgba(25,49,83,0.8)',
+        ]}
         locations={[0, 0.25, 0.65, 1]}
         style={StyleSheet.absoluteFillObject}
         pointerEvents="none"
@@ -197,9 +237,7 @@ function GalleryScreen({
       <View style={styles.galleryOverlay} pointerEvents="box-none">
         <Text style={styles.galleryHeadline}>Discover what{'\n'}AI can create</Text>
         <View style={styles.galleryBottom}>
-          <TouchableOpacity style={styles.ctaButton} onPress={onNext} activeOpacity={0.8}>
-            <Text style={styles.ctaText}>Start Creating</Text>
-          </TouchableOpacity>
+          <GradientCTA onPress={onNext} label="Start Creating" />
         </View>
       </View>
     </View>
@@ -427,7 +465,7 @@ function CreditsScreen({
 
   return (
     <View style={[styles.page, styles.creditsPage]}>
-      {/* Background image */}
+      {/* Background image as subtle texture */}
       {backgroundImage && (
         <Image
           source={{ uri: backgroundImage }}
@@ -436,10 +474,15 @@ function CreditsScreen({
           blurRadius={20}
         />
       )}
-      {/* Dark overlay */}
+      {/* Aurora gradient overlay */}
       <LinearGradient
-        colors={['rgba(0,0,0,0.7)', 'rgba(10,5,30,0.85)', 'rgba(10,5,30,0.95)']}
-        locations={[0, 0.4, 1]}
+        colors={[
+          'rgba(25,49,83,0.94)',
+          'rgba(11,87,119,0.88)',
+          'rgba(91,33,182,0.82)',
+          'rgba(235,150,255,0.65)',
+        ]}
+        locations={[0, 0.35, 0.65, 1]}
         style={StyleSheet.absoluteFillObject}
       />
 
@@ -499,13 +542,7 @@ function CreditsScreen({
 
       {/* CTA pinned at bottom */}
       <View style={styles.creditsBottom}>
-        <TouchableOpacity
-          style={[styles.ctaButton, styles.ctaLarge]}
-          onPress={onFinish}
-          activeOpacity={0.8}
-        >
-          <Text style={[styles.ctaText, styles.ctaTextLarge]}>Create My Account</Text>
-        </TouchableOpacity>
+        <GradientCTA onPress={onFinish} label="Create My Account" large />
       </View>
     </View>
   )
@@ -519,28 +556,28 @@ function BenefitRow({ icon, text }: { icon: 'sparkle' | 'grid' | 'arrow-up'; tex
           <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
             <SvgPath
               d="M12 2L14.09 8.26L20 9.27L15.55 13.97L16.91 20L12 16.9L7.09 20L8.45 13.97L4 9.27L9.91 8.26L12 2Z"
-              fill={BRAND_CYAN}
+              fill={AURORA_MAGENTA}
             />
           </Svg>
         )}
         {icon === 'grid' && (
           <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
-            <Rect x="3" y="3" width="5" height="5" rx="1" fill={BRAND_CYAN} />
-            <Rect x="10" y="3" width="5" height="5" rx="1" fill={BRAND_CYAN} />
-            <Rect x="17" y="3" width="5" height="5" rx="1" fill={BRAND_CYAN} />
-            <Rect x="3" y="10" width="5" height="5" rx="1" fill={BRAND_CYAN} />
-            <Rect x="10" y="10" width="5" height="5" rx="1" fill={BRAND_CYAN} />
-            <Rect x="17" y="10" width="5" height="5" rx="1" fill={BRAND_CYAN} />
-            <Rect x="3" y="17" width="5" height="5" rx="1" fill={BRAND_CYAN} />
-            <Rect x="10" y="17" width="5" height="5" rx="1" fill={BRAND_CYAN} />
-            <Rect x="17" y="17" width="5" height="5" rx="1" fill={BRAND_CYAN} />
+            <Rect x="3" y="3" width="5" height="5" rx="1" fill={AURORA_MAGENTA} />
+            <Rect x="10" y="3" width="5" height="5" rx="1" fill={AURORA_MAGENTA} />
+            <Rect x="17" y="3" width="5" height="5" rx="1" fill={AURORA_MAGENTA} />
+            <Rect x="3" y="10" width="5" height="5" rx="1" fill={AURORA_MAGENTA} />
+            <Rect x="10" y="10" width="5" height="5" rx="1" fill={AURORA_MAGENTA} />
+            <Rect x="17" y="10" width="5" height="5" rx="1" fill={AURORA_MAGENTA} />
+            <Rect x="3" y="17" width="5" height="5" rx="1" fill={AURORA_MAGENTA} />
+            <Rect x="10" y="17" width="5" height="5" rx="1" fill={AURORA_MAGENTA} />
+            <Rect x="17" y="17" width="5" height="5" rx="1" fill={AURORA_MAGENTA} />
           </Svg>
         )}
         {icon === 'arrow-up' && (
           <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
             <SvgPath
               d="M12 3L20 11H15V21H9V11H4L12 3Z"
-              fill={BRAND_CYAN}
+              fill={AURORA_MAGENTA}
             />
           </Svg>
         )}
@@ -554,7 +591,7 @@ function BenefitRow({ icon, text }: { icon: 'sparkle' | 'grid' | 'arrow-up'; tex
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: AURORA_NAVY,
   },
   page: {
     width: SCREEN_W,
@@ -572,7 +609,6 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   dot: {
-    width: 8,
     height: 8,
     borderRadius: 4,
   },
@@ -599,7 +635,6 @@ const styles = StyleSheet.create({
     marginBottom: 28,
   },
   ctaButton: {
-    backgroundColor: BRAND,
     paddingVertical: 16,
     borderRadius: 14,
     alignItems: 'center',
@@ -650,7 +685,7 @@ const styles = StyleSheet.create({
 
   // Credits
   creditsPage: {
-    backgroundColor: '#0a0a0a',
+    backgroundColor: AURORA_NAVY,
   },
   creditsContent: {
     flex: 1,
@@ -664,10 +699,10 @@ const styles = StyleSheet.create({
     width: 180,
     height: 180,
     borderRadius: 90,
-    backgroundColor: '#F59E0B',
+    backgroundColor: AURORA_MAGENTA,
     ...Platform.select({
       ios: {
-        shadowColor: '#F59E0B',
+        shadowColor: AURORA_MAGENTA,
         shadowOffset: { width: 0, height: 0 },
         shadowOpacity: 0.6,
         shadowRadius: 50,
@@ -696,7 +731,7 @@ const styles = StyleSheet.create({
   creditsLabel: {
     fontSize: 22,
     fontWeight: '800',
-    color: '#FBBF24',
+    color: AURORA_PINK,
     marginBottom: 6,
     textTransform: 'uppercase',
     letterSpacing: 3,
@@ -712,7 +747,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.08)',
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
+    borderColor: 'rgba(235,150,255,0.15)',
     paddingVertical: 6,
     paddingHorizontal: 20,
   },
@@ -726,7 +761,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 8,
-    backgroundColor: 'rgba(6,182,212,0.15)',
+    backgroundColor: 'rgba(235,150,255,0.15)',
     justifyContent: 'center',
     alignItems: 'center',
   },

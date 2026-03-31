@@ -37,8 +37,11 @@ import Svg, {
   Path as SvgPath,
 } from 'react-native-svg'
 
-const BRAND = '#8B5CF6'
-const BRAND_CYAN = '#06B6D4'
+// Aurora Blossom palette
+const AURORA_NAVY = '#193153'
+const AURORA_TEAL = '#0B5777'
+const AURORA_MAGENTA = '#EB96FF'
+const AURORA_PINK = '#F9D4E0'
 
 // Only show these two models to users
 const VISIBLE_MODELS: { id: ImageModelId; label: string }[] = [
@@ -78,9 +81,9 @@ function AspectRatioIcon({ w, h, color = '#fff' }: { w: number; h: number; color
 function InstagramIcon() {
   return (
     <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
-      <Rect x="2" y="2" width="20" height="20" rx="5" fill="none" stroke={BRAND} strokeWidth="2" />
-      <Circle cx="12" cy="12" r="5" fill="none" stroke={BRAND} strokeWidth="2" />
-      <Circle cx="17.5" cy="6.5" r="1.5" fill={BRAND} />
+      <Rect x="2" y="2" width="20" height="20" rx="5" fill="none" stroke={AURORA_MAGENTA} strokeWidth="2" />
+      <Circle cx="12" cy="12" r="5" fill="none" stroke={AURORA_MAGENTA} strokeWidth="2" />
+      <Circle cx="17.5" cy="6.5" r="1.5" fill={AURORA_MAGENTA} />
     </Svg>
   )
 }
@@ -90,7 +93,7 @@ function SparkleGoalIcon() {
     <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
       <SvgPath
         d="M12 2L14.09 8.26L20 9.27L15.55 13.97L16.91 20L12 16.9L7.09 20L8.45 13.97L4 9.27L9.91 8.26L12 2Z"
-        fill="none" stroke={BRAND_CYAN} strokeWidth="2" strokeLinejoin="round"
+        fill="none" stroke={AURORA_TEAL} strokeWidth="2" strokeLinejoin="round"
       />
     </Svg>
   )
@@ -99,11 +102,11 @@ function SparkleGoalIcon() {
 function PaletteIcon() {
   return (
     <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
-      <Circle cx="12" cy="12" r="10" fill="none" stroke="#F59E0B" strokeWidth="2" />
-      <Circle cx="8" cy="10" r="1.5" fill="#EF4444" />
-      <Circle cx="12" cy="7" r="1.5" fill="#3B82F6" />
-      <Circle cx="16" cy="10" r="1.5" fill="#22C55E" />
-      <Circle cx="14" cy="15" r="1.5" fill="#F59E0B" />
+      <Circle cx="12" cy="12" r="10" fill="none" stroke={AURORA_PINK} strokeWidth="2" />
+      <Circle cx="8" cy="10" r="1.5" fill={AURORA_MAGENTA} />
+      <Circle cx="12" cy="7" r="1.5" fill={AURORA_TEAL} />
+      <Circle cx="16" cy="10" r="1.5" fill="#9333EA" />
+      <Circle cx="14" cy="15" r="1.5" fill={AURORA_PINK} />
     </Svg>
   )
 }
@@ -111,8 +114,8 @@ function PaletteIcon() {
 function PosterIcon() {
   return (
     <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
-      <Rect x="3" y="3" width="18" height="18" rx="2" fill="none" stroke="#A78BFA" strokeWidth="2" />
-      <SvgPath d="M3 15l5-5 4 4 3-3 6 6" stroke="#A78BFA" strokeWidth="2" strokeLinecap="round" />
+      <Rect x="3" y="3" width="18" height="18" rx="2" fill="none" stroke={AURORA_MAGENTA} strokeWidth="2" />
+      <SvgPath d="M3 15l5-5 4 4 3-3 6 6" stroke={AURORA_MAGENTA} strokeWidth="2" strokeLinecap="round" />
     </Svg>
   )
 }
@@ -120,8 +123,8 @@ function PosterIcon() {
 function FoodIcon() {
   return (
     <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
-      <Circle cx="12" cy="14" r="8" fill="none" stroke="#F97316" strokeWidth="2" />
-      <SvgPath d="M12 6V2M8 7l-2-3M16 7l2-3" stroke="#F97316" strokeWidth="2" strokeLinecap="round" />
+      <Circle cx="12" cy="14" r="8" fill="none" stroke={AURORA_PINK} strokeWidth="2" />
+      <SvgPath d="M12 6V2M8 7l-2-3M16 7l2-3" stroke={AURORA_PINK} strokeWidth="2" strokeLinecap="round" />
     </Svg>
   )
 }
@@ -131,9 +134,9 @@ function CameraGoalIcon() {
     <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
       <SvgPath
         d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"
-        fill="none" stroke="#10B981" strokeWidth="2"
+        fill="none" stroke={AURORA_TEAL} strokeWidth="2"
       />
-      <Circle cx="12" cy="13" r="4" fill="none" stroke="#10B981" strokeWidth="2" />
+      <Circle cx="12" cy="13" r="4" fill="none" stroke={AURORA_TEAL} strokeWidth="2" />
     </Svg>
   )
 }
@@ -492,7 +495,7 @@ export default function CreateScreen() {
               activeOpacity={0.8}
             >
               <LinearGradient
-                colors={['#7C3AED', '#06B6D4']}
+                colors={[AURORA_MAGENTA, '#9333EA', AURORA_TEAL]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={StyleSheet.absoluteFillObject}
@@ -545,7 +548,7 @@ export default function CreateScreen() {
                   {/* Product name input overlaid at bottom */}
                   <View style={styles.nameOverlay} pointerEvents="box-none">
                     <LinearGradient
-                      colors={['transparent', 'rgba(0,0,0,0.7)']}
+                      colors={['transparent', 'rgba(25,49,83,0.85)']}
                       style={StyleSheet.absoluteFillObject}
                     />
                     <View style={styles.nameRow}>
@@ -633,8 +636,8 @@ export default function CreateScreen() {
                 activeOpacity={0.7}
               >
                 <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
-                  <SvgPath d="M12 15.5A3.5 3.5 0 1012 8.5a3.5 3.5 0 000 7z" stroke={BRAND} strokeWidth="2" />
-                  <SvgPath d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" stroke={BRAND} strokeWidth="2" />
+                  <SvgPath d="M12 15.5A3.5 3.5 0 1012 8.5a3.5 3.5 0 000 7z" stroke={AURORA_MAGENTA} strokeWidth="2" />
+                  <SvgPath d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" stroke={AURORA_MAGENTA} strokeWidth="2" />
                 </Svg>
                 <Text style={styles.customizeLinkText}>
                   Customize {store.selectedGoalId === 'elements' ? 'Elements' : 'Poster'}
@@ -728,7 +731,7 @@ export default function CreateScreen() {
                       <Text style={[styles.cfgSectionTitle, { marginTop: 24 }]}>Visual Enhancers</Text>
                       <View style={styles.chipWrap}>
                         {store.secondImageConfig.elementsConfig.enhancers.map((en, i) => (
-                          <View key={`en-${i}`} style={[styles.chip, { borderColor: 'rgba(6,182,212,0.3)' }]}>
+                          <View key={`en-${i}`} style={[styles.chip, { borderColor: 'rgba(11,87,119,0.5)' }]}>
                             <Text style={styles.chipText} numberOfLines={1}>{en}</Text>
                             <TouchableOpacity
                               hitSlop={8}
@@ -829,7 +832,7 @@ export default function CreateScreen() {
                           return (
                             <TouchableOpacity
                               key={fs}
-                              style={[styles.chip, active && { borderColor: BRAND, backgroundColor: 'rgba(139,92,246,0.15)' }]}
+                              style={[styles.chip, active && { borderColor: AURORA_MAGENTA, backgroundColor: 'rgba(235,150,255,0.12)' }]}
                               onPress={() => store.setSecondImageConfig({
                                 posterConfig: { ...store.secondImageConfig.posterConfig!, fontStyle: fs } as any,
                               })}
@@ -919,7 +922,7 @@ export default function CreateScreen() {
                           ) : (
                             <>
                               <LinearGradient
-                                colors={['#7C3AED', '#06B6D4']}
+                                colors={[AURORA_MAGENTA, '#9333EA', AURORA_TEAL]}
                                 start={{ x: 0, y: 0 }}
                                 end={{ x: 1, y: 0 }}
                                 style={StyleSheet.absoluteFillObject}
@@ -981,7 +984,7 @@ export default function CreateScreen() {
                       onPress={() => store.setSeedreamConfig({ aspect_ratio: ratio.value })}
                       activeOpacity={0.7}
                     >
-                      <AspectRatioIcon w={ratio.w} h={ratio.h} color={isSelected ? BRAND : 'rgba(255,255,255,0.5)'} />
+                      <AspectRatioIcon w={ratio.w} h={ratio.h} color={isSelected ? AURORA_MAGENTA : 'rgba(255,255,255,0.5)'} />
                       <Text style={[styles.aspectPillText, isSelected && styles.aspectPillTextSelected]}>
                         {ratio.value}
                       </Text>
@@ -1011,7 +1014,7 @@ export default function CreateScreen() {
               >
                 {canGenerate && !store.isGenerating && (
                   <LinearGradient
-                    colors={['#7C3AED', '#06B6D4']}
+                    colors={[AURORA_MAGENTA, '#9333EA', AURORA_TEAL]}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
                     style={StyleSheet.absoluteFillObject}
@@ -1103,7 +1106,7 @@ const styles = StyleSheet.create({
   previewImage: { width: '100%', height: '100%' },
   analyzeOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(25,49,83,0.7)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -1161,7 +1164,7 @@ const styles = StyleSheet.create({
   customizeLinkText: {
     fontSize: 13,
     fontWeight: '600',
-    color: BRAND,
+    color: AURORA_MAGENTA,
   },
 
   // Config modal form
@@ -1197,7 +1200,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(139,92,246,0.3)',
+    borderColor: 'rgba(235,150,255,0.2)',
     backgroundColor: 'rgba(255,255,255,0.06)',
   },
   chipText: {
@@ -1213,7 +1216,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderRadius: 10,
-    backgroundColor: BRAND,
+    backgroundColor: AURORA_MAGENTA,
     justifyContent: 'center',
   },
   addBtnText: {
@@ -1244,10 +1247,10 @@ const styles = StyleSheet.create({
   // Goal picker modal
   modalBackdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
+    backgroundColor: 'rgba(25,49,83,0.75)',
   },
   modalSheet: {
-    backgroundColor: '#1a1a2e',
+    backgroundColor: '#162844',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     paddingBottom: 40,
@@ -1276,7 +1279,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.08)',
   },
   goalCardModalSelected: {
-    borderColor: BRAND,
+    borderColor: AURORA_MAGENTA,
   },
   goalPreviewImage: {
     width: '100%',
@@ -1309,9 +1312,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.1)',
   },
   goalSelectBtnActive: {
-    backgroundColor: 'rgba(139,92,246,0.15)',
+    backgroundColor: 'rgba(235,150,255,0.12)',
     borderWidth: 1,
-    borderColor: BRAND,
+    borderColor: AURORA_MAGENTA,
   },
   goalSelectBtnText: {
     fontSize: 15,
@@ -1333,7 +1336,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.2)',
   },
   dotActive: {
-    backgroundColor: BRAND,
+    backgroundColor: AURORA_MAGENTA,
     width: 18,
     borderRadius: 3,
   },
@@ -1358,7 +1361,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   modelPillSelected: {
-    backgroundColor: 'rgba(139,92,246,0.25)',
+    backgroundColor: 'rgba(235,150,255,0.2)',
   },
   modelPillText: {
     fontSize: 13,
@@ -1388,8 +1391,8 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.1)',
   },
   aspectPillSelected: {
-    borderColor: 'rgba(139,92,246,0.6)',
-    backgroundColor: 'rgba(139,92,246,0.15)',
+    borderColor: 'rgba(235,150,255,0.4)',
+    backgroundColor: 'rgba(235,150,255,0.12)',
   },
   aspectPillText: {
     fontSize: 13,

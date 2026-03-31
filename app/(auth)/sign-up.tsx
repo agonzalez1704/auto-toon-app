@@ -27,8 +27,11 @@ import Svg, {
 
 WebBrowser.maybeCompleteAuthSession()
 
-const BRAND = '#8B5CF6'
-const BRAND_CYAN = '#06B6D4'
+// Aurora Blossom palette
+const AURORA_NAVY = '#193153'
+const AURORA_TEAL = '#0B5777'
+const AURORA_MAGENTA = '#EB96FF'
+const AURORA_PINK = '#F9D4E0'
 
 // ─── SVG Icons ──────────────────────────────────────────────────────────
 
@@ -71,8 +74,8 @@ function SparkleIcon() {
     <Svg width={48} height={48} viewBox="0 0 48 48">
       <Defs>
         <SvgLinearGradient id="sparkleGrad" x1="0" y1="0" x2="1" y2="1">
-          <Stop offset="0" stopColor={BRAND} />
-          <Stop offset="1" stopColor={BRAND_CYAN} />
+          <Stop offset="0" stopColor={AURORA_MAGENTA} />
+          <Stop offset="1" stopColor={AURORA_TEAL} />
         </SvgLinearGradient>
       </Defs>
       <Rect x="4" y="4" width="40" height="40" rx="12" fill="url(#sparkleGrad)" />
@@ -105,6 +108,8 @@ export default function SignUpScreen() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [pendingVerification, setPendingVerification] = useState(false)
+
+  const otpInputRef = useRef<TextInput>(null)
 
   // Entrance animations
   const fadeAnim = useRef(new Animated.Value(0)).current
@@ -197,7 +202,7 @@ export default function SignUpScreen() {
       <View style={styles.root}>
         <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
         <LinearGradient
-          colors={['#0a0a0a', '#0f0520', '#0a0a0a']}
+          colors={[AURORA_NAVY, '#0D2E4A', '#1C1240']}
           locations={[0, 0.5, 1]}
           style={StyleSheet.absoluteFillObject}
         />
@@ -215,30 +220,57 @@ export default function SignUpScreen() {
                   We sent a verification code to {email}
                 </Text>
 
-                <TextInput
-                  style={[styles.input, styles.codeInput]}
-                  placeholder="Verification code"
-                  placeholderTextColor="rgba(255,255,255,0.3)"
-                  value={code}
-                  onChangeText={setCode}
-                  keyboardType="number-pad"
-                  textContentType="oneTimeCode"
-                  autoFocus
-                />
+                <View style={otpStyles.container}>
+                  <TextInput
+                    ref={otpInputRef}
+                    style={otpStyles.hiddenInput}
+                    value={code}
+                    onChangeText={(text) => setCode(text.replace(/[^0-9]/g, '').slice(0, 6))}
+                    keyboardType="number-pad"
+                    textContentType="oneTimeCode"
+                    autoFocus
+                    maxLength={6}
+                  />
+                  <View style={otpStyles.boxes}>
+                    {[0, 1, 2, 3, 4, 5].map((i) => (
+                      <TouchableOpacity
+                        key={i}
+                        style={[
+                          otpStyles.box,
+                          code.length === i && otpStyles.boxFocused,
+                          code.length > i && otpStyles.boxFilled,
+                        ]}
+                        activeOpacity={1}
+                        onPress={() => otpInputRef.current?.focus()}
+                      >
+                        <Text style={[otpStyles.digit, code.length > i && otpStyles.digitFilled]}>
+                          {code[i] || ''}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
 
                 {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
                 <TouchableOpacity
-                  style={[styles.emailButton, loading && { opacity: 0.6 }]}
                   onPress={handleVerify}
                   activeOpacity={0.7}
                   disabled={loading || !code}
+                  style={loading ? { opacity: 0.6 } : undefined}
                 >
-                  {loading ? (
-                    <ActivityIndicator color="#FFFFFF" size="small" />
-                  ) : (
-                    <Text style={styles.emailButtonText}>Verify Email</Text>
-                  )}
+                  <LinearGradient
+                    colors={[AURORA_MAGENTA, '#9333EA', AURORA_TEAL]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.emailButton}
+                  >
+                    {loading ? (
+                      <ActivityIndicator color="#FFFFFF" size="small" />
+                    ) : (
+                      <Text style={styles.emailButtonText}>Verify Email</Text>
+                    )}
+                  </LinearGradient>
                 </TouchableOpacity>
 
                 <TouchableOpacity
@@ -267,7 +299,7 @@ export default function SignUpScreen() {
     <View style={styles.root}>
       <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
       <LinearGradient
-        colors={['#0a0a0a', '#0f0520', '#0a0a0a']}
+        colors={[AURORA_NAVY, '#0D2E4A', '#1C1240']}
         locations={[0, 0.5, 1]}
         style={StyleSheet.absoluteFillObject}
       />
@@ -361,19 +393,26 @@ export default function SignUpScreen() {
               {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
               <TouchableOpacity
-                style={[styles.emailButton, loading && { opacity: 0.6 }]}
                 onPress={handleEmailSignUp}
                 activeOpacity={0.7}
                 disabled={loading || !email || !password}
+                style={loading ? { opacity: 0.6 } : undefined}
               >
-                {loading ? (
-                  <ActivityIndicator color="#FFFFFF" size="small" />
-                ) : (
-                  <>
-                    <MailIcon />
-                    <Text style={styles.emailButtonText}>Sign up with Email</Text>
-                  </>
-                )}
+                <LinearGradient
+                  colors={[AURORA_MAGENTA, '#9333EA', AURORA_TEAL]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.emailButton}
+                >
+                  {loading ? (
+                    <ActivityIndicator color="#FFFFFF" size="small" />
+                  ) : (
+                    <>
+                      <MailIcon />
+                      <Text style={styles.emailButtonText}>Sign up with Email</Text>
+                    </>
+                  )}
+                </LinearGradient>
               </TouchableOpacity>
             </View>
 
@@ -399,7 +438,7 @@ export default function SignUpScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#0a0a0a',
+    backgroundColor: AURORA_NAVY,
   },
   glowOrb: {
     position: 'absolute',
@@ -409,11 +448,11 @@ const styles = StyleSheet.create({
     width: 200,
     height: 200,
     borderRadius: 100,
-    backgroundColor: BRAND,
+    backgroundColor: AURORA_MAGENTA,
     opacity: 0.06,
     ...Platform.select({
       ios: {
-        shadowColor: BRAND,
+        shadowColor: AURORA_MAGENTA,
         shadowOffset: { width: 0, height: 0 },
         shadowOpacity: 0.4,
         shadowRadius: 80,
@@ -460,7 +499,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.06)',
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    borderColor: 'rgba(235,150,255,0.12)',
     padding: 24,
     marginBottom: 24,
   },
@@ -479,7 +518,7 @@ const styles = StyleSheet.create({
   },
   authCardSubtitle2: {
     fontSize: 14,
-    color: BRAND_CYAN,
+    color: AURORA_PINK,
     textAlign: 'center',
     marginBottom: 24,
     fontWeight: '500',
@@ -575,7 +614,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 15,
     borderRadius: 14,
-    backgroundColor: BRAND,
     gap: 10,
   },
   emailButtonText: {
@@ -595,7 +633,50 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   linkAccent: {
-    color: BRAND,
+    color: AURORA_PINK,
     fontWeight: '600',
+  },
+})
+
+const otpStyles = StyleSheet.create({
+  container: {
+    marginBottom: 16,
+  },
+  hiddenInput: {
+    position: 'absolute',
+    opacity: 0,
+    height: 0,
+    width: 0,
+  },
+  boxes: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  box: {
+    width: 44,
+    height: 52,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.12)',
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  boxFocused: {
+    borderColor: AURORA_MAGENTA,
+    backgroundColor: 'rgba(235,150,255,0.08)',
+  },
+  boxFilled: {
+    borderColor: 'rgba(255,255,255,0.25)',
+    backgroundColor: 'rgba(255,255,255,0.08)',
+  },
+  digit: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  digitFilled: {
+    color: '#FFFFFF',
   },
 })

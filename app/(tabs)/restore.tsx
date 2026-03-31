@@ -1,36 +1,37 @@
-import { useState, useCallback, useRef, useEffect } from 'react'
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  StyleSheet,
-  ActivityIndicator,
-  Alert,
-  StatusBar,
-  Platform,
-  ActionSheetIOS,
-  Share,
-} from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import { Image } from 'expo-image'
-import { LinearGradient } from 'expo-linear-gradient'
-import * as ImagePicker from 'expo-image-picker'
+import { BeforeAfterSlider } from '@/components/before-after-slider'
+import { ParticleSphere } from '@/components/particle-sphere'
+import { RestoreIntroModal } from '@/components/restore-intro-modal'
+import { restoreImage } from '@/lib/api'
+import { uploadImage } from '@/lib/upload'
+import { useCreditsStore } from '@/stores/use-credits-store'
+import { RESTORE_MODELS, useRestoreStore, type Resolution, type RestoreModelId } from '@/stores/use-restore-store'
+import { useTermsConsentStore } from '@/stores/use-terms-consent-store'
 import * as FileSystem from 'expo-file-system/legacy'
+import { Image } from 'expo-image'
+import * as ImagePicker from 'expo-image-picker'
+import { LinearGradient } from 'expo-linear-gradient'
 import * as MediaLibrary from 'expo-media-library'
 import { useRouter } from 'expo-router'
-import Svg, { Path as SvgPath, Defs, Stop, LinearGradient as SvgLinearGradient } from 'react-native-svg'
-import { useRestoreStore, RESTORE_MODELS, type RestoreModelId, type Resolution } from '@/stores/use-restore-store'
-import { useCreditsStore } from '@/stores/use-credits-store'
-import { useTermsConsentStore } from '@/stores/use-terms-consent-store'
-import { uploadImage } from '@/lib/upload'
-import { restoreImage } from '@/lib/api'
-import { ParticleSphere } from '@/components/particle-sphere'
-import { BeforeAfterSlider } from '@/components/before-after-slider'
-import { RestoreIntroModal } from '@/components/restore-intro-modal'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import {
+  ActivityIndicator,
+  Alert,
+  Platform,
+  ScrollView,
+  Share,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
+} from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
+import Svg, { Defs, Stop, LinearGradient as SvgLinearGradient, Path as SvgPath } from 'react-native-svg'
 
-const BRAND = '#8B5CF6'
-const BRAND_CYAN = '#06B6D4'
+// Aurora Blossom palette
+const AURORA_NAVY = '#193153'
+const AURORA_TEAL = '#0B5777'
+const AURORA_MAGENTA = '#EB96FF'
 
 const RESOLUTIONS: { value: Resolution; label: string; credits: number }[] = [
   { value: '2K', label: '2K', credits: 3 },
@@ -340,7 +341,7 @@ export default function RestoreScreen() {
             {balance !== null && (
               <View style={styles.creditsBadge}>
                 <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
-                  <SvgPath d="M12 2L15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2z" fill="#FFD700" />
+                  <SvgPath d="M12 2L15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2z" fill={AURORA_MAGENTA} />
                 </Svg>
                 <Text style={styles.creditsText}>{balance}</Text>
               </View>
@@ -426,7 +427,7 @@ export default function RestoreScreen() {
             <View style={styles.resRow}>
               {RESOLUTIONS.map((res) => {
                 const isSelected = store.resolution === res.value
-                const accent = res.value === '2K' ? BRAND : BRAND_CYAN
+                const accent = res.value === '2K' ? AURORA_MAGENTA : AURORA_TEAL
                 return (
                   <TouchableOpacity
                     key={res.value}
@@ -465,7 +466,7 @@ export default function RestoreScreen() {
           >
             {canRestore && (
               <LinearGradient
-                colors={['#7C3AED', '#06B6D4']}
+                colors={[AURORA_MAGENTA, '#9333EA', AURORA_TEAL]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={StyleSheet.absoluteFillObject}
@@ -507,12 +508,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: 'rgba(235,150,255,0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(235,150,255,0.15)',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
   },
-  creditsText: { fontSize: 14, fontWeight: '700', color: '#FFD700' },
+  creditsText: { fontSize: 14, fontWeight: '700', color: AURORA_MAGENTA },
 
   section: { marginBottom: 20 },
   label: {
@@ -556,7 +559,7 @@ const styles = StyleSheet.create({
   previewImage: { width: '100%', height: '100%' },
   uploadOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(25,49,83,0.7)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -568,7 +571,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: 'rgba(0,0,0,0.6)',
+    backgroundColor: 'rgba(25,49,83,0.75)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -592,7 +595,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   modelPillSelected: {
-    backgroundColor: 'rgba(139,92,246,0.25)',
+    backgroundColor: 'rgba(235,150,255,0.2)',
   },
   modelPillText: {
     fontSize: 13,

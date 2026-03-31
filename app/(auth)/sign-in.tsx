@@ -29,8 +29,12 @@ import Svg, {
 WebBrowser.maybeCompleteAuthSession()
 
 const { width: SCREEN_W } = Dimensions.get('window')
-const BRAND = '#8B5CF6'
-const BRAND_CYAN = '#06B6D4'
+
+// Aurora Blossom palette
+const AURORA_NAVY = '#193153'
+const AURORA_TEAL = '#0B5777'
+const AURORA_MAGENTA = '#EB96FF'
+const AURORA_PINK = '#F9D4E0'
 
 // ─── SVG Icons ──────────────────────────────────────────────────────────
 
@@ -84,8 +88,8 @@ function AutoToonLogo() {
         <Svg width={40} height={40} viewBox="0 0 48 48">
           <Defs>
             <SvgLinearGradient id="logoGrad" x1="0" y1="0" x2="1" y2="1">
-              <Stop offset="0" stopColor={BRAND} />
-              <Stop offset="1" stopColor={BRAND_CYAN} />
+              <Stop offset="0" stopColor={AURORA_MAGENTA} />
+              <Stop offset="1" stopColor={AURORA_TEAL} />
             </SvgLinearGradient>
           </Defs>
           <Rect x="4" y="4" width="40" height="40" rx="12" fill="url(#logoGrad)" />
@@ -112,7 +116,7 @@ const logoStyles = StyleSheet.create({
     alignItems: 'center',
     ...Platform.select({
       ios: {
-        shadowColor: BRAND,
+        shadowColor: AURORA_MAGENTA,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
         shadowRadius: 12,
@@ -275,7 +279,7 @@ export default function SignInScreen() {
       <View style={styles.root}>
         <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
         <LinearGradient
-          colors={['#0a0a0a', '#0f0520', '#0a0a0a']}
+          colors={[AURORA_NAVY, '#0D2E4A', '#1C1240']}
           locations={[0, 0.5, 1]}
           style={StyleSheet.absoluteFillObject}
         />
@@ -327,16 +331,23 @@ export default function SignInScreen() {
                 {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
                 <TouchableOpacity
-                  style={[styles.emailButton, loading && { opacity: 0.6 }]}
                   onPress={handleVerifyCode}
                   activeOpacity={0.7}
                   disabled={loading || !code}
+                  style={loading ? { opacity: 0.6 } : undefined}
                 >
-                  {loading ? (
-                    <ActivityIndicator color="#FFFFFF" size="small" />
-                  ) : (
-                    <Text style={styles.emailButtonText}>Verify & Sign In</Text>
-                  )}
+                  <LinearGradient
+                    colors={[AURORA_MAGENTA, '#9333EA', AURORA_TEAL]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.emailButton}
+                  >
+                    {loading ? (
+                      <ActivityIndicator color="#FFFFFF" size="small" />
+                    ) : (
+                      <Text style={styles.emailButtonText}>Verify & Sign In</Text>
+                    )}
+                  </LinearGradient>
                 </TouchableOpacity>
 
                 <TouchableOpacity
@@ -363,7 +374,7 @@ export default function SignInScreen() {
     <View style={styles.root}>
       <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
       <LinearGradient
-        colors={['#0a0a0a', '#0f0520', '#0a0a0a']}
+        colors={[AURORA_NAVY, '#0D2E4A', '#1C1240']}
         locations={[0, 0.5, 1]}
         style={StyleSheet.absoluteFillObject}
       />
@@ -457,19 +468,26 @@ export default function SignInScreen() {
               {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
               <TouchableOpacity
-                style={[styles.emailButton, loading && { opacity: 0.6 }]}
                 onPress={handleEmailSignIn}
                 activeOpacity={0.7}
                 disabled={loading || !email || !password}
+                style={loading ? { opacity: 0.6 } : undefined}
               >
-                {loading ? (
-                  <ActivityIndicator color="#FFFFFF" size="small" />
-                ) : (
-                  <>
-                    <MailIcon />
-                    <Text style={styles.emailButtonText}>Sign in with Email</Text>
-                  </>
-                )}
+                <LinearGradient
+                  colors={[AURORA_MAGENTA, '#9333EA', AURORA_TEAL]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.emailButton}
+                >
+                  {loading ? (
+                    <ActivityIndicator color="#FFFFFF" size="small" />
+                  ) : (
+                    <>
+                      <MailIcon />
+                      <Text style={styles.emailButtonText}>Sign in with Email</Text>
+                    </>
+                  )}
+                </LinearGradient>
               </TouchableOpacity>
             </View>
 
@@ -495,7 +513,7 @@ export default function SignInScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#0a0a0a',
+    backgroundColor: AURORA_NAVY,
   },
   glowOrb: {
     position: 'absolute',
@@ -505,11 +523,11 @@ const styles = StyleSheet.create({
     width: 200,
     height: 200,
     borderRadius: 100,
-    backgroundColor: BRAND,
+    backgroundColor: AURORA_MAGENTA,
     opacity: 0.06,
     ...Platform.select({
       ios: {
-        shadowColor: BRAND,
+        shadowColor: AURORA_MAGENTA,
         shadowOffset: { width: 0, height: 0 },
         shadowOpacity: 0.4,
         shadowRadius: 80,
@@ -555,7 +573,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.06)',
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    borderColor: 'rgba(235,150,255,0.12)',
     padding: 24,
     marginBottom: 24,
   },
@@ -663,7 +681,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 15,
     borderRadius: 14,
-    backgroundColor: BRAND,
     gap: 10,
   },
   emailButtonText: {
@@ -683,7 +700,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   linkAccent: {
-    color: BRAND,
+    color: AURORA_PINK,
     fontWeight: '600',
   },
 })
@@ -714,8 +731,8 @@ const otpStyles = StyleSheet.create({
     alignItems: 'center',
   },
   boxFocused: {
-    borderColor: BRAND,
-    backgroundColor: 'rgba(139,92,246,0.08)',
+    borderColor: AURORA_MAGENTA,
+    backgroundColor: 'rgba(235,150,255,0.08)',
   },
   boxFilled: {
     borderColor: 'rgba(255,255,255,0.25)',

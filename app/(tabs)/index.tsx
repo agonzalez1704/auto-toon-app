@@ -30,8 +30,11 @@ import { getRecentCreations } from '@/lib/api'
 import { queryKeys } from '@/lib/query'
 import { CONFIG } from '@/lib/config'
 
-const BRAND = '#8B5CF6'
-const BRAND_CYAN = '#06B6D4'
+// Aurora Blossom palette
+const AURORA_NAVY = '#193153'
+const AURORA_TEAL = '#0B5777'
+const AURORA_MAGENTA = '#EB96FF'
+const AURORA_PINK = '#F9D4E0'
 
 // ─── Helpers ─────────────────────────────────────────────────────────────
 
@@ -83,9 +86,9 @@ function CreditIcon() {
 function PlanIcon() {
   return (
     <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
-      <Rect x="3" y="5" width="18" height="14" rx="3" fill="none" stroke={BRAND_CYAN} strokeWidth="2" />
-      <SvgPath d="M3 10h18" stroke={BRAND_CYAN} strokeWidth="2" />
-      <Rect x="6" y="14" width="5" height="2" rx="1" fill={BRAND_CYAN} opacity={0.6} />
+      <Rect x="3" y="5" width="18" height="14" rx="3" fill="none" stroke={AURORA_MAGENTA} strokeWidth="2" />
+      <SvgPath d="M3 10h18" stroke={AURORA_MAGENTA} strokeWidth="2" />
+      <Rect x="6" y="14" width="5" height="2" rx="1" fill={AURORA_MAGENTA} opacity={0.6} />
     </Svg>
   )
 }
@@ -95,7 +98,7 @@ function SparkleIcon() {
     <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
       <SvgPath
         d="M12 2L14.09 8.26L20 9.27L15.55 13.97L16.91 20L12 16.9L7.09 20L8.45 13.97L4 9.27L9.91 8.26L12 2Z"
-        fill="#FBBF24"
+        fill={AURORA_PINK}
       />
     </Svg>
   )
@@ -136,7 +139,7 @@ function ProBadge({ label }: { label: string }) {
   return (
     <View style={styles.proBadge}>
       <LinearGradient
-        colors={[BRAND_CYAN, '#0891B2']}
+        colors={[AURORA_MAGENTA, AURORA_TEAL]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
         style={StyleSheet.absoluteFillObject}
@@ -232,7 +235,7 @@ export default function DashboardScreen() {
               </Text>
               <View style={styles.statAction}>
                 <Text style={styles.statActionText}>Buy More</Text>
-                <ChevronRight color={BRAND} />
+                <ChevronRight color={AURORA_MAGENTA} />
               </View>
             </TouchableOpacity>
 
@@ -242,12 +245,12 @@ export default function DashboardScreen() {
               activeOpacity={0.7}
             >
               <LinearGradient
-                colors={['rgba(6,182,212,0.06)', 'transparent']}
+                colors={['rgba(235,150,255,0.06)', 'transparent']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={StyleSheet.absoluteFillObject}
               />
-              <View style={[styles.statIconWrap, { backgroundColor: 'rgba(6,182,212,0.12)' }]}>
+              <View style={[styles.statIconWrap, { backgroundColor: 'rgba(235,150,255,0.12)' }]}>
                 <PlanIcon />
               </View>
               <Text style={styles.statLabel}>Plan</Text>
@@ -257,10 +260,10 @@ export default function DashboardScreen() {
                 <ProBadge label={planLabel} />
               )}
               <View style={styles.statAction}>
-                <Text style={[styles.statActionText, { color: BRAND_CYAN }]}>
+                <Text style={[styles.statActionText, { color: AURORA_PINK }]}>
                   {plan === 'FREE' ? 'Upgrade' : 'Manage'}
                 </Text>
-                <ChevronRight color={BRAND_CYAN} />
+                <ChevronRight color={AURORA_PINK} />
               </View>
             </TouchableOpacity>
           </View>
@@ -273,7 +276,7 @@ export default function DashboardScreen() {
               activeOpacity={0.8}
             >
               <LinearGradient
-                colors={[BRAND, '#7C3AED']}
+                colors={[AURORA_MAGENTA, '#9333EA', AURORA_TEAL]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={StyleSheet.absoluteFillObject}
@@ -291,7 +294,7 @@ export default function DashboardScreen() {
               activeOpacity={0.8}
             >
               <LinearGradient
-                colors={[BRAND_CYAN, '#0891B2']}
+                colors={[AURORA_TEAL, '#0891B2', AURORA_NAVY]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={StyleSheet.absoluteFillObject}
@@ -315,7 +318,7 @@ export default function DashboardScreen() {
               )}
             </View>
             {loadingRecent ? (
-              <ActivityIndicator color={BRAND} style={{ marginTop: 24 }} />
+              <ActivityIndicator color={AURORA_MAGENTA} style={{ marginTop: 24 }} />
             ) : recentImages && recentImages.length > 0 ? (
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.recentList}>
                 {recentImages.map((url, i) => (
@@ -340,7 +343,7 @@ export default function DashboardScreen() {
                       transition={200}
                     />
                     <LinearGradient
-                      colors={['transparent', 'rgba(0,0,0,0.5)']}
+                      colors={['transparent', 'rgba(25,49,83,0.6)']}
                       style={styles.recentOverlay}
                     />
                   </TouchableOpacity>
@@ -379,7 +382,7 @@ export default function DashboardScreen() {
                     transition={200}
                   />
                   <LinearGradient
-                    colors={['transparent', 'rgba(0,0,0,0.75)']}
+                    colors={['transparent', 'rgba(25,49,83,0.85)']}
                     style={styles.featureOverlay}
                   />
                   <View style={styles.featureInfo}>
@@ -401,7 +404,7 @@ export default function DashboardScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#0a0a0f',
+    backgroundColor: AURORA_NAVY,
   },
   safeArea: {
     flex: 1,
@@ -435,7 +438,7 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     overflow: 'hidden',
     borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.12)',
+    borderColor: 'rgba(235,150,255,0.2)',
   },
   avatar: {
     width: '100%',
@@ -444,7 +447,7 @@ const styles = StyleSheet.create({
   avatarFallback: {
     width: '100%',
     height: '100%',
-    backgroundColor: BRAND,
+    backgroundColor: AURORA_MAGENTA,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -465,7 +468,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.05)',
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: 'rgba(235,150,255,0.08)',
     padding: 16,
     overflow: 'hidden',
   },
@@ -473,7 +476,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 10,
-    backgroundColor: 'rgba(139,92,246,0.12)',
+    backgroundColor: 'rgba(235,150,255,0.12)',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 12,
@@ -521,7 +524,7 @@ const styles = StyleSheet.create({
   statActionText: {
     fontSize: 12,
     fontWeight: '600',
-    color: BRAND,
+    color: AURORA_MAGENTA,
   },
 
   // Pro Badge
@@ -592,7 +595,7 @@ const styles = StyleSheet.create({
   seeAll: {
     fontSize: 13,
     fontWeight: '600',
-    color: BRAND,
+    color: AURORA_PINK,
   },
 
   // Recent
@@ -605,7 +608,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: 'rgba(235,150,255,0.1)',
   },
   recentImage: {
     width: '100%',
@@ -625,7 +628,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: 'rgba(235,150,255,0.1)',
     borderStyle: 'dashed',
     alignItems: 'center',
     backgroundColor: 'rgba(255,255,255,0.02)',
@@ -653,7 +656,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: 'rgba(235,150,255,0.1)',
   },
   featureImage: {
     width: '100%',

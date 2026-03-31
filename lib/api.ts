@@ -319,11 +319,19 @@ export async function analyzeBodyPhoto(imageBase64: string) {
 // (staging has Vercel SSO protection, production may not have the route deployed yet)
 const SHOWCASE_BASE = 'https://auto-toon.com'
 const SHOWCASE_PATHS = [
-  '/previews/professional_photo.png',
+  '/previews/upscaled_1773202996947_3.jpg',
+  '/previews/upscaled_1773202961651_2.jpg',
+  '/previews/relight.jpg',
+  '/previews/upscale.jpg',
+  '/previews/1772652596964_tefcxtjyanf.png',
+  '/previews/bolsa-strikeout-(upscaled-batch)-upscale-2.png',
+  '/previews/nike-travis-scott-olive-(upscaled-batch)-upscale-1.png',
   '/previews/vignette.png',
   '/previews/elements.png',
+  '/previews/elements-image.png',
   '/previews/3x3.png',
   '/previews/creative_elements.png',
+  '/previews/pro-photo.png',
   '/previews/poster.png',
   '/previews/instagram_feed.png',
   '/previews/food_photography.png',
