@@ -4,6 +4,8 @@ import { RestoreIntroModal } from '@/components/restore-intro-modal'
 import { restoreImage } from '@/lib/api'
 import { uploadImage } from '@/lib/upload'
 import { useCreditsStore } from '@/stores/use-credits-store'
+import { useSubscriptionStore } from '@/stores/use-subscription-store'
+import { getCostLabel } from '@/lib/ai-models'
 import { RESTORE_MODELS, useRestoreStore, type Resolution, type RestoreModelId } from '@/stores/use-restore-store'
 import { useTermsConsentStore } from '@/stores/use-terms-consent-store'
 import * as FileSystem from 'expo-file-system/legacy'
@@ -87,12 +89,15 @@ export default function RestoreScreen() {
   const store = useRestoreStore()
   const { balance, fetchCredits, setShowExhaustionModal } = useCreditsStore()
   const { requireConsent } = useTermsConsentStore()
+  const isPayPerUse = useSubscriptionStore((s) => s.plan) === 'PAYPERUSE'
 
   const [isPickingImage, setIsPickingImage] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
   const isSubmittingRef = useRef(false)
 
   const creditCost = store.creditCost()
+  const restoreModelId = RESTORE_MODELS[store.selectedModel].id
+  const restoreCostLabel = getCostLabel(restoreModelId, isPayPerUse, { resolution: store.resolution })
   const canRestore = store.uploadedImageUrl && !isUploading && store.phase === 'idle'
 
   // ─── Image picking ──────────────────────────────────────────────────
@@ -338,7 +343,7 @@ export default function RestoreScreen() {
           {/* Header */}
           <View style={styles.headerRow}>
             <Text style={styles.pageTitle}>Restore</Text>
-            {balance !== null && (
+            {!isPayPerUse && balance !== null && (
               <View style={styles.creditsBadge}>
                 <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
                   <SvgPath d="M12 2L15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2z" fill={AURORA_MAGENTA} />
@@ -442,7 +447,7 @@ export default function RestoreScreen() {
                       {res.label}
                     </Text>
                     <Text style={[styles.resCredits, isSelected && { color: `${accent}B3` }]}>
-                      {res.credits} credits
+                      {getCostLabel(restoreModelId, isPayPerUse, { resolution: res.value })}
                     </Text>
                   </TouchableOpacity>
                 )
@@ -476,11 +481,11 @@ export default function RestoreScreen() {
               <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
                 <SvgPath d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="#FFFFFF" />
               </Svg>
-              <Text style={styles.restoreBtnText}>Restore ({creditCost} credits)</Text>
+              <Text style={styles.restoreBtnText}>Restore ({restoreCostLabel})</Text>
             </View>
           </TouchableOpacity>
 
-          {balance !== null && (
+          {!isPayPerUse && balance !== null && (
             <Text style={styles.balanceHint}>Balance: {balance} credits</Text>
           )}
         </ScrollView>

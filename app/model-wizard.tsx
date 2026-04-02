@@ -27,7 +27,8 @@ import {
   analyzeBodyPhoto,
 } from '@/lib/api'
 import { ParticleSphere } from '@/components/particle-sphere'
-import { AI_MODELS, getModelCredits } from '@/lib/ai-models'
+import { AI_MODELS, getModelCredits, getCostLabel } from '@/lib/ai-models'
+import { useSubscriptionStore } from '@/stores/use-subscription-store'
 
 const AURORA_NAVY = '#193153'
 const AURORA_MAGENTA = '#EB96FF'
@@ -209,6 +210,10 @@ export default function ModelWizardScreen() {
   const store = useModelFactoryStore()
   const { balance, fetchCredits, setShowExhaustionModal } = useCreditsStore()
   const { requireConsent } = useTermsConsentStore()
+  const isPayPerUse = useSubscriptionStore((s) => s.plan) === 'PAYPERUSE'
+
+  const faceModelCostLabel = getCostLabel(AI_MODELS.GEMINI_3_IMAGE.id, isPayPerUse)
+  const turboModelCostLabel = getCostLabel(AI_MODELS.Z_IMAGE_TURBO.id, isPayPerUse)
 
   const [isFaceUploading, setIsFaceUploading] = useState(false)
   const [isBodyUploading, setIsBodyUploading] = useState(false)
@@ -477,7 +482,7 @@ export default function ModelWizardScreen() {
             <CloseIcon />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Create Model</Text>
-          {balance !== null && (
+          {!isPayPerUse && balance !== null && (
             <View style={styles.creditsBadge}>
               <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
                 <SvgPath
@@ -606,12 +611,12 @@ export default function ModelWizardScreen() {
                 />
               </Svg>
               <Text style={styles.generateBtnText}>
-                Generate Model ({store.mode === 'use-face' ? `${getModelCredits(AI_MODELS.GEMINI_3_IMAGE.id)} credits` : `${getModelCredits(AI_MODELS.Z_IMAGE_TURBO.id)} credit`})
+                Generate Model ({store.mode === 'use-face' ? faceModelCostLabel : turboModelCostLabel})
               </Text>
             </View>
           </TouchableOpacity>
 
-          {balance !== null && (
+          {!isPayPerUse && balance !== null && (
             <Text style={styles.balanceHint}>Balance: {balance} credits</Text>
           )}
         </ScrollView>

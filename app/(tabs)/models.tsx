@@ -12,7 +12,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Image } from 'expo-image'
 import { useRouter } from 'expo-router'
-import Svg, { Path as SvgPath, Circle } from 'react-native-svg'
+import Svg, { Path as SvgPath, Circle, Rect } from 'react-native-svg'
 import { useModelFactoryStore } from '@/stores/use-model-factory-store'
 import type { SavedModel } from '@/lib/model-factory'
 
@@ -33,6 +33,15 @@ function PlusIcon() {
         strokeWidth={2.5}
         strokeLinecap="round"
       />
+    </Svg>
+  )
+}
+
+function SheetsIcon() {
+  return (
+    <Svg width={12} height={12} viewBox="0 0 24 24" fill="none">
+      <Rect x="3" y="3" width="7" height="18" rx="1.5" stroke="#FFFFFF" strokeWidth="2" fill="none" />
+      <Rect x="14" y="3" width="7" height="18" rx="1.5" stroke="#FFFFFF" strokeWidth="2" fill="none" />
     </Svg>
   )
 }
@@ -65,12 +74,15 @@ export default function ModelsScreen() {
 
   const handleModelPress = useCallback(
     (model: SavedModel) => {
+      const urls = [model.imageUrl]
+      if (model.characterSheetUrl) urls.push(model.characterSheetUrl)
+
       router.push({
-        pathname: '/model-result',
+        pathname: '/image-viewer',
         params: {
-          imageUrl: model.imageUrl,
-          modelId: model.id,
+          urls: JSON.stringify(urls),
           title: model.name,
+          hideVideo: '1',
         },
       })
     },
@@ -118,6 +130,12 @@ export default function ModelsScreen() {
           contentFit="cover"
           transition={200}
         />
+        {item.characterSheetUrl && (
+          <View style={styles.sheetBadge}>
+            <SheetsIcon />
+            <Text style={styles.sheetBadgeText}>1:2</Text>
+          </View>
+        )}
         <View style={styles.cardOverlay}>
           <Text style={styles.cardName} numberOfLines={1}>
             {item.name}
@@ -265,6 +283,23 @@ const styles = StyleSheet.create({
   cardImage: {
     width: '100%',
     height: '100%',
+  },
+  sheetBadge: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    paddingHorizontal: 7,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  sheetBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
   cardOverlay: {
     position: 'absolute',

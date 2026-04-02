@@ -137,11 +137,13 @@ export default function ImageViewerScreen() {
     urls: string
     initialIndex?: string
     title?: string
+    hideVideo?: string
   }>()
 
   const urls: string[] = params.urls ? JSON.parse(params.urls) : []
   const initialIndex = parseInt(params.initialIndex || '0', 10)
   const title = params.title || ''
+  const hideVideo = params.hideVideo === '1'
 
   const [currentIndex, setCurrentIndex] = useState(initialIndex)
   const [isSaving, setIsSaving] = useState(false)
@@ -270,23 +272,25 @@ export default function ImageViewerScreen() {
 
       {/* Bottom overlay: Create Video + hint */}
       <SafeAreaView style={styles.bottomOverlay} edges={['bottom']} pointerEvents="box-none">
-        <TouchableOpacity
-          style={styles.createVideoButton}
-          onPress={() => {
-            useVideoStore.getState().setSourceImage(urls[currentIndex], urls, title)
-            router.push('/video-generator')
-          }}
-          activeOpacity={0.8}
-        >
-          <LinearGradient
-            colors={['#EB96FF', '#9333EA', '#0B5777']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={StyleSheet.absoluteFillObject}
-          />
-          <VideoIcon />
-          <Text style={styles.createVideoText}>Create Video</Text>
-        </TouchableOpacity>
+        {!hideVideo && (
+          <TouchableOpacity
+            style={styles.createVideoButton}
+            onPress={() => {
+              useVideoStore.getState().setSourceImage(urls[currentIndex], urls, title)
+              router.push('/video-generator')
+            }}
+            activeOpacity={0.8}
+          >
+            <LinearGradient
+              colors={['#EB96FF', '#9333EA', '#0B5777']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={StyleSheet.absoluteFillObject}
+            />
+            <VideoIcon />
+            <Text style={styles.createVideoText}>Create Video</Text>
+          </TouchableOpacity>
+        )}
         <Text style={styles.hintText} pointerEvents="none">Hold image to save or share</Text>
       </SafeAreaView>
 

@@ -4,7 +4,9 @@ import { analyzeProduct, enhanceProduct } from '@/lib/api'
 import { CONFIG } from '@/lib/config'
 import { uploadImage } from '@/lib/upload'
 import { useCreditsStore } from '@/stores/use-credits-store'
+import { useSubscriptionStore } from '@/stores/use-subscription-store'
 import { AI_MODELS, getModelCredits, GOAL_MAP, useProductEnhancerStore, type GoalId, type ImageModelId } from '@/stores/use-product-enhancer-store'
+import { getCostLabel } from '@/lib/ai-models'
 import { useTermsConsentStore } from '@/stores/use-terms-consent-store'
 import { Image } from 'expo-image'
 import * as ImagePicker from 'expo-image-picker'
@@ -277,8 +279,11 @@ export default function CreateScreen() {
   const store = useProductEnhancerStore()
   const { balance, fetchCredits, setShowExhaustionModal } = useCreditsStore()
   const { requireConsent } = useTermsConsentStore()
+  const isPayPerUse = useSubscriptionStore((s) => s.plan) === 'PAYPERUSE'
 
   const creditCost = getModelCredits(store.selectedModel)
+  const modelId = AI_MODELS[store.selectedModel].id
+  const costLabel = getCostLabel(modelId, isPayPerUse)
   const canGenerate =
     (store.localImageUri || store.uploadedImageUrl) &&
     store.productName.trim() &&
@@ -1029,13 +1034,13 @@ export default function CreateScreen() {
                   <View style={styles.generatingRow}>
                     <SparklesIcon size={20} color="#fff" />
                     <Text style={styles.generateButtonText}>
-                      Generate ({creditCost} credits)
+                      Generate ({costLabel})
                     </Text>
                   </View>
                 )}
               </TouchableOpacity>
 
-              {balance !== null && (
+              {!isPayPerUse && balance !== null && (
                 <Text style={styles.balanceHint}>Balance: {balance} credits</Text>
               )}
             </View>

@@ -17,7 +17,9 @@ import { LinearGradient } from 'expo-linear-gradient'
 import Svg, { Path as SvgPath, Circle, Rect } from 'react-native-svg'
 import { useVideoStore } from '@/stores/use-video-store'
 import { useCreditsStore } from '@/stores/use-credits-store'
+import { useSubscriptionStore } from '@/stores/use-subscription-store'
 import { useTermsConsentStore } from '@/stores/use-terms-consent-store'
+import { getCostLabel, AI_MODELS } from '@/lib/ai-models'
 import { analyzeProductForVideo, generateVideoSSE } from '@/lib/api'
 import { ParticleSphere } from '@/components/particle-sphere'
 
@@ -244,11 +246,14 @@ export default function VideoGeneratorScreen() {
   const store = useVideoStore()
   const { balance, fetchCredits, setShowExhaustionModal } = useCreditsStore()
   const { requireConsent } = useTermsConsentStore()
+  const isPayPerUse = useSubscriptionStore((s) => s.plan) === 'PAYPERUSE'
   const abortRef = useRef<{ abort: () => void } | null>(null)
   const [showEndFramePicker, setShowEndFramePicker] = useState(false)
 
   const plan = store.aiPlan
   const creditCost = plan ? getVideoCreditCost(plan.duration) : 10
+  const duration = plan?.duration ?? 5
+  const videoCostLabel = getCostLabel(AI_MODELS.KLING_V3.id, isPayPerUse, { videoDuration: duration })
 
   // Auto-analyze on mount
   useEffect(() => {
@@ -649,12 +654,12 @@ export default function VideoGeneratorScreen() {
             <View style={styles.genButtonContent}>
               <VideoIcon size={20} />
               <Text style={styles.generateButtonText}>
-                Generate Video ({creditCost} credits)
+                Generate Video ({videoCostLabel})
               </Text>
             </View>
           </TouchableOpacity>
 
-          {balance !== null && (
+          {!isPayPerUse && balance !== null && (
             <Text style={styles.balanceHint}>Balance: {balance} credits</Text>
           )}
         </ScrollView>
