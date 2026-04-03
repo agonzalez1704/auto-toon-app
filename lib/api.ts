@@ -638,6 +638,16 @@ export async function relightImage(params: RelightRequest) {
   return data
 }
 
+// Push notifications
+export async function registerPushToken(pushToken: string, platform: string) {
+  await api.post('/api/notifications/register', { pushToken, platform })
+}
+
+export async function updateNotificationSettings(enabled: boolean) {
+  const { data } = await api.put('/api/notifications/settings', { enabled })
+  return data
+}
+
 // Showcase images — hardcoded to avoid dependency on API availability
 // (staging has Vercel SSO protection, production may not have the route deployed yet)
 const SHOWCASE_BASE = 'https://auto-toon.com'
