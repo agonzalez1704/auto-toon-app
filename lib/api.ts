@@ -620,6 +620,24 @@ export async function generateFashionVariations(params: FashionVariationsRequest
   return data
 }
 
+// Relight
+export interface RelightRequest {
+  baseImageUrl: string
+  lighting: string
+  aiModel?: string
+  lightPosition?: string
+  lightColor?: string
+}
+
+export async function relightImage(params: RelightRequest) {
+  const { data } = await api.post<{ imageUrl: string; creditsRemaining: number }>(
+    '/api/fashion-editorial/relight',
+    params,
+    { timeout: 300_000 }
+  )
+  return data
+}
+
 // Showcase images — hardcoded to avoid dependency on API availability
 // (staging has Vercel SSO protection, production may not have the route deployed yet)
 const SHOWCASE_BASE = 'https://auto-toon.com'

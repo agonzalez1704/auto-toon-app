@@ -217,6 +217,7 @@ export default function AssetsScreen() {
             urls: JSON.stringify(item.batchUrls),
             initialIndex: String(item.batchIndex ?? 0),
             title: item.productName,
+            assetType: 'upscale_batch',
           },
         })
       } else if (item.asset?.secondImageType === 'restore' && item.asset.originalImageUrl) {
@@ -243,6 +244,7 @@ export default function AssetsScreen() {
           params: {
             urls: JSON.stringify([item.imageUrl]),
             title: item.productName,
+            assetType: item.asset.secondImageType || '',
           },
         })
       }

@@ -19,9 +19,10 @@ import { Image } from 'expo-image'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import * as FileSystem from 'expo-file-system/legacy'
 import * as MediaLibrary from 'expo-media-library'
-import Svg, { Path as SvgPath, Rect } from 'react-native-svg'
+import Svg, { Path as SvgPath, Rect, Circle } from 'react-native-svg'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useVideoStore } from '@/stores/use-video-store'
+import { useFashionEditorialStore } from '@/stores/use-fashion-editorial-store'
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window')
 
@@ -46,6 +47,35 @@ function VideoIcon() {
     <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
       <Rect x="2" y="4" width="15" height="16" rx="2" stroke="#FFFFFF" strokeWidth={2} fill="none" />
       <SvgPath d="M17 9l5-3v12l-5-3V9z" stroke="#FFFFFF" strokeWidth={2} fill="none" strokeLinejoin="round" />
+    </Svg>
+  )
+}
+
+function CampaignIcon() {
+  return (
+    <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
+      <Rect x="3" y="3" width="7" height="7" rx="1.5" stroke="#FFF" strokeWidth={2} />
+      <Rect x="14" y="3" width="7" height="7" rx="1.5" stroke="#FFF" strokeWidth={2} />
+      <Rect x="3" y="14" width="7" height="7" rx="1.5" stroke="#FFF" strokeWidth={2} />
+      <Rect x="14" y="14" width="7" height="7" rx="1.5" stroke="#FFF" strokeWidth={2} />
+    </Svg>
+  )
+}
+
+function RelightIcon() {
+  return (
+    <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
+      <Circle cx="12" cy="12" r="5" stroke="#FFF" strokeWidth={2} />
+      <SvgPath d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="#FFF" strokeWidth={2} strokeLinecap="round" />
+    </Svg>
+  )
+}
+
+function AngleIcon() {
+  return (
+    <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
+      <SvgPath d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z" stroke="#FFF" strokeWidth={2} strokeLinejoin="round" />
+      <SvgPath d="M3.27 6.96L12 12.01l8.73-5.05M12 22.08V12" stroke="#FFF" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
     </Svg>
   )
 }
@@ -138,12 +168,15 @@ export default function ImageViewerScreen() {
     initialIndex?: string
     title?: string
     hideVideo?: string
+    assetType?: string // fashion_editorial | upscale_batch | vignette | elements | poster | etc.
   }>()
 
   const urls: string[] = params.urls ? JSON.parse(params.urls) : []
   const initialIndex = parseInt(params.initialIndex || '0', 10)
   const title = params.title || ''
   const hideVideo = params.hideVideo === '1'
+  const assetType = params.assetType || ''
+  const isFashion = assetType === 'fashion_editorial'
 
   const [currentIndex, setCurrentIndex] = useState(initialIndex)
   const [isSaving, setIsSaving] = useState(false)
@@ -270,26 +303,76 @@ export default function ImageViewerScreen() {
         </View>
       </SafeAreaView>
 
-      {/* Bottom overlay: Create Video + hint */}
+      {/* Bottom overlay: contextual actions */}
       <SafeAreaView style={styles.bottomOverlay} edges={['bottom']} pointerEvents="box-none">
         {!hideVideo && (
-          <TouchableOpacity
-            style={styles.createVideoButton}
-            onPress={() => {
-              useVideoStore.getState().setSourceImage(urls[currentIndex], urls, title)
-              router.push('/video-generator')
-            }}
-            activeOpacity={0.8}
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.actionsRow}
           >
-            <LinearGradient
-              colors={['#EB96FF', '#9333EA', '#0B5777']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={StyleSheet.absoluteFillObject}
-            />
-            <VideoIcon />
-            <Text style={styles.createVideoText}>Create Video</Text>
-          </TouchableOpacity>
+            {/* Create Video — available for all types */}
+            <TouchableOpacity
+              style={styles.actionPill}
+              onPress={() => {
+                useVideoStore.getState().setSourceImage(urls[currentIndex], urls, title)
+                router.push('/video-generator')
+              }}
+              activeOpacity={0.8}
+            >
+              <LinearGradient colors={['#EB96FF', '#9333EA', '#0B5777']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFillObject} />
+              <VideoIcon />
+              <Text style={styles.actionText}>Video</Text>
+            </TouchableOpacity>
+
+            {/* Fashion-specific: Campaign Variations */}
+            {isFashion && (
+              <TouchableOpacity
+                style={styles.actionPill}
+                onPress={() => {
+                  useFashionEditorialStore.getState().setHeroResult(urls[currentIndex])
+                  router.push('/fashion-editorial/campaign')
+                }}
+                activeOpacity={0.8}
+              >
+                <LinearGradient colors={['#EC4899', '#9333EA']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFillObject} />
+                <CampaignIcon />
+                <Text style={styles.actionText}>Campaign</Text>
+              </TouchableOpacity>
+            )}
+
+            {/* Relight — available for all types */}
+            <TouchableOpacity
+              style={styles.actionPill}
+              onPress={() => {
+                router.push({
+                  pathname: '/relight',
+                  params: { imageUrl: urls[currentIndex], title },
+                })
+              }}
+              activeOpacity={0.8}
+            >
+              <LinearGradient colors={['#F59E0B', '#EF4444']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFillObject} />
+              <RelightIcon />
+              <Text style={styles.actionText}>Relight</Text>
+            </TouchableOpacity>
+
+            {/* Multi-angle — available for all types */}
+            {isFashion && (
+              <TouchableOpacity
+                style={styles.actionPill}
+                onPress={() => {
+                  useFashionEditorialStore.getState().setHeroResult(urls[currentIndex])
+                  router.push('/fashion-editorial/campaign')
+                }}
+                activeOpacity={0.8}
+              >
+                <LinearGradient colors={['#06B6D4', '#3B82F6']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFillObject} />
+                <AngleIcon />
+                <Text style={styles.actionText}>Multi-Angle</Text>
+              </TouchableOpacity>
+            )}
+          </ScrollView>
         )}
         <Text style={styles.hintText} pointerEvents="none">Hold image to save or share</Text>
       </SafeAreaView>
@@ -392,17 +475,22 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
     gap: 10,
   },
-  createVideoButton: {
+  actionsRow: {
+    flexDirection: 'row',
+    gap: 8,
+    paddingHorizontal: 16,
+  },
+  actionPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: 24,
-    paddingVertical: 14,
-    borderRadius: 14,
+    gap: 6,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 12,
     overflow: 'hidden',
   },
-  createVideoText: {
-    fontSize: 15,
+  actionText: {
+    fontSize: 13,
     fontWeight: '700',
     color: '#FFFFFF',
   },
