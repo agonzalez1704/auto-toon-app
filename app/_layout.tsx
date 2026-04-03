@@ -120,6 +120,10 @@ export default function RootLayout() {
                   options={{ headerShown: false, presentation: 'modal', animation: 'slide_from_bottom' }}
                 />
                 <Stack.Screen
+                  name="fashion-editorial"
+                  options={{ headerShown: false, presentation: 'modal', animation: 'slide_from_bottom' }}
+                />
+                <Stack.Screen
                   name="video-player"
                   options={{ headerShown: false, presentation: 'modal', animation: 'fade' }}
                 />

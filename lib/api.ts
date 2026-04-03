@@ -531,6 +531,91 @@ export async function getUserVideos() {
   return data.videos ?? []
 }
 
+// ─── Fashion Editorial ─────────────────────────────────────────────
+
+export interface FashionImageAnalysis {
+  productName: string
+  productType: string
+  clothingAnalysis: string
+  itemCount: number
+}
+
+export async function analyzeFashionImage(imageUrl: string) {
+  const { data } = await api.post<{ success: boolean } & FashionImageAnalysis>(
+    '/api/fashion-editorial/analyze-image',
+    { imageUrl }
+  )
+  return data
+}
+
+export interface MakeupAnalysis {
+  analysis: string
+  mode: 'face' | 'product'
+}
+
+export async function analyzeMakeup(imageBase64: string) {
+  const { data } = await api.post<MakeupAnalysis>(
+    '/api/fashion-editorial/analyze-makeup',
+    { imageBase64 }
+  )
+  return data
+}
+
+export interface HairstyleAnalysis {
+  styleAnalysis: string
+  colorAnalysis: string
+  mode: 'face' | 'product'
+}
+
+export async function analyzeHairstyle(imageBase64: string) {
+  const { data } = await api.post<HairstyleAnalysis>(
+    '/api/fashion-editorial/analyze-hairstyle',
+    { imageBase64 }
+  )
+  return data
+}
+
+export interface FashionEditorialRequest {
+  modelId: string
+  clothingImageUrls: string[]
+  makeupAnalysis?: string
+  hairstyleAnalysis?: string
+  styleData?: { style: string; customStyle?: string }
+  backgroundData?: { background: string; customBackground?: string }
+  promptModifier?: string
+  aiModel?: string
+}
+
+export async function generateFashionEditorial(params: FashionEditorialRequest) {
+  const { data } = await api.post<{ imageUrl: string; creditsRemaining: number }>(
+    '/api/fashion-editorial/generate',
+    params,
+    { timeout: 300_000 }
+  )
+  return data
+}
+
+export interface FashionVariationsRequest {
+  baseImageUrl: string
+  modelImageUrls?: string[]
+  clothingImageUrls?: string[]
+  poseStyle: string
+  aspectRatio?: string
+  mainProductInfo?: { productName: string; productType?: string; clothingAnalysis?: string }
+  makeupAnalysis?: string
+  hairstyleAnalysis?: string
+  model?: string
+}
+
+export async function generateFashionVariations(params: FashionVariationsRequest) {
+  const { data } = await api.post<{ success: boolean; variations: string[] }>(
+    '/api/fashion-editorial/variations',
+    params,
+    { timeout: 300_000 }
+  )
+  return data
+}
+
 // Showcase images — hardcoded to avoid dependency on API availability
 // (staging has Vercel SSO protection, production may not have the route deployed yet)
 const SHOWCASE_BASE = 'https://auto-toon.com'

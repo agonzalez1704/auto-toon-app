@@ -14,6 +14,7 @@ import { Image } from 'expo-image'
 import { useRouter } from 'expo-router'
 import Svg, { Path as SvgPath, Circle, Rect } from 'react-native-svg'
 import { useModelFactoryStore } from '@/stores/use-model-factory-store'
+import { useFashionEditorialStore } from '@/stores/use-fashion-editorial-store'
 import type { SavedModel } from '@/lib/model-factory'
 
 const { width: SCREEN_W } = Dimensions.get('window')
@@ -92,6 +93,14 @@ export default function ModelsScreen() {
   const handleModelLongPress = useCallback(
     (model: SavedModel) => {
       Alert.alert(model.name, undefined, [
+        {
+          text: 'Use in Editorial',
+          onPress: () => {
+            useFashionEditorialStore.getState().reset()
+            useFashionEditorialStore.getState().selectModel(model.id, model.imageUrl)
+            router.push('/fashion-editorial')
+          },
+        },
         {
           text: 'Regenerate',
           onPress: () => {

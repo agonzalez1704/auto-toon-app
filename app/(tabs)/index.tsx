@@ -100,6 +100,13 @@ const QUICK_LINKS = [
     text: '#2DD4BF',
   },
   {
+    label: 'Editorial',
+    route: '/fashion-editorial' as const,
+    bg: 'rgba(236,72,153,0.12)',
+    border: 'rgba(236,72,153,0.25)',
+    text: '#EC4899',
+  },
+  {
     label: 'Video',
     route: '/video-generator' as const,
     bg: 'rgba(139,92,246,0.12)',
