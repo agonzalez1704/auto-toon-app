@@ -21,10 +21,11 @@ import { queryKeys } from '@/lib/query'
 const AURORA_NAVY = '#193153'
 const AURORA_MAGENTA = '#EB96FF'
 
-type FilterType = 'all' | 'vignette' | 'elements' | 'poster' | '3x3' | 'food' | 'upscaled' | 'restored' | 'video'
+type FilterType = 'all' | 'fashion_editorial' | 'vignette' | 'elements' | 'poster' | '3x3' | 'food' | 'upscaled' | 'restored' | 'video'
 
 const FILTERS: { value: FilterType; label: string }[] = [
   { value: 'all', label: 'All' },
+  { value: 'fashion_editorial', label: 'Fashion' },
   { value: 'video', label: 'Videos' },
   { value: 'restored', label: 'Restored' },
   { value: 'vignette', label: 'Vignette' },
@@ -45,6 +46,7 @@ const TYPE_LABELS: Record<string, string> = {
   restore: 'Restored',
   none: 'Photo',
   video: 'Video',
+  fashion_editorial: 'Fashion',
 }
 
 // A display item is either a regular asset, an individual image from an upscale_batch, or a video
@@ -164,6 +166,7 @@ export default function AssetsScreen() {
     if (filter === 'video') return displayItems.filter((d) => d.isVideo)
     if (filter === 'upscaled') return displayItems.filter((d) => !!d.batchUrls)
     if (filter === 'restored') return displayItems.filter((d) => d.asset?.secondImageType === 'restore')
+    if (filter === 'fashion_editorial') return displayItems.filter((d) => d.asset?.secondImageType === 'fashion_editorial')
     return displayItems.filter(
       (d) => !d.batchUrls && !d.isVideo && d.asset?.secondImageType === filter
     )

@@ -222,9 +222,11 @@ export async function deleteAsset(id: string) {
 }
 
 // Recent creations
-export async function getRecentCreations() {
-  const { data } = await api.get<{ images: string[] }>('/api/user/recent-creations')
-  return data.images ?? []
+export async function getRecentCreations(limit = 30, offset = 0) {
+  const { data } = await api.get<{ images: string[]; total: number }>(
+    `/api/user/recent-creations?limit=${limit}&offset=${offset}`
+  )
+  return data
 }
 
 // Stripe checkout
@@ -584,6 +586,8 @@ export interface FashionEditorialRequest {
   backgroundData?: { background: string; customBackground?: string }
   promptModifier?: string
   aiModel?: string
+  /** Inline model data — used by mobile app where models aren't in the DB */
+  models?: { modelId: string; clothingImageUrls: string[]; imageUrl?: string; prompt?: string; characterSheetUrl?: string }[]
 }
 
 export async function generateFashionEditorial(params: FashionEditorialRequest) {

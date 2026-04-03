@@ -1,7 +1,8 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
 import {
   Animated,
   Dimensions,
+  Easing,
   Platform,
   ScrollView,
   StatusBar,
@@ -234,112 +235,291 @@ function QuickLinkPill({
   )
 }
 
-// ─── Masonry Grid ──────────────────────────────────────────────────────
+// ─── Layout helper ─────────────────────────────────────────────────────
 
-function MasonryGrid({
-  images,
-  onPress,
-}: {
-  images: string[]
-  onPress: (url: string) => void
-}) {
-  // Build a simple CSS-grid-like layout using absolute positioning
-  // Each cell is GRID_CELL x GRID_CELL, with spans doubling size
+interface SlotLayout { x: number; y: number; w: number; h: number }
+
+function computeMasonryLayout(count: number): { slots: SlotLayout[]; totalHeight: number } {
   const ROW_HEIGHT = GRID_CELL
-
-  // Occupy a 2D grid tracker
   const grid: boolean[][] = []
   const ensureRow = (r: number) => {
     while (grid.length <= r) grid.push(new Array(GRID_COLS).fill(false))
   }
+  const slots: SlotLayout[] = []
 
-  const placed: {
-    url: string
-    x: number
-    y: number
-    w: number
-    h: number
-  }[] = []
-
-  for (let i = 0; i < images.length; i++) {
+  for (let i = 0; i < count; i++) {
     const [cs, rs] = MASONRY_SPANS[i % MASONRY_SPANS.length]
     const colSpan = Math.min(cs, GRID_COLS)
     const rowSpan = rs
-
-    // Find first free slot that fits
-    let foundR = -1
-    let foundC = -1
+    let foundR = -1, foundC = -1
     outer: for (let r = 0; ; r++) {
       ensureRow(r + rowSpan - 1)
       for (let c = 0; c <= GRID_COLS - colSpan; c++) {
         let fits = true
-        for (let dr = 0; dr < rowSpan && fits; dr++) {
-          for (let dc = 0; dc < colSpan && fits; dc++) {
+        for (let dr = 0; dr < rowSpan && fits; dr++)
+          for (let dc = 0; dc < colSpan && fits; dc++)
             if (grid[r + dr][c + dc]) fits = false
-          }
-        }
-        if (fits) {
-          foundR = r
-          foundC = c
-          break outer
-        }
+        if (fits) { foundR = r; foundC = c; break outer }
       }
-      if (r > 50) break // safety
+      if (r > 50) break
     }
-
     if (foundR < 0) continue
-
-    // Mark cells
-    for (let dr = 0; dr < rowSpan; dr++) {
-      for (let dc = 0; dc < colSpan; dc++) {
+    for (let dr = 0; dr < rowSpan; dr++)
+      for (let dc = 0; dc < colSpan; dc++)
         grid[foundR + dr][foundC + dc] = true
-      }
-    }
-
-    placed.push({
-      url: images[i],
+    slots.push({
       x: foundC * (GRID_CELL + GRID_GAP),
       y: foundR * (ROW_HEIGHT + GRID_GAP),
       w: colSpan * GRID_CELL + (colSpan - 1) * GRID_GAP,
       h: rowSpan * ROW_HEIGHT + (rowSpan - 1) * GRID_GAP,
     })
   }
-
   const totalRows = grid.length
-  const totalHeight = totalRows * ROW_HEIGHT + (totalRows - 1) * GRID_GAP
+  return { slots, totalHeight: totalRows * ROW_HEIGHT + (totalRows - 1) * GRID_GAP }
+}
+
+// ─── Slot Reel (controlled single-spin tile) ─────────────────────────
+
+function SlotReel({
+  imageUrl,
+  nextImageUrl,
+  width,
+  height,
+  onPress,
+  onSpinComplete,
+}: {
+  imageUrl: string
+  nextImageUrl: string | null
+  width: number
+  height: number
+  onPress: (url: string) => void
+  onSpinComplete: () => void
+}) {
+  const [displayUrl, setDisplayUrl] = useState(imageUrl)
+  const slideY = useRef(new Animated.Value(0)).current
+  const spinning = useRef(false)
+
+  // Keep display in sync when imageUrl prop changes externally (initial load)
+  useEffect(() => {
+    if (!spinning.current) setDisplayUrl(imageUrl)
+  }, [imageUrl])
+
+  // Trigger spin when a new nextImageUrl arrives
+  useEffect(() => {
+    if (!nextImageUrl || spinning.current || nextImageUrl === displayUrl) return
+    spinning.current = true
+    slideY.setValue(0)
+
+    Animated.sequence([
+      // Bounce up — anticipation
+      Animated.spring(slideY, {
+        toValue: 12,
+        speed: 40,
+        bounciness: 12,
+        useNativeDriver: true,
+      }),
+      // Slide current image up out of frame
+      Animated.timing(slideY, {
+        toValue: -height,
+        duration: 300,
+        easing: Easing.in(Easing.quad),
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      // Swap to new image, position below
+      setDisplayUrl(nextImageUrl)
+
+      slideY.setValue(height)
+
+      // Slide new image in with bounce landing
+      Animated.spring(slideY, {
+        toValue: 0,
+        speed: 10,
+        bounciness: 10,
+        useNativeDriver: true,
+      }).start(() => {
+        spinning.current = false
+        onSpinComplete()
+      })
+    })
+  }, [nextImageUrl])
+
+  return (
+    <View style={{ width, height, borderRadius: 10, overflow: 'hidden', backgroundColor: 'rgba(255,255,255,0.03)' }}>
+      <TouchableOpacity
+        activeOpacity={0.85}
+        onPress={() => onPress(displayUrl)}
+        style={{ width, height }}
+      >
+        <Animated.View style={{ width, height, transform: [{ translateY: slideY }] }}>
+          <Image
+            source={{ uri: displayUrl }}
+            style={{ width, height }}
+            contentFit="cover"
+          />
+        </Animated.View>
+
+        {/* 3D cylindrical gradient */}
+        <LinearGradient
+          pointerEvents="none"
+          colors={['rgba(0,0,0,0.35)', 'transparent', 'transparent', 'rgba(0,0,0,0.5)']}
+          locations={[0, 0.18, 0.82, 1]}
+          style={StyleSheet.absoluteFillObject}
+        />
+      </TouchableOpacity>
+    </View>
+  )
+}
+
+// ─── Animated Masonry Grid ────────────────────────────────────────────
+
+function MasonryGrid({
+  images,
+  onPress,
+  fetchMore,
+}: {
+  images: string[]
+  onPress: (url: string) => void
+  fetchMore: () => Promise<string[]>
+}) {
+  const { slots, totalHeight } = useMemo(() => computeMasonryLayout(images.length), [images.length])
+  const tileCount = Math.min(images.length, slots.length)
+
+  // Current image shown in each tile + pending spin targets
+  const [tileImages, setTileImages] = useState<string[]>(() => images.slice(0, tileCount))
+  const [spinTarget, setSpinTarget] = useState<{ idx: number; url: string } | null>(null)
+
+  // Reserve pool: images not currently visible in any tile
+  const reservePool = useRef<string[]>([])
+  useEffect(() => {
+    const visible = new Set(tileImages)
+    reservePool.current = images.filter(u => !visible.has(u))
+  }, []) // Only on mount — we manage the pool manually after that
+
+  // Track which slot each tile occupies (for position-swap animation)
+  const tileSlots = useRef<number[]>(Array.from({ length: tileCount }, (_, i) => i)).current
+
+  // Animated position values for each tile
+  const animX = useRef<Animated.Value[]>(slots.slice(0, tileCount).map(s => new Animated.Value(s.x))).current
+  const animY = useRef<Animated.Value[]>(slots.slice(0, tileCount).map(s => new Animated.Value(s.y))).current
+  const isBusy = useRef(false) // Global lock: 1 animation at a time
+
+  // Group tiles by slot dimensions for same-size swaps
+  const sizeGroups = useMemo(() => {
+    const groups: Record<string, number[]> = {}
+    for (let i = 0; i < tileCount; i++) {
+      const s = slots[tileSlots[i]]
+      const key = `${s.w}x${s.h}`
+      ;(groups[key] ??= []).push(i)
+    }
+    return Object.values(groups).filter(g => g.length >= 2)
+  }, [tileCount, slots, tileSlots])
+
+  const doSwap = useCallback(() => {
+    if (sizeGroups.length === 0) { isBusy.current = false; return }
+    const group = sizeGroups[Math.floor(Math.random() * sizeGroups.length)]
+    const ai = Math.floor(Math.random() * group.length)
+    let bi = Math.floor(Math.random() * (group.length - 1))
+    if (bi >= ai) bi++
+    const a = group[ai], b = group[bi]
+    const slotA = tileSlots[a], slotB = tileSlots[b]
+
+    Animated.parallel([
+      Animated.spring(animX[a], { toValue: slots[slotB].x, useNativeDriver: true, speed: 6, bounciness: 4 }),
+      Animated.spring(animY[a], { toValue: slots[slotB].y, useNativeDriver: true, speed: 6, bounciness: 4 }),
+      Animated.spring(animX[b], { toValue: slots[slotA].x, useNativeDriver: true, speed: 6, bounciness: 4 }),
+      Animated.spring(animY[b], { toValue: slots[slotA].y, useNativeDriver: true, speed: 6, bounciness: 4 }),
+    ]).start(() => {
+      tileSlots[a] = slotB
+      tileSlots[b] = slotA
+      isBusy.current = false
+    })
+  }, [sizeGroups, slots, animX, animY, tileSlots])
+
+  const doSlotSpin = useCallback(async () => {
+    // Pick a random tile
+    const idx = Math.floor(Math.random() * tileCount)
+
+    // Try to get an image from the reserve pool
+    let nextUrl: string | undefined
+    if (reservePool.current.length > 0) {
+      const ri = Math.floor(Math.random() * reservePool.current.length)
+      nextUrl = reservePool.current.splice(ri, 1)[0]
+    }
+
+    // If reserve is running low, fetch more in background
+    if (reservePool.current.length < 5) {
+      fetchMore().then(fresh => {
+        const visible = new Set(tileImages)
+        const existing = new Set(reservePool.current)
+        for (const u of fresh) {
+          if (!visible.has(u) && !existing.has(u)) reservePool.current.push(u)
+        }
+      }).catch(() => {})
+    }
+
+    if (!nextUrl) { isBusy.current = false; return }
+
+    // Tell the SlotReel to spin
+    setSpinTarget({ idx, url: nextUrl })
+  }, [tileCount, tileImages, fetchMore])
+
+  const handleSpinComplete = useCallback(() => {
+    if (!spinTarget) return
+    const { idx, url } = spinTarget
+    // Return old image to reserve pool
+    setTileImages(prev => {
+      const old = prev[idx]
+      reservePool.current.push(old)
+      const next = [...prev]
+      next[idx] = url
+      return next
+    })
+    setSpinTarget(null)
+    isBusy.current = false
+  }, [spinTarget])
+
+  // Single master timer: 1 animation every 3-4 seconds
+  useEffect(() => {
+    if (tileCount < 2) return
+    const iv = setInterval(() => {
+      if (isBusy.current) return
+      isBusy.current = true
+      // Alternate: ~40% position swap, ~60% image spin
+      if (Math.random() < 0.4) {
+        doSwap()
+      } else {
+        doSlotSpin()
+      }
+    }, 3000 + Math.random() * 1000)
+    return () => clearInterval(iv)
+  }, [tileCount, doSwap, doSlotSpin])
 
   return (
     <View style={{ height: totalHeight, position: 'relative' }}>
-      {placed.map((item, i) => (
-        <TouchableOpacity
-          key={i}
-          activeOpacity={0.85}
-          onPress={() => onPress(item.url)}
-          style={{
-            position: 'absolute',
-            left: item.x,
-            top: item.y,
-            width: item.w,
-            height: item.h,
-            borderRadius: 10,
-            overflow: 'hidden',
-            backgroundColor: 'rgba(255,255,255,0.03)',
-          }}
-        >
-          <Image
-            source={{ uri: item.url }}
-            style={{ width: '100%', height: '100%' }}
-            contentFit="cover"
-            transition={200}
-          />
-          <LinearGradient
-            colors={['transparent', 'rgba(0,0,0,0.45)']}
-            style={StyleSheet.absoluteFillObject}
-            start={{ x: 0.5, y: 0.5 }}
-            end={{ x: 0.5, y: 1 }}
-          />
-        </TouchableOpacity>
-      ))}
+      {Array.from({ length: tileCount }).map((_, i) => {
+        const slot = slots[tileSlots[i]]
+        return (
+          <Animated.View
+            key={i}
+            style={{
+              position: 'absolute',
+              width: slot.w,
+              height: slot.h,
+              transform: [{ translateX: animX[i] }, { translateY: animY[i] }],
+            }}
+          >
+            <SlotReel
+              imageUrl={tileImages[i]}
+              nextImageUrl={spinTarget?.idx === i ? spinTarget.url : null}
+              width={slot.w}
+              height={slot.h}
+              onPress={onPress}
+              onSpinComplete={handleSpinComplete}
+            />
+          </Animated.View>
+        )
+      })}
     </View>
   )
 }
@@ -426,10 +606,20 @@ export default function DashboardScreen() {
     ]).start()
   }, [])
 
-  const { data: recentImages, isLoading: loadingRecent } = useQuery({
+  const { data: recentData, isLoading: loadingRecent } = useQuery({
     queryKey: queryKeys.recentCreations,
-    queryFn: getRecentCreations,
+    queryFn: () => getRecentCreations(30, 0),
   })
+
+  const recentImages = recentData?.images
+  const fetchOffset = useRef(30)
+
+  const fetchMoreImages = useCallback(async (): Promise<string[]> => {
+    const offset = fetchOffset.current
+    fetchOffset.current += 20
+    const result = await getRecentCreations(20, offset)
+    return result.images ?? []
+  }, [])
 
   const planLabel = PLAN_LABELS[plan] ?? plan
   const firstName = user?.firstName || 'there'
@@ -545,6 +735,7 @@ export default function DashboardScreen() {
             {hasImages ? (
               <MasonryGrid
                 images={recentImages}
+                fetchMore={fetchMoreImages}
                 onPress={(url) =>
                   router.push({
                     pathname: '/image-viewer',

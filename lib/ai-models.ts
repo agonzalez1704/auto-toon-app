@@ -75,9 +75,9 @@ export const AI_MODELS = {
     type: 'image',
     credits: 3,
     cost: {
-      perImage: 0.04 // Estimate
+      perImage: 0.0672
     },
-    payPerUseRate: 0.072, // $0.04 × 1.8
+    payPerUseRate: 0.121, // $0.0672 × 1.8
     inputConfig: {
       defaultResolution: '2K'
     }
@@ -87,11 +87,11 @@ export const AI_MODELS = {
     name: 'Nano Banana 2',
     provider: 'google',
     type: 'image',
-    credits: 3,
+    credits: 2,
     cost: {
-      perImage: 0.0672 // $0.0672 per image output
+      perImage: 0.04
     },
-    payPerUseRate: 0.121, // $0.0672 × 1.8
+    payPerUseRate: 0.072, // $0.04 × 1.8
     inputConfig: {
       defaultResolution: '2K'
     }
@@ -114,9 +114,9 @@ export const AI_MODELS = {
     type: 'image',
     credits: 1,
     cost: {
-      perImage: 0.04 // Replicate run cost estimate
+      perImage: 0.034
     },
-    payPerUseRate: 0.072, // $0.04 × 1.8
+    payPerUseRate: 0.061, // $0.034 × 1.8
   },
   SEEDREAM_5_LITE: {
     id: 'bytedance/seedream-5-lite',
@@ -125,9 +125,9 @@ export const AI_MODELS = {
     type: 'image',
     credits: 2,
     cost: {
-      perImage: 0.034 // Replicate run cost estimate (lite tier)
+      perImage: 0.04
     },
-    payPerUseRate: 0.061, // $0.034 × 1.8
+    payPerUseRate: 0.072, // $0.04 × 1.8
     inputConfig: {
       defaultResolution: '2K',
       maxImages: 1
