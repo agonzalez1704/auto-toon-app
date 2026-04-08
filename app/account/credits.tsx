@@ -140,7 +140,7 @@ export default function CreditsScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#0a0a0f',
+    backgroundColor: '#193153',
   },
   safeArea: { flex: 1 },
   scrollContent: {
@@ -160,7 +160,7 @@ const styles = StyleSheet.create({
   },
   balanceValue: {
     fontSize: 48,
-    fontWeight: '800',
+    fontWeight: '700',
     color: '#FFFFFF',
     marginTop: 12,
   },
@@ -219,7 +219,7 @@ const styles = StyleSheet.create({
   },
   packPrice: {
     fontSize: 16,
-    fontWeight: '800',
+    fontWeight: '700',
     color: BRAND,
   },
 })

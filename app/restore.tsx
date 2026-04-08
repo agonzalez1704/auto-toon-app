@@ -33,7 +33,7 @@ import Svg, { Defs, Stop, LinearGradient as SvgLinearGradient, Path as SvgPath }
 // Aurora Blossom palette
 const AURORA_NAVY = '#193153'
 const AURORA_TEAL = '#0B5777'
-const AURORA_MAGENTA = '#EB96FF'
+const AURORA_MAGENTA = '#FBBF24'
 
 const RESOLUTIONS: { value: Resolution; label: string; credits: number }[] = [
   { value: '2K', label: '2K', credits: 3 },
@@ -365,7 +365,7 @@ export default function RestoreScreen() {
                     <Text style={styles.uploadOverlayText}>Uploading...</Text>
                   </View>
                 )}
-                <TouchableOpacity style={styles.removeBtn} onPress={clearImage}>
+                <TouchableOpacity style={styles.removeBtn} onPress={clearImage} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
                   <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
                     <SvgPath d="M18 6L6 18M6 6l12 12" stroke="#FFFFFF" strokeWidth={2.5} strokeLinecap="round" />
                   </Svg>
@@ -471,7 +471,7 @@ export default function RestoreScreen() {
           >
             {canRestore && (
               <LinearGradient
-                colors={[AURORA_MAGENTA, '#9333EA', AURORA_TEAL]}
+                colors={['#FBBF24', '#F59E0B', '#B45309']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={StyleSheet.absoluteFillObject}
@@ -497,9 +497,9 @@ export default function RestoreScreen() {
 // ─── Styles ─────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#0a0a0f' },
+  root: { flex: 1, backgroundColor: '#193153' },
   safeArea: { flex: 1 },
-  scrollContent: { padding: 20, paddingBottom: 40 },
+  scrollContent: { padding: 16, paddingBottom: 40 },
 
   // Header
   headerRow: {
@@ -508,14 +508,14 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 20,
   },
-  pageTitle: { fontSize: 24, fontWeight: '800', color: '#FFFFFF' },
+  pageTitle: { fontSize: 28, fontWeight: '700', color: '#FFFFFF' },
   creditsBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: 'rgba(235,150,255,0.08)',
+    backgroundColor: 'rgba(251,191,36,0.08)',
     borderWidth: 1,
-    borderColor: 'rgba(235,150,255,0.15)',
+    borderColor: 'rgba(251,191,36,0.15)',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
@@ -600,7 +600,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   modelPillSelected: {
-    backgroundColor: 'rgba(235,150,255,0.2)',
+    backgroundColor: 'rgba(251,191,36,0.2)',
   },
   modelPillText: {
     fontSize: 13,

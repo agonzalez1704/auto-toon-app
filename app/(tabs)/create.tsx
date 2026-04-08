@@ -1,7 +1,7 @@
+import { CarouselPickerModal } from '@/components/carousel-picker-modal'
 import { CreateIntroModal } from '@/components/create-intro-modal'
 import { ParticleSphere } from '@/components/particle-sphere'
 import { analyzeProduct, enhanceProduct } from '@/lib/api'
-import { CONFIG } from '@/lib/config'
 import { uploadImage } from '@/lib/upload'
 import { useCreditsStore } from '@/stores/use-credits-store'
 import { useSubscriptionStore } from '@/stores/use-subscription-store'
@@ -16,8 +16,6 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   ActivityIndicator,
   Alert,
-  Dimensions,
-  FlatList,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -42,7 +40,7 @@ import Svg, {
 // Aurora Blossom palette
 const AURORA_NAVY = '#193153'
 const AURORA_TEAL = '#0B5777'
-const AURORA_MAGENTA = '#EB96FF'
+const AURORA_MAGENTA = '#FBBF24'
 const AURORA_PINK = '#F9D4E0'
 
 // Only show these two models to users
@@ -222,11 +220,6 @@ const GOAL_ICONS: Record<GoalId, () => React.JSX.Element> = {
   'professional-photo': CameraGoalIcon,
 }
 
-const { width: SCREEN_W } = Dimensions.get('window')
-const CARD_W = SCREEN_W * 0.72
-const CARD_GAP = 12
-const CARD_SNAP = CARD_W + CARD_GAP
-
 const GOALS: { id: GoalId; label: string; description: string; preview: string }[] = [
   { id: 'instagram-feed', label: 'Instagram Feed', description: '3x3 grid for carousels', preview: 'instagram_feed.png' },
   { id: 'product-advantages', label: 'Product Advantages', description: 'Highlight key features', preview: 'product_advantages.png' },
@@ -270,11 +263,9 @@ export default function CreateScreen() {
   const router = useRouter()
   const [isPickingImage, setIsPickingImage] = useState(false)
   const [goalModalVisible, setGoalModalVisible] = useState(false)
-  const [activeGoalIndex, setActiveGoalIndex] = useState(0)
   const [configModalVisible, setConfigModalVisible] = useState(false)
   const [newElement, setNewElement] = useState('')
   const [newEnhancer, setNewEnhancer] = useState('')
-  const goalListRef = useRef<FlatList>(null)
 
   const store = useProductEnhancerStore()
   const { balance, fetchCredits, setShowExhaustionModal } = useCreditsStore()
@@ -500,7 +491,7 @@ export default function CreateScreen() {
               activeOpacity={0.8}
             >
               <LinearGradient
-                colors={[AURORA_MAGENTA, '#9333EA', AURORA_TEAL]}
+                colors={['#FBBF24', '#F59E0B', '#B45309']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={StyleSheet.absoluteFillObject}
@@ -611,14 +602,7 @@ export default function CreateScreen() {
               <Text style={styles.label}>Goal</Text>
               <TouchableOpacity
                 style={styles.goalButton}
-                onPress={() => {
-                  const idx = GOALS.findIndex((g) => g.id === store.selectedGoalId)
-                  setActiveGoalIndex(idx >= 0 ? idx : 0)
-                  setGoalModalVisible(true)
-                  setTimeout(() => {
-                    goalListRef.current?.scrollToIndex({ index: idx >= 0 ? idx : 0, animated: false })
-                  }, 100)
-                }}
+                onPress={() => setGoalModalVisible(true)}
                 activeOpacity={0.7}
               >
                 {store.selectedGoalId && GOAL_ICONS[store.selectedGoalId] ? (
@@ -837,7 +821,7 @@ export default function CreateScreen() {
                           return (
                             <TouchableOpacity
                               key={fs}
-                              style={[styles.chip, active && { borderColor: AURORA_MAGENTA, backgroundColor: 'rgba(235,150,255,0.12)' }]}
+                              style={[styles.chip, active && { borderColor: AURORA_MAGENTA, backgroundColor: 'rgba(251,191,36,0.12)' }]}
                               onPress={() => store.setSecondImageConfig({
                                 posterConfig: { ...store.secondImageConfig.posterConfig!, fontStyle: fs } as any,
                               })}
@@ -854,101 +838,15 @@ export default function CreateScreen() {
             </Modal>
 
             {/* Goal Picker Modal */}
-            <Modal
+            <CarouselPickerModal
               visible={goalModalVisible}
-              animationType="slide"
-              transparent
-              onRequestClose={() => setGoalModalVisible(false)}
-            >
-              <TouchableOpacity
-                style={styles.modalBackdrop}
-                activeOpacity={1}
-                onPress={() => setGoalModalVisible(false)}
-              >
-                <View />
-              </TouchableOpacity>
-              <View style={styles.modalSheet}>
-                {/* Header */}
-                <View style={styles.modalHeader}>
-                  <Text style={styles.modalTitle}>Choose Goal</Text>
-                  <TouchableOpacity onPress={() => setGoalModalVisible(false)} hitSlop={12}>
-                    <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
-                      <SvgPath d="M18 6L6 18M6 6l12 12" stroke="rgba(255,255,255,0.6)" strokeWidth="2.5" strokeLinecap="round" />
-                    </Svg>
-                  </TouchableOpacity>
-                </View>
-
-                {/* Carousel */}
-                <FlatList
-                  ref={goalListRef}
-                  data={GOALS}
-                  horizontal
-                  pagingEnabled={false}
-                  snapToInterval={CARD_SNAP}
-                  snapToAlignment="start"
-                  decelerationRate="fast"
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={{ paddingHorizontal: (SCREEN_W - CARD_W) / 2 }}
-                  ItemSeparatorComponent={() => <View style={{ width: CARD_GAP }} />}
-                  getItemLayout={(_, index) => ({
-                    length: CARD_SNAP,
-                    offset: CARD_SNAP * index,
-                    index,
-                  })}
-                  onMomentumScrollEnd={(e) => {
-                    const idx = Math.round(e.nativeEvent.contentOffset.x / CARD_SNAP)
-                    setActiveGoalIndex(Math.max(0, Math.min(idx, GOALS.length - 1)))
-                  }}
-                  keyExtractor={(item) => item.id}
-                  renderItem={({ item }) => {
-                    const isSelected = store.selectedGoalId === item.id
-                    return (
-                      <View style={[styles.goalCardModal, isSelected && styles.goalCardModalSelected]}>
-                        <Image
-                          source={{ uri: `${CONFIG.API_BASE_URL}/previews/${item.preview}` }}
-                          style={styles.goalPreviewImage}
-                          contentFit="cover"
-                          transition={200}
-                        />
-                        <View style={styles.goalCardInfo}>
-                          <Text style={styles.goalCardTitle}>{item.label}</Text>
-                          <Text style={styles.goalCardDesc}>{item.description}</Text>
-                        </View>
-                        <TouchableOpacity
-                          style={[styles.goalSelectBtn, isSelected && styles.goalSelectBtnActive]}
-                          onPress={() => {
-                            store.selectGoal(item.id)
-                            setGoalModalVisible(false)
-                          }}
-                          activeOpacity={0.8}
-                        >
-                          {isSelected ? (
-                            <Text style={styles.goalSelectBtnText}>Selected</Text>
-                          ) : (
-                            <>
-                              <LinearGradient
-                                colors={[AURORA_MAGENTA, '#9333EA', AURORA_TEAL]}
-                                start={{ x: 0, y: 0 }}
-                                end={{ x: 1, y: 0 }}
-                                style={StyleSheet.absoluteFillObject}
-                              />
-                              <Text style={styles.goalSelectBtnText}>Select</Text>
-                            </>
-                          )}
-                        </TouchableOpacity>
-                      </View>
-                    )
-                  }}
-                />
-
-                {/* Dot indicators */}
-                <View style={styles.dotsRow}>
-                  {GOALS.map((g, i) => (
-                    <View key={g.id} style={[styles.dot, i === activeGoalIndex && styles.dotActive]} />
-                  ))}
-                </View>
-              </View>
-            </Modal>
+              onClose={() => setGoalModalVisible(false)}
+              title="Choose Goal"
+              items={GOALS}
+              selectedId={store.selectedGoalId}
+              onSelect={(id) => store.selectGoal(id as GoalId)}
+              initialIndex={GOALS.findIndex((g) => g.id === store.selectedGoalId)}
+            />
 
             {/* Error */}
             {store.error && (
@@ -1019,7 +917,7 @@ export default function CreateScreen() {
               >
                 {canGenerate && !store.isGenerating && (
                   <LinearGradient
-                    colors={[AURORA_MAGENTA, '#9333EA', AURORA_TEAL]}
+                    colors={['#FBBF24', '#F59E0B', '#B45309']}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
                     style={StyleSheet.absoluteFillObject}
@@ -1056,18 +954,18 @@ export default function CreateScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#0a0a0f',
+    backgroundColor: '#193153',
   },
   safeArea: { flex: 1 },
   scrollContent: {
-    padding: 20,
+    padding: 16,
     paddingBottom: 40,
   },
   pageTitle: {
-    fontSize: 24,
-    fontWeight: '800',
+    fontSize: 28,
+    fontWeight: '700',
     color: '#FFFFFF',
-    marginBottom: 20,
+    marginBottom: 24,
   },
   section: { marginBottom: 20 },
   label: {
@@ -1205,7 +1103,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(235,150,255,0.2)',
+    borderColor: 'rgba(251,191,36,0.2)',
     backgroundColor: 'rgba(255,255,255,0.06)',
   },
   chipText: {
@@ -1274,78 +1172,6 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
 
-  // Goal carousel cards
-  goalCardModal: {
-    width: CARD_W,
-    borderRadius: 18,
-    overflow: 'hidden',
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.08)',
-  },
-  goalCardModalSelected: {
-    borderColor: AURORA_MAGENTA,
-  },
-  goalPreviewImage: {
-    width: '100%',
-    aspectRatio: 3 / 4,
-  },
-  goalCardInfo: {
-    paddingHorizontal: 16,
-    paddingTop: 14,
-    paddingBottom: 8,
-  },
-  goalCardTitle: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: '#FFFFFF',
-    marginBottom: 4,
-  },
-  goalCardDesc: {
-    fontSize: 13,
-    color: 'rgba(255,255,255,0.5)',
-    lineHeight: 18,
-  },
-  goalSelectBtn: {
-    marginHorizontal: 16,
-    marginBottom: 16,
-    marginTop: 8,
-    paddingVertical: 12,
-    borderRadius: 12,
-    alignItems: 'center',
-    overflow: 'hidden',
-    backgroundColor: 'rgba(255,255,255,0.1)',
-  },
-  goalSelectBtnActive: {
-    backgroundColor: 'rgba(235,150,255,0.12)',
-    borderWidth: 1,
-    borderColor: AURORA_MAGENTA,
-  },
-  goalSelectBtnText: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#FFFFFF',
-  },
-
-  // Dot indicators
-  dotsRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 6,
-    paddingTop: 16,
-  },
-  dot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-  },
-  dotActive: {
-    backgroundColor: AURORA_MAGENTA,
-    width: 18,
-    borderRadius: 3,
-  },
-
   // Bottom section
   bottomSection: {
     marginTop: 4,
@@ -1366,7 +1192,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   modelPillSelected: {
-    backgroundColor: 'rgba(235,150,255,0.2)',
+    backgroundColor: 'rgba(251,191,36,0.2)',
   },
   modelPillText: {
     fontSize: 13,
@@ -1396,8 +1222,8 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.1)',
   },
   aspectPillSelected: {
-    borderColor: 'rgba(235,150,255,0.4)',
-    backgroundColor: 'rgba(235,150,255,0.12)',
+    borderColor: 'rgba(251,191,36,0.4)',
+    backgroundColor: 'rgba(251,191,36,0.12)',
   },
   aspectPillText: {
     fontSize: 13,

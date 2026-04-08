@@ -320,7 +320,7 @@ export default function ImageViewerScreen() {
               }}
               activeOpacity={0.8}
             >
-              <LinearGradient colors={['#EB96FF', '#9333EA', '#0B5777']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFillObject} />
+              <LinearGradient colors={['#FBBF24', '#F59E0B', '#B45309']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFillObject} />
               <VideoIcon />
               <Text style={styles.actionText}>Video</Text>
             </TouchableOpacity>

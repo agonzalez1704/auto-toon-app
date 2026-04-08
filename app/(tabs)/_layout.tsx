@@ -17,7 +17,7 @@ const Tabs = withLayoutContext<
   NativeBottomTabNavigationEventMap
 >(Navigator)
 
-const ACCENT = '#EB96FF'
+const ACCENT = '#FBBF24'
 
 export default function TabLayout() {
   return (
@@ -27,7 +27,7 @@ export default function TabLayout() {
           tabBarActiveTintColor: ACCENT,
           ...(Platform.OS === 'android' && {
             tabBarInactiveTintColor: '#64748b',
-            tabBarActiveIndicatorColor: 'rgba(235,150,255,0.15)',
+            tabBarActiveIndicatorColor: 'rgba(251,191,36,0.15)',
           }),
           tabBarStyle: {
             backgroundColor: '#111B2E',
@@ -56,32 +56,22 @@ export default function TabLayout() {
           }}
         />
         <Tabs.Screen
-          name="restore"
-          options={{
-            title: 'Restore',
-            tabBarIcon: Platform.select({
-              ios: { type: 'sfSymbol', name: 'arrow.counterclockwise.circle.fill' },
-              default: { type: 'sfSymbol', name: 'arrow.counterclockwise.circle.fill' },
-            }) as any,
-          }}
-        />
-        <Tabs.Screen
-          name="models"
-          options={{
-            title: 'Models',
-            tabBarIcon: Platform.select({
-              ios: { type: 'sfSymbol', name: 'person.crop.rectangle.fill' },
-              default: { type: 'sfSymbol', name: 'person.crop.rectangle.fill' },
-            }) as any,
-          }}
-        />
-        <Tabs.Screen
           name="assets"
           options={{
             title: 'Assets',
             tabBarIcon: Platform.select({
               ios: { type: 'sfSymbol', name: 'photo.stack.fill' },
               default: { type: 'sfSymbol', name: 'photo.stack.fill' },
+            }) as any,
+          }}
+        />
+        <Tabs.Screen
+          name="more"
+          options={{
+            title: 'More',
+            tabBarIcon: Platform.select({
+              ios: { type: 'sfSymbol', name: 'ellipsis.circle.fill' },
+              default: { type: 'sfSymbol', name: 'ellipsis.circle.fill' },
             }) as any,
           }}
         />

@@ -163,7 +163,7 @@ export default function AccountScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#0a0a0f',
+    backgroundColor: '#193153',
   },
   safeArea: { flex: 1 },
   scrollContent: {

@@ -24,10 +24,10 @@ import {
 import { CONFIG } from '@/lib/config'
 
 const { width: SCREEN_W } = Dimensions.get('window')
-const BG = '#0F0F13'
-const ACCENT = '#EB96FF'
+const BG = '#193153'
+const ACCENT = '#FBBF24'
 const TEAL = '#0B5777'
-const MUTED = 'rgba(255,255,255,0.45)'
+const MUTED = 'rgba(255,255,255,0.55)'
 const CARD_BG = 'rgba(255,255,255,0.05)'
 const CARD_BORDER = 'rgba(255,255,255,0.08)'
 
@@ -216,7 +216,7 @@ export default function ModelSelectorScreen() {
             activeOpacity={0.8}
             disabled={!store.selectedModelId}
           >
-            <LinearGradient colors={[ACCENT, '#9333EA', TEAL]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFillObject} />
+            <LinearGradient colors={['#FBBF24', '#F59E0B', '#B45309']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFillObject} />
             <Text style={styles.continueBtnText}>Continue</Text>
             <ArrowRightIcon />
           </TouchableOpacity>
@@ -231,7 +231,7 @@ export default function ModelSelectorScreen() {
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: BG },
   safeArea: { flex: 1 },
-  scrollContent: { padding: 20 },
+  scrollContent: { padding: 16 },
 
   // Header
   header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 10, gap: 12 },

@@ -24,7 +24,7 @@ const { width: SCREEN_W } = Dimensions.get('window')
 // Aurora Blossom palette
 const AURORA_NAVY = '#193153'
 const AURORA_TEAL = '#0B5777'
-const AURORA_MAGENTA = '#EB96FF'
+const AURORA_MAGENTA = '#FBBF24'
 const AURORA_PINK = '#F9D4E0'
 
 // ─── Confetti Particle ──────────────────────────────────────────────────
@@ -262,7 +262,7 @@ export default function WelcomeScreen() {
             activeOpacity={0.85}
           >
             <LinearGradient
-              colors={[AURORA_MAGENTA, '#9333EA', AURORA_TEAL]}
+              colors={['#FBBF24', '#F59E0B', '#B45309']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={StyleSheet.absoluteFillObject}

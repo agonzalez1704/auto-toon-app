@@ -32,16 +32,16 @@ import { getRecentCreations } from '@/lib/api'
 import { queryKeys } from '@/lib/query'
 
 // ─── Palette ───────────────────────────────────────────────────────────
-const BG = '#0F0F13'
+const BG = '#193153'
 const CARD_BG = 'rgba(255,255,255,0.04)'
 const CARD_BORDER = 'rgba(255,255,255,0.06)'
-const MUTED = 'rgba(255,255,255,0.45)'
+const MUTED = 'rgba(255,255,255,0.55)'
 const ACCENT_VIOLET = '#8B5CF6'
 
 const SCREEN_WIDTH = Dimensions.get('window').width
 const GRID_GAP = 4
 const GRID_COLS = 2
-const GRID_CELL = (SCREEN_WIDTH - 40 - GRID_GAP) / GRID_COLS
+const GRID_CELL = (SCREEN_WIDTH - 32 - GRID_GAP) / GRID_COLS
 
 // ─── Plan labels ───────────────────────────────────────────────────────
 const PLAN_LABELS: Record<string, string> = {
@@ -81,14 +81,14 @@ const QUICK_LINKS = [
   },
   {
     label: 'Restore',
-    route: '/(tabs)/restore' as const,
+    route: '/restore' as const,
     bg: 'rgba(34,211,238,0.12)',
     border: 'rgba(34,211,238,0.25)',
     text: '#22D3EE',
   },
   {
     label: 'Models',
-    route: '/(tabs)/models' as const,
+    route: '/models' as const,
     bg: 'rgba(236,72,153,0.12)',
     border: 'rgba(236,72,153,0.25)',
     text: '#EC4899',
@@ -767,7 +767,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    padding: 20,
+    padding: 16,
     paddingBottom: 40,
   },
 
@@ -804,17 +804,17 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     flex: 1,
-    fontSize: 22,
+    fontSize: 28,
     fontWeight: '700',
     color: '#FFFFFF',
     letterSpacing: -0.3,
-    marginLeft: 10,
+    marginLeft: 12,
   },
   newBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
-    paddingHorizontal: 14,
+    gap: 4,
+    paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
     overflow: 'hidden',
@@ -835,7 +835,8 @@ const styles = StyleSheet.create({
   pill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 8,
+    minHeight: 44,
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 20,
@@ -870,9 +871,11 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   sectionLabel: {
-    fontSize: 13,
-    fontWeight: '500',
+    fontSize: 12,
+    fontWeight: '600',
     color: MUTED,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   viewAll: {
     flexDirection: 'row',
@@ -927,9 +930,9 @@ const styles = StyleSheet.create({
   emptyCta: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 20,
-    paddingVertical: 10,
+    gap: 8,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
     borderRadius: 20,
     overflow: 'hidden',
   },

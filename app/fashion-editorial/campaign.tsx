@@ -30,10 +30,10 @@ import { getCostLabel, AI_MODELS } from '@/lib/ai-models'
 import { ParticleSphere } from '@/components/particle-sphere'
 
 const { width: SCREEN_W } = Dimensions.get('window')
-const BG = '#0F0F13'
-const ACCENT = '#EB96FF'
+const BG = '#193153'
+const ACCENT = '#FBBF24'
 const TEAL = '#0B5777'
-const MUTED = 'rgba(255,255,255,0.45)'
+const MUTED = 'rgba(255,255,255,0.55)'
 const CARD_BG = 'rgba(255,255,255,0.05)'
 const CARD_BORDER = 'rgba(255,255,255,0.08)'
 
@@ -269,7 +269,7 @@ export default function CampaignScreen() {
                   <Text style={styles.actionBtnText}>Regenerate</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.actionBtnSave} onPress={handleSave} activeOpacity={0.8}>
-                  <LinearGradient colors={[ACCENT, '#9333EA']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFillObject} />
+                  <LinearGradient colors={['#FBBF24', '#F59E0B']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFillObject} />
                   <SaveIcon />
                   <Text style={styles.actionBtnSaveText}>Save All</Text>
                 </TouchableOpacity>
@@ -289,7 +289,7 @@ export default function CampaignScreen() {
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: BG },
   safeArea: { flex: 1 },
-  scrollContent: { padding: 20 },
+  scrollContent: { padding: 16 },
 
   header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 10, gap: 12 },
   headerBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.08)', justifyContent: 'center', alignItems: 'center' },
@@ -301,7 +301,7 @@ const styles = StyleSheet.create({
   // Pose pills
   poseRow: { gap: 8, marginBottom: 24 },
   posePill: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12, borderWidth: 1, borderColor: CARD_BORDER, backgroundColor: CARD_BG },
-  posePillActive: { borderColor: ACCENT, backgroundColor: 'rgba(235,150,255,0.1)' },
+  posePillActive: { borderColor: ACCENT, backgroundColor: 'rgba(251,191,36,0.1)' },
   posePillText: { fontSize: 14, fontWeight: '500', color: MUTED },
   posePillTextActive: { color: ACCENT, fontWeight: '600' },
 

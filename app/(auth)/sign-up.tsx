@@ -30,7 +30,7 @@ WebBrowser.maybeCompleteAuthSession()
 // Aurora Blossom palette
 const AURORA_NAVY = '#193153'
 const AURORA_TEAL = '#0B5777'
-const AURORA_MAGENTA = '#EB96FF'
+const AURORA_MAGENTA = '#FBBF24'
 const AURORA_PINK = '#F9D4E0'
 
 // ─── SVG Icons ──────────────────────────────────────────────────────────
@@ -260,7 +260,7 @@ export default function SignUpScreen() {
                   style={loading ? { opacity: 0.6 } : undefined}
                 >
                   <LinearGradient
-                    colors={[AURORA_MAGENTA, '#9333EA', AURORA_TEAL]}
+                    colors={['#FBBF24', '#F59E0B', '#B45309']}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
                     style={styles.emailButton}
@@ -399,7 +399,7 @@ export default function SignUpScreen() {
                 style={loading ? { opacity: 0.6 } : undefined}
               >
                 <LinearGradient
-                  colors={[AURORA_MAGENTA, '#9333EA', AURORA_TEAL]}
+                  colors={['#FBBF24', '#F59E0B', '#B45309']}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                   style={styles.emailButton}
@@ -499,7 +499,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.06)',
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(235,150,255,0.12)',
+    borderColor: 'rgba(251,191,36,0.12)',
     padding: 24,
     marginBottom: 24,
   },
@@ -665,7 +665,7 @@ const otpStyles = StyleSheet.create({
   },
   boxFocused: {
     borderColor: AURORA_MAGENTA,
-    backgroundColor: 'rgba(235,150,255,0.08)',
+    backgroundColor: 'rgba(251,191,36,0.08)',
   },
   boxFilled: {
     borderColor: 'rgba(255,255,255,0.25)',

@@ -21,9 +21,9 @@ import { useFashionEditorialStore } from '@/stores/use-fashion-editorial-store'
 import { analyzeMakeup } from '@/lib/api'
 
 const { width: SCREEN_W } = Dimensions.get('window')
-const BG = '#0F0F13'
-const ACCENT = '#EB96FF'
-const MUTED = 'rgba(255,255,255,0.45)'
+const BG = '#193153'
+const ACCENT = '#FBBF24'
+const MUTED = 'rgba(255,255,255,0.55)'
 const CARD_BG = 'rgba(255,255,255,0.05)'
 const CARD_BORDER = 'rgba(255,255,255,0.08)'
 

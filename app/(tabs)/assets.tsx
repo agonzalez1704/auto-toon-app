@@ -19,7 +19,7 @@ import { getAssets, getUserVideos, deleteAsset, type Asset, type VideoGeneration
 import { queryKeys } from '@/lib/query'
 
 const AURORA_NAVY = '#193153'
-const AURORA_MAGENTA = '#EB96FF'
+const AURORA_MAGENTA = '#FBBF24'
 
 type FilterType = 'all' | 'fashion_editorial' | 'vignette' | 'elements' | 'poster' | '3x3' | 'food' | 'upscaled' | 'restored' | 'video'
 
@@ -378,13 +378,13 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1 },
 
   headerRow: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     paddingTop: 8,
     paddingBottom: 4,
   },
   pageTitle: {
     fontSize: 28,
-    fontWeight: '800',
+    fontWeight: '700',
     color: '#FFFFFF',
   },
 
@@ -395,15 +395,17 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   filterChip: {
-    paddingHorizontal: 14,
+    paddingHorizontal: 16,
     paddingVertical: 8,
+    minHeight: 44,
+    justifyContent: 'center' as const,
     borderRadius: 8,
     borderWidth: 1,
     backgroundColor: 'rgba(255,255,255,0.05)',
     borderColor: 'rgba(255,255,255,0.08)',
   },
   filterChipActive: {
-    backgroundColor: 'rgba(235,150,255,0.15)',
+    backgroundColor: 'rgba(251,191,36,0.15)',
     borderColor: AURORA_MAGENTA,
   },
   filterLabel: {
@@ -453,7 +455,7 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: 'rgba(235,150,255,0.6)',
+    backgroundColor: 'rgba(251,191,36,0.6)',
     justifyContent: 'center',
     alignItems: 'center',
     paddingLeft: 2,

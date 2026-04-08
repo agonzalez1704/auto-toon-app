@@ -31,7 +31,7 @@ import { AI_MODELS, getModelCredits, getCostLabel } from '@/lib/ai-models'
 import { useSubscriptionStore } from '@/stores/use-subscription-store'
 
 const AURORA_NAVY = '#193153'
-const AURORA_MAGENTA = '#EB96FF'
+const AURORA_MAGENTA = '#FBBF24'
 const AURORA_TEAL = '#0B5777'
 
 // ─── Icons ──────────────────────────────────────────────────────────
@@ -162,7 +162,7 @@ function PhotoSection({
               <Text style={styles.analyzedText}>Analyzed</Text>
             </View>
           )}
-          <TouchableOpacity style={styles.removeBtn} onPress={onClear}>
+          <TouchableOpacity style={styles.removeBtn} onPress={onClear} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
             <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
               <SvgPath
                 d="M18 6L6 18M6 6l12 12"
@@ -596,7 +596,7 @@ export default function ModelWizardScreen() {
           >
             {canGenerate && (
               <LinearGradient
-                colors={[AURORA_MAGENTA, '#9333EA', AURORA_TEAL]}
+                colors={['#FBBF24', '#F59E0B', '#B45309']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={StyleSheet.absoluteFillObject}
@@ -671,7 +671,7 @@ const styles = StyleSheet.create({
     color: AURORA_MAGENTA,
   },
   scrollContent: {
-    padding: 20,
+    padding: 16,
     paddingBottom: 40,
   },
 
@@ -786,7 +786,7 @@ const styles = StyleSheet.create({
   },
   modeCardSelected: {
     borderColor: AURORA_MAGENTA,
-    backgroundColor: 'rgba(235,150,255,0.1)',
+    backgroundColor: 'rgba(251,191,36,0.1)',
   },
   modeRadio: {
     width: 20,

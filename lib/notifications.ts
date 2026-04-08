@@ -5,13 +5,16 @@ import { Platform } from 'react-native'
 import { registerPushToken, updateNotificationSettings as updateSettingsApi } from './api'
 
 // Configure notification handler (show notifications when app is foregrounded)
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-  }),
-})
+// Guard: skip on simulators where push entitlements are unavailable
+if (Device.isDevice) {
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowAlert: true,
+      shouldPlaySound: true,
+      shouldSetBadge: true,
+    }),
+  })
+}
 
 /**
  * Request permission and get the Expo push token.

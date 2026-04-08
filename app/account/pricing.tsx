@@ -22,10 +22,10 @@ import { useSubscriptionStore } from '@/stores/use-subscription-store'
 
 const BRAND = '#8B5CF6'
 const BRAND_CYAN = '#06B6D4'
-const BG = '#0a0a0f'
+const BG = '#193153'
 const CARD_BG = 'rgba(255,255,255,0.05)'
 const CARD_BORDER = 'rgba(255,255,255,0.08)'
-const MUTED = 'rgba(255,255,255,0.45)'
+const MUTED = 'rgba(255,255,255,0.55)'
 
 // ─── Icons ──────────────────────────────────────────────────────────────
 
@@ -508,7 +508,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 26,
-    fontWeight: '800',
+    fontWeight: '700',
     color: '#FFFFFF',
     marginTop: 12,
   },
@@ -676,7 +676,7 @@ const styles = StyleSheet.create({
   },
   planPrice: {
     fontSize: 32,
-    fontWeight: '800',
+    fontWeight: '700',
     color: '#FFFFFF',
   },
   planPeriod: {
@@ -791,7 +791,7 @@ const styles = StyleSheet.create({
   },
   ppuName: {
     fontSize: 20,
-    fontWeight: '800',
+    fontWeight: '700',
     color: '#FFFFFF',
   },
   ppuBadge: {
@@ -802,7 +802,7 @@ const styles = StyleSheet.create({
   },
   ppuBadgeText: {
     fontSize: 9,
-    fontWeight: '800',
+    fontWeight: '700',
     color: BRAND_CYAN,
     letterSpacing: 0.5,
   },
@@ -814,7 +814,7 @@ const styles = StyleSheet.create({
   },
   ppuPrice: {
     fontSize: 36,
-    fontWeight: '800',
+    fontWeight: '700',
     color: '#FFFFFF',
   },
   ppuPriceSub: {
@@ -858,7 +858,7 @@ const styles = StyleSheet.create({
   },
   ppuStepNum: {
     fontSize: 11,
-    fontWeight: '800',
+    fontWeight: '700',
     color: BRAND_CYAN,
   },
   ppuStepText: {
@@ -938,7 +938,7 @@ const styles = StyleSheet.create({
   },
   creditPackAmount: {
     fontSize: 24,
-    fontWeight: '800',
+    fontWeight: '700',
     color: '#FFFFFF',
   },
   creditPackUnit: {

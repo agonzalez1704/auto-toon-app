@@ -31,7 +31,7 @@ const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window')
 // Aurora Blossom palette (from reference)
 const AURORA_NAVY = '#193153'
 const AURORA_TEAL = '#0B5777'
-const AURORA_MAGENTA = '#EB96FF'
+const AURORA_MAGENTA = '#FBBF24'
 const AURORA_PINK = '#F9D4E0'
 
 const COLUMN_COUNT = 3
@@ -126,7 +126,7 @@ function GradientCTA({
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={0.85}>
       <LinearGradient
-        colors={[AURORA_MAGENTA, '#9333EA', AURORA_TEAL]}
+        colors={['#FBBF24', '#F59E0B', '#B45309']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={[styles.ctaButton, large && styles.ctaLarge]}
@@ -480,7 +480,7 @@ function CreditsScreen({
           'rgba(25,49,83,0.94)',
           'rgba(11,87,119,0.88)',
           'rgba(91,33,182,0.82)',
-          'rgba(235,150,255,0.65)',
+          'rgba(251,191,36,0.65)',
         ]}
         locations={[0, 0.35, 0.65, 1]}
         style={StyleSheet.absoluteFillObject}
@@ -747,7 +747,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.08)',
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(235,150,255,0.15)',
+    borderColor: 'rgba(251,191,36,0.15)',
     paddingVertical: 6,
     paddingHorizontal: 20,
   },
@@ -761,7 +761,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 8,
-    backgroundColor: 'rgba(235,150,255,0.15)',
+    backgroundColor: 'rgba(251,191,36,0.15)',
     justifyContent: 'center',
     alignItems: 'center',
   },

@@ -29,7 +29,7 @@ import { ParticleSphere } from '@/components/particle-sphere'
 const { width: SCREEN_W } = Dimensions.get('window')
 
 const AURORA_NAVY = '#193153'
-const AURORA_MAGENTA = '#EB96FF'
+const AURORA_MAGENTA = '#FBBF24'
 const AURORA_TEAL = '#0B5777'
 
 function CloseIcon() {
@@ -152,10 +152,10 @@ export default function ModelResultScreen() {
     if (!imageUrl) return
     const name = modelName.trim() || 'Untitled Model'
 
-    // Save locally first (without character sheet)
-    const modelId = Date.now().toString()
+    // Save a temporary local entry while we generate the character sheet
+    const tempId = `temp_${Date.now()}`
     saveModel({
-      id: modelId,
+      id: tempId,
       name,
       imageUrl,
       prompt: faceAnalysis?.fullPrompt || '',
@@ -165,7 +165,7 @@ export default function ModelResultScreen() {
     })
     setShowSaveDialog(false)
 
-    // Now trigger character sheet generation in background
+    // Trigger character sheet generation — the API creates the DB record
     setIsGeneratingSheet(true)
     try {
       const result = await generateCharacterSheet({
@@ -174,11 +174,16 @@ export default function ModelResultScreen() {
         prompt: faceAnalysis?.fullPrompt || '',
       })
 
-      // Update the saved model with character sheet URL
+      // Replace temp entry with DB-backed model (use the real DB id)
       const store = useModelFactoryStore.getState()
       const updated = store.savedModels.map((m) =>
-        m.id === modelId
-          ? { ...m, characterSheetUrl: result.model.characterSheetUrl }
+        m.id === tempId
+          ? {
+              ...m,
+              id: result.model.id,
+              imageUrl: result.model.imageUrl,
+              characterSheetUrl: result.model.characterSheetUrl,
+            }
           : m
       )
       useModelFactoryStore.setState({ savedModels: updated })
@@ -192,7 +197,7 @@ export default function ModelResultScreen() {
         `"${name}" has been saved with a character reference sheet for consistent generations.`
       )
     } catch (error: any) {
-      // Model is already saved locally — character sheet just failed
+      // Model is saved locally — character sheet just failed
       Alert.alert(
         'Saved (Partial)',
         `"${name}" has been saved, but the character sheet could not be generated. You can regenerate it later.\n\n${error?.message || ''}`
@@ -281,7 +286,7 @@ export default function ModelResultScreen() {
             activeOpacity={0.7}
           >
             <LinearGradient
-              colors={[AURORA_MAGENTA, '#9333EA', AURORA_TEAL]}
+              colors={['#FBBF24', '#F59E0B', '#B45309']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={StyleSheet.absoluteFillObject}
@@ -324,7 +329,7 @@ export default function ModelResultScreen() {
                 onPress={confirmSaveToGallery}
               >
                 <LinearGradient
-                  colors={[AURORA_MAGENTA, '#9333EA']}
+                  colors={['#FBBF24', '#F59E0B']}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
                   style={[StyleSheet.absoluteFillObject, { borderRadius: 12 }]}
@@ -428,7 +433,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 24,
     borderWidth: 1,
-    borderColor: 'rgba(235,150,255,0.15)',
+    borderColor: 'rgba(251,191,36,0.15)',
   },
   dialogTitle: {
     fontSize: 18,
@@ -446,7 +451,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.06)',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: 'rgba(235,150,255,0.15)',
+    borderColor: 'rgba(251,191,36,0.15)',
     paddingHorizontal: 14,
     paddingVertical: 12,
     fontSize: 15,

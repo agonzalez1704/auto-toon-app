@@ -26,10 +26,10 @@ import { getCostLabel, AI_MODELS } from '@/lib/ai-models'
 import { ParticleSphere } from '@/components/particle-sphere'
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window')
-const BG = '#0F0F13'
-const ACCENT = '#EB96FF'
+const BG = '#193153'
+const ACCENT = '#FBBF24'
 const TEAL = '#0B5777'
-const MUTED = 'rgba(255,255,255,0.45)'
+const MUTED = 'rgba(255,255,255,0.55)'
 const CARD_BG = 'rgba(255,255,255,0.05)'
 const CARD_BORDER = 'rgba(255,255,255,0.08)'
 
@@ -266,7 +266,7 @@ export default function GenerateScreen() {
             onPress={() => router.push('/fashion-editorial/campaign')}
             activeOpacity={0.8}
           >
-            <LinearGradient colors={[ACCENT, '#9333EA', TEAL]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFillObject} />
+            <LinearGradient colors={['#FBBF24', '#F59E0B', '#B45309']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFillObject} />
             <Text style={styles.campaignBtnText}>Campaign Variations</Text>
             <ArrowRightIcon />
           </TouchableOpacity>
@@ -360,7 +360,7 @@ export default function GenerateScreen() {
             activeOpacity={0.8}
             disabled={!store.canGenerateHero()}
           >
-            <LinearGradient colors={[ACCENT, '#9333EA', TEAL]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFillObject} />
+            <LinearGradient colors={['#FBBF24', '#F59E0B', '#B45309']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFillObject} />
             <Text style={styles.generateBtnText}>Generate ({costLabel})</Text>
           </TouchableOpacity>
         </ScrollView>
@@ -420,7 +420,7 @@ const styles = StyleSheet.create({
   },
   modelOptionSelected: {
     borderColor: ACCENT,
-    backgroundColor: 'rgba(235,150,255,0.08)',
+    backgroundColor: 'rgba(251,191,36,0.08)',
   },
   modelOptionLabel: { flex: 1, fontSize: 11, fontWeight: '600' as const, color: 'rgba(255,255,255,0.5)' },
   modelOptionLabelSelected: { color: '#FFFFFF' },

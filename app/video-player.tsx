@@ -22,7 +22,7 @@ import { LinearGradient } from 'expo-linear-gradient'
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window')
 
-const AURORA_MAGENTA = '#EB96FF'
+const AURORA_MAGENTA = '#FBBF24'
 
 // ─── Icons ────────────────────────────────────────────────────────────
 
@@ -281,7 +281,7 @@ export default function VideoPlayerScreen() {
               <View style={styles.progressBar}>
                 <View style={[styles.progressFill, { width: `${progress * 100}%` }]}>
                   <LinearGradient
-                    colors={[AURORA_MAGENTA, '#9333EA']}
+                    colors={['#FBBF24', '#F59E0B']}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
                     style={StyleSheet.absoluteFillObject}
@@ -384,9 +384,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   topButtonActive: {
-    backgroundColor: 'rgba(235,150,255,0.2)',
+    backgroundColor: 'rgba(251,191,36,0.2)',
     borderWidth: 1,
-    borderColor: 'rgba(235,150,255,0.4)',
+    borderColor: 'rgba(251,191,36,0.4)',
   },
   topTitle: {
     flex: 1,

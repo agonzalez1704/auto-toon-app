@@ -1,4 +1,4 @@
-import { useCallback } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   Dimensions,
   Alert,
   StatusBar,
+  ActivityIndicator,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Image } from 'expo-image'
@@ -15,6 +16,7 @@ import { useRouter } from 'expo-router'
 import Svg, { Path as SvgPath, Circle, Rect } from 'react-native-svg'
 import { useModelFactoryStore } from '@/stores/use-model-factory-store'
 import { useFashionEditorialStore } from '@/stores/use-fashion-editorial-store'
+import { listFashionModels } from '@/lib/api'
 import type { SavedModel } from '@/lib/model-factory'
 
 const { width: SCREEN_W } = Dimensions.get('window')
@@ -23,7 +25,7 @@ const GRID_COLS = 2
 const CARD_W = (SCREEN_W - 32 - GRID_GAP) / GRID_COLS
 
 const AURORA_NAVY = '#193153'
-const AURORA_MAGENTA = '#EB96FF'
+const AURORA_MAGENTA = '#FBBF24'
 
 function PlusIcon() {
   return (
@@ -67,6 +69,48 @@ export default function ModelsScreen() {
   const savedModels = useModelFactoryStore((s) => s.savedModels)
   const deleteModel = useModelFactoryStore((s) => s.deleteModel)
   const resetForNew = useModelFactoryStore((s) => s.resetForNew)
+  const [isLoading, setIsLoading] = useState(false)
+
+  // Sync models from database on mount
+  useEffect(() => {
+    let cancelled = false
+    async function syncModels() {
+      setIsLoading(true)
+      try {
+        const dbModels = await listFashionModels()
+        if (cancelled) return
+
+        // Merge: DB is source of truth, keyed by id
+        const localModels = useModelFactoryStore.getState().savedModels
+        const dbIds = new Set(dbModels.map((m) => m.id))
+
+        // Keep local temp models (not yet synced) that aren't in DB
+        const unsyncedLocal = localModels.filter(
+          (m) => m.id.startsWith('temp_') && !dbIds.has(m.id)
+        )
+
+        const merged: SavedModel[] = [
+          ...dbModels.map((m) => ({
+            id: m.id,
+            name: m.name,
+            imageUrl: m.imageUrl,
+            prompt: m.prompt,
+            characterSheetUrl: m.characterSheetUrl ?? undefined,
+            createdAt: m.createdAt,
+          })),
+          ...unsyncedLocal,
+        ]
+
+        useModelFactoryStore.setState({ savedModels: merged })
+      } catch {
+        // Silently fall back to local models
+      } finally {
+        if (!cancelled) setIsLoading(false)
+      }
+    }
+    syncModels()
+    return () => { cancelled = true }
+  }, [])
 
   const handleNewModel = useCallback(() => {
     resetForNew()
@@ -172,7 +216,11 @@ export default function ModelsScreen() {
           </TouchableOpacity>
         </View>
 
-        {savedModels.length === 0 ? (
+        {isLoading && savedModels.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <ActivityIndicator color={AURORA_MAGENTA} size="large" />
+          </View>
+        ) : savedModels.length === 0 ? (
           /* Empty state */
           <View style={styles.emptyContainer}>
             <PersonIcon />
@@ -222,13 +270,13 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 28,
-    fontWeight: '800',
+    fontWeight: '700',
     color: '#FFFFFF',
   },
   newButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 8,
     backgroundColor: AURORA_MAGENTA,
     paddingHorizontal: 16,
     paddingVertical: 10,

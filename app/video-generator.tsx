@@ -27,7 +27,7 @@ const { width: SCREEN_W } = Dimensions.get('window')
 
 const AURORA_NAVY = '#193153'
 const AURORA_TEAL = '#0B5777'
-const AURORA_MAGENTA = '#EB96FF'
+const AURORA_MAGENTA = '#FBBF24'
 
 // Credit cost for video (matches backend: 10 credits per 5s, 20 per 10s)
 function getVideoCreditCost(duration: 5 | 10): number {
@@ -645,7 +645,7 @@ export default function VideoGeneratorScreen() {
           >
             {plan && (
               <LinearGradient
-                colors={[AURORA_MAGENTA, '#9333EA', AURORA_TEAL]}
+                colors={['#FBBF24', '#F59E0B', '#B45309']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={StyleSheet.absoluteFillObject}
@@ -792,9 +792,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 14,
     borderRadius: 14,
-    backgroundColor: 'rgba(235,150,255,0.15)',
+    backgroundColor: 'rgba(251,191,36,0.15)',
     borderWidth: 1,
-    borderColor: 'rgba(235,150,255,0.3)',
+    borderColor: 'rgba(251,191,36,0.3)',
   },
   retryButtonText: {
     fontSize: 15,
@@ -948,7 +948,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.04)',
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(235,150,255,0.12)',
+    borderColor: 'rgba(251,191,36,0.12)',
     padding: 16,
     marginBottom: 20,
   },

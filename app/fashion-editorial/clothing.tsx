@@ -1,35 +1,34 @@
-import { useCallback } from 'react'
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  ScrollView,
-  StatusBar,
-  Dimensions,
-  Alert,
-  ActivityIndicator,
-  Platform,
-  ActionSheetIOS,
-} from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import { Image } from 'expo-image'
-import { useRouter } from 'expo-router'
-import { LinearGradient } from 'expo-linear-gradient'
-import * as ImagePicker from 'expo-image-picker'
-import Svg, { Path as SvgPath } from 'react-native-svg'
+import { analyzeFashionImage } from '@/lib/api'
+import { uploadImage } from '@/lib/upload'
 import {
   useFashionEditorialStore,
   type ClothingItem,
 } from '@/stores/use-fashion-editorial-store'
-import { analyzeFashionImage } from '@/lib/api'
-import { uploadImage } from '@/lib/upload'
+import { Image } from 'expo-image'
+import * as ImagePicker from 'expo-image-picker'
+import { LinearGradient } from 'expo-linear-gradient'
+import { useRouter } from 'expo-router'
+import { useCallback } from 'react'
+import {
+  ActionSheetIOS,
+  ActivityIndicator,
+  Alert,
+  Dimensions,
+  Platform,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
+import Svg, { Path as SvgPath } from 'react-native-svg'
 
 const { width: SCREEN_W } = Dimensions.get('window')
-const BG = '#0F0F13'
-const ACCENT = '#EB96FF'
-const TEAL = '#0B5777'
-const MUTED = 'rgba(255,255,255,0.45)'
+const BG = '#193153'
+const ACCENT = '#FBBF24'
+const MUTED = 'rgba(255,255,255,0.55)'
 const CARD_BG = 'rgba(255,255,255,0.05)'
 const CARD_BORDER = 'rgba(255,255,255,0.08)'
 
@@ -272,7 +271,7 @@ export default function ClothingScreen() {
             activeOpacity={0.8}
             disabled={!hasReady}
           >
-            <LinearGradient colors={[ACCENT, '#9333EA', TEAL]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFillObject} />
+            <LinearGradient colors={['#FBBF24', '#F59E0B', '#B45309']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFillObject} />
             <Text style={styles.continueBtnText}>Continue to Generate</Text>
             <ArrowRightIcon />
           </TouchableOpacity>
@@ -287,7 +286,7 @@ export default function ClothingScreen() {
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: BG },
   safeArea: { flex: 1 },
-  scrollContent: { padding: 20 },
+  scrollContent: { padding: 16 },
 
   header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 10, gap: 12 },
   headerBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.08)', justifyContent: 'center', alignItems: 'center' },
@@ -338,7 +337,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   optionalThumb: { ...StyleSheet.absoluteFillObject, opacity: 0.4 },
-  optionalIcon: { fontSize: 22, fontWeight: '800', color: 'rgba(255,255,255,0.12)' },
+  optionalIcon: { fontSize: 22, fontWeight: '700', color: 'rgba(255,255,255,0.12)' },
   optionalLabel: { fontSize: 13, fontWeight: '600', color: 'rgba(255,255,255,0.7)' },
   optionalDot: { position: 'absolute', top: 8, right: 8, width: 8, height: 8, borderRadius: 4, backgroundColor: '#22C55E' },
 

@@ -312,6 +312,21 @@ export async function generateCharacterSheet(data: CharacterSheetRequest) {
   return result
 }
 
+// List fashion models from database
+export interface FashionModelListItem {
+  id: string
+  name: string
+  imageUrl: string
+  prompt: string
+  config?: Record<string, unknown>
+  characterSheetUrl: string | null
+  createdAt: string
+}
+export async function listFashionModels() {
+  const { data } = await api.get<{ models: FashionModelListItem[] }>('/api/fashion-model/list')
+  return data.models
+}
+
 // Analyze face photo (OpenAI Vision)
 export interface FaceAnalysisResponse {
   subjectDescriptor: string
@@ -621,17 +636,23 @@ export async function generateFashionVariations(params: FashionVariationsRequest
 }
 
 // Relight
+export type RelightMode = 'object' | 'character'
+
 export interface RelightRequest {
   baseImageUrl: string
-  lighting: string
-  aiModel?: string
-  lightPosition?: string
-  lightColor?: string
+  mode: RelightMode
+  presetId: string
+  customText?: string
 }
 
-export async function relightImage(params: RelightRequest) {
-  const { data } = await api.post<{ imageUrl: string; creditsRemaining: number }>(
-    '/api/fashion-editorial/relight',
+export interface RelightResponse {
+  success: boolean
+  relitImageUrl: string
+}
+
+export async function relightImage(params: RelightRequest): Promise<RelightResponse> {
+  const { data } = await api.post<RelightResponse>(
+    '/api/relight/generate',
     params,
     { timeout: 300_000 }
   )
