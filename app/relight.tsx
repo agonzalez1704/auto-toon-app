@@ -151,7 +151,7 @@ export default function RelightScreen() {
 
   const costLabel = getCostLabel(AI_MODELS.GEMINI_NANO_BANANA_REPLICATE.id, isPayPerUse)
 
-  // If opened with an imageUrl param (e.g. from image-viewer), seed the store
+  // Seed store from params, or reset if opened fresh (no image param)
   useEffect(() => {
     if (paramImageUrl && paramImageUrl !== store.uploadedImageUrl) {
       store.setUploadedImage(paramImageUrl, title)
@@ -162,6 +162,8 @@ export default function RelightScreen() {
       if (!store.selectedPresetId) {
         store.selectPreset(presets[0].id)
       }
+    } else if (!paramImageUrl) {
+      store.clearImage()
     }
   }, [paramImageUrl])
 
