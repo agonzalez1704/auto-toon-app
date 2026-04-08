@@ -244,40 +244,85 @@ export default function RelightScreen() {
 
   // ── Result View ─────────────────────────────────────────────────────────
   if (store.resultUrl) {
+    const selectedPreset = presets.find((p) => p.id === store.selectedPresetId)
+
     return (
       <View style={styles.root}>
         <StatusBar barStyle="light-content" />
-        <Image source={{ uri: store.resultUrl }} style={StyleSheet.absoluteFillObject} contentFit="cover" transition={300} />
-        <LinearGradient colors={['rgba(0,0,0,0.55)', 'transparent', 'transparent', 'rgba(0,0,0,0.75)']} style={StyleSheet.absoluteFillObject} locations={[0, 0.2, 0.55, 1]} />
+        <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
+          {/* Header */}
+          <View style={styles.header}>
+            <TouchableOpacity style={styles.circleBtn} onPress={() => { store.reset(); router.back() }} activeOpacity={0.7}>
+              <BackIcon />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>
+              {selectedPreset?.label ?? 'Relit'}
+            </Text>
+            <View style={{ width: 40 }} />
+          </View>
 
-        <SafeAreaView style={styles.resultTopBar} edges={['top']} pointerEvents="box-none">
-          <TouchableOpacity style={styles.circleBtn} onPress={() => router.back()} activeOpacity={0.7}>
-            <BackIcon />
-          </TouchableOpacity>
-          <Text style={styles.resultTitle}>Relit</Text>
-          <View style={{ width: 40 }} />
-        </SafeAreaView>
+          {/* Result image */}
+          <View style={styles.resultImageWrap}>
+            <Image
+              source={{ uri: store.resultUrl }}
+              style={styles.resultImage}
+              contentFit="contain"
+              transition={300}
+            />
+          </View>
 
-        <SafeAreaView style={styles.resultBottom} edges={['bottom']} pointerEvents="box-none">
-          <TouchableOpacity
-            style={styles.secondaryBtn}
-            onPress={() => store.resetResult()}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.secondaryBtnText}>Try Another</Text>
-          </TouchableOpacity>
+          {/* Actions */}
+          <View style={styles.resultActions}>
+            <TouchableOpacity
+              style={styles.resultActionBtn}
+              onPress={() => store.resetResult()}
+              activeOpacity={0.7}
+            >
+              <SunIcon />
+              <Text style={styles.resultActionLabel}>Try Another</Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.gradientBtn}
-            onPress={() => {
-              useVideoStore.getState().setSourceImage(store.resultUrl!, [store.resultUrl!], store.sourceTitle || 'Relit')
-              router.push('/video-generator')
-            }}
-            activeOpacity={0.8}
-          >
-            <LinearGradient colors={['#FBBF24', '#F59E0B', '#B45309']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFillObject} />
-            <Text style={styles.gradientBtnText}>Create Video</Text>
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.resultActionBtn}
+              onPress={() => {
+                store.reset()
+                router.replace('/(tabs)/assets')
+              }}
+              activeOpacity={0.7}
+            >
+              <FolderIcon />
+              <Text style={styles.resultActionLabel}>View Assets</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.resultActionBtn}
+              onPress={() => {
+                useVideoStore.getState().setSourceImage(store.resultUrl!, [store.resultUrl!], store.sourceTitle || 'Relit')
+                router.push('/video-generator')
+              }}
+              activeOpacity={0.7}
+            >
+              <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
+                <SvgPath d="M5 3l14 9-14 9V3z" fill="#FFF" />
+              </Svg>
+              <Text style={styles.resultActionLabel}>Create Video</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Primary CTA */}
+          <View style={styles.footer}>
+            <TouchableOpacity
+              style={styles.gradientBtn}
+              onPress={() => {
+                store.reset()
+                router.back()
+              }}
+              activeOpacity={0.8}
+            >
+              <LinearGradient colors={['#FBBF24', '#F59E0B', '#B45309']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFillObject} />
+              <Text style={styles.gradientBtnText}>Done</Text>
+            </TouchableOpacity>
+          </View>
         </SafeAreaView>
       </View>
     )
@@ -748,11 +793,34 @@ const styles = StyleSheet.create({
   generateBtnText: { fontSize: 16, fontWeight: '700', color: '#FFFFFF' },
 
   // Result view
-  resultTopBar: { position: 'absolute', top: 0, left: 0, right: 0, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingTop: 10 },
-  resultTitle: { flex: 1, textAlign: 'center', fontSize: 17, fontWeight: '700', color: '#FFFFFF' },
-  resultBottom: { position: 'absolute', bottom: 0, left: 0, right: 0, padding: 16, gap: 10, alignItems: 'center' },
-  secondaryBtn: { paddingHorizontal: 24, paddingVertical: 12, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.15)' },
-  secondaryBtnText: { fontSize: 14, fontWeight: '600', color: '#FFFFFF' },
+  resultImageWrap: {
+    flex: 1,
+    marginHorizontal: 16,
+    borderRadius: 16,
+    overflow: 'hidden',
+    backgroundColor: 'rgba(255,255,255,0.03)',
+  },
+  resultImage: {
+    width: '100%',
+    height: '100%',
+  },
+  resultActions: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 24,
+    paddingVertical: 20,
+  },
+  resultActionBtn: {
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  resultActionLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.6)',
+  },
   gradientBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 16, borderRadius: 14, overflow: 'hidden', width: '100%' },
   gradientBtnText: { fontSize: 16, fontWeight: '700', color: '#FFFFFF' },
 })
