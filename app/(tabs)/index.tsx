@@ -1,40 +1,33 @@
-import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
+import { getRecentCreations } from '@/lib/api'
+import { queryKeys } from '@/lib/query'
+import { useCreditsStore } from '@/stores/use-credits-store'
+import { useSubscriptionStore } from '@/stores/use-subscription-store'
+import { useUser } from '@clerk/clerk-expo'
+import { useQuery } from '@tanstack/react-query'
+import { Image } from 'expo-image'
+import { LinearGradient } from 'expo-linear-gradient'
+import { useRouter } from 'expo-router'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   Animated,
   Dimensions,
   Easing,
-  Platform,
-  ScrollView,
+  Image as RNImage,
   StatusBar,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
-  ActivityIndicator,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { Image } from 'expo-image'
-import { LinearGradient } from 'expo-linear-gradient'
-import { useRouter } from 'expo-router'
-import { useUser } from '@clerk/clerk-expo'
-import { useQuery } from '@tanstack/react-query'
 import Svg, {
   Circle,
-  Defs,
-  Rect,
-  Stop,
-  LinearGradient as SvgLinearGradient,
   Path as SvgPath,
 } from 'react-native-svg'
-import { useCreditsStore } from '@/stores/use-credits-store'
-import { useSubscriptionStore } from '@/stores/use-subscription-store'
-import { getRecentCreations } from '@/lib/api'
-import { queryKeys } from '@/lib/query'
 
 // ─── Palette ───────────────────────────────────────────────────────────
 const BG = '#193153'
 const CARD_BG = 'rgba(255,255,255,0.04)'
-const CARD_BORDER = 'rgba(255,255,255,0.06)'
 const MUTED = 'rgba(255,255,255,0.55)'
 const ACCENT_VIOLET = '#8B5CF6'
 
@@ -70,57 +63,44 @@ const MASONRY_SPANS: [number, number][] = [
   [2, 1], // wide
 ]
 
-// ─── Quick links config ────────────────────────────────────────────────
-const QUICK_LINKS = [
+// ─── Bento Cards config ───────────────────────────────────────────────
+const BENTO_CARDS = [
   {
-    label: 'Enhance',
+    label: 'Mejora tu Producto',
+    description: 'Fotos profesionales con IA',
     route: '/(tabs)/create' as const,
-    bg: 'rgba(251,146,60,0.12)',
-    border: 'rgba(251,146,60,0.25)',
-    text: '#FB923C',
+    preview: require('@/assets/images/previews/professional_photo.png'),
+    gradientColors: ['rgba(234,88,12,0.85)', 'rgba(245,158,11,0.65)'] as const,
   },
   {
-    label: 'Restore',
-    route: '/restore' as const,
-    bg: 'rgba(34,211,238,0.12)',
-    border: 'rgba(34,211,238,0.25)',
-    text: '#22D3EE',
-  },
-  {
-    label: 'Models',
-    route: '/models' as const,
-    bg: 'rgba(236,72,153,0.12)',
-    border: 'rgba(236,72,153,0.25)',
-    text: '#EC4899',
-  },
-  {
-    label: 'Assets',
-    route: '/(tabs)/assets' as const,
-    bg: 'rgba(45,212,191,0.12)',
-    border: 'rgba(45,212,191,0.25)',
-    text: '#2DD4BF',
-  },
-  {
-    label: 'Editorial',
+    label: 'Fashion Editorial',
+    description: 'Sesiones de moda con modelos IA',
     route: '/fashion-editorial' as const,
-    bg: 'rgba(236,72,153,0.12)',
-    border: 'rgba(236,72,153,0.25)',
-    text: '#EC4899',
+    preview: require('@/assets/images/previews/fashion-editorial-1.png'),
+    gradientColors: ['rgba(219,39,119,0.85)', 'rgba(244,63,94,0.65)'] as const,
+    pro: true,
   },
   {
-    label: 'Video',
-    route: '/video-generator' as const,
-    bg: 'rgba(139,92,246,0.12)',
-    border: 'rgba(139,92,246,0.25)',
-    text: '#8B5CF6',
+    label: 'Relight',
+    description: 'Iluminacion cinematica',
+    route: '/relight' as const,
+    preview: require('@/assets/images/previews/backlight_halo_2k.png'),
+    gradientColors: ['rgba(8,145,178,0.85)', 'rgba(59,130,246,0.65)'] as const,
   },
   {
-    label: 'Pricing',
-    route: '/account/pricing' as const,
-    bg: 'rgba(16,185,129,0.12)',
-    border: 'rgba(16,185,129,0.25)',
-    text: '#10B981',
+    label: 'Restauracion',
+    description: 'Revive imagenes a 2K/4K',
+    route: '/restore' as const,
+    preview: require('@/assets/images/previews/upscale.jpg'),
+    gradientColors: ['rgba(124,58,237,0.85)', 'rgba(147,51,234,0.65)'] as const,
   },
+]
+
+// ─── Utility Links config ─────────────────────────────────────────────
+const UTILITY_LINKS = [
+  { label: 'Assets', route: '/(tabs)/assets' as const },
+  { label: 'API', route: '/developer' as const },
+  { label: 'Pricing', route: '/account/pricing' as const },
 ]
 
 // ─── SVG Icons (minimal) ──────────────────────────────────────────────
@@ -176,62 +156,100 @@ function EmptySparkle() {
   )
 }
 
-// ─── Stat Pill ─────────────────────────────────────────────────────────
+// ─── Bento Card ───────────────────────────────────────────────────────
 
-function StatPill({
-  icon,
+function BentoCard({
   label,
-  value,
-  pillBg,
-  pillBorder,
-  pillText,
-  onPress,
-}: {
-  icon: React.ReactNode
-  label: string
-  value: string | number
-  pillBg: string
-  pillBorder: string
-  pillText: string
-  onPress?: () => void
-}) {
-  return (
-    <TouchableOpacity
-      style={[styles.pill, { backgroundColor: pillBg, borderColor: pillBorder }]}
-      activeOpacity={0.7}
-      onPress={onPress}
-    >
-      {icon}
-      <Text style={[styles.pillLabel, { color: pillText }]}>{label}</Text>
-      <Text style={[styles.pillValue, { color: pillText }]}>{value}</Text>
-    </TouchableOpacity>
-  )
-}
-
-// ─── Quick Link Pill ───────────────────────────────────────────────────
-
-function QuickLinkPill({
-  label,
-  bg,
-  border,
-  text,
+  description,
+  preview,
+  gradientColors,
+  pro,
   onPress,
 }: {
   label: string
-  bg: string
-  border: string
-  text: string
+  description: string
+  preview: any
+  gradientColors: readonly [string, string]
+  pro?: boolean
   onPress: () => void
 }) {
   return (
     <TouchableOpacity
-      style={[styles.pill, { backgroundColor: bg, borderColor: border }]}
-      activeOpacity={0.7}
+      style={styles.bentoCard}
+      activeOpacity={0.85}
       onPress={onPress}
     >
-      <Text style={[styles.pillLinkLabel, { color: text }]}>{label}</Text>
-      <ArrowRightIcon color={text} />
+      <RNImage
+        source={preview}
+        style={{ position: 'absolute', width: '100%', height: '100%' }}
+        resizeMode="cover"
+      />
+      <LinearGradient
+        colors={[...gradientColors]}
+        start={{ x: 0, y: 1 }}
+        end={{ x: 0, y: 0 }}
+        style={styles.bentoGradient}
+      />
+      <View style={styles.bentoContent}>
+        <View style={styles.bentoTitleRow}>
+          <Text style={styles.bentoLabel} numberOfLines={1}>{label}</Text>
+          {pro && (
+            <View style={styles.bentoBadge}>
+              <Text style={styles.bentoBadgeText}>PRO</Text>
+            </View>
+          )}
+        </View>
+        <Text style={styles.bentoDesc} numberOfLines={1}>{description}</Text>
+      </View>
     </TouchableOpacity>
+  )
+}
+
+// ─── Stat Bar ─────────────────────────────────────────────────────────
+
+function StatBar({
+  credits,
+  planLabel,
+  onCreditsPress,
+  onPlanPress,
+}: {
+  credits: number | null
+  planLabel: string
+  onCreditsPress: () => void
+  onPlanPress: () => void
+}) {
+  return (
+    <View style={styles.statBar}>
+      <TouchableOpacity style={styles.statItem} onPress={onCreditsPress} activeOpacity={0.7}>
+        <CoinsIcon />
+        <Text style={styles.statLabel}>Credits</Text>
+        <Text style={styles.statValue}>{credits !== null ? credits : '--'}</Text>
+      </TouchableOpacity>
+      <View style={styles.statDivider} />
+      <TouchableOpacity style={styles.statItem} onPress={onPlanPress} activeOpacity={0.7}>
+        <SparklesIcon />
+        <Text style={styles.statValue}>{planLabel}</Text>
+      </TouchableOpacity>
+    </View>
+  )
+}
+
+// ─── Utility Row ──────────────────────────────────────────────────────
+
+function UtilityRow({ onPress }: { onPress: (route: string) => void }) {
+  return (
+    <View style={styles.utilityRow}>
+      {UTILITY_LINKS.map((link) => (
+        <TouchableOpacity
+          key={link.label}
+          style={styles.utilityLink}
+          activeOpacity={0.7}
+          onPress={() => onPress(link.route)}
+        >
+          <Text style={styles.utilityLinkText}>{link.label}</Text>
+        </TouchableOpacity>
+      ))}
+    </View>
   )
 }
 
@@ -410,7 +428,7 @@ function MasonryGrid({
     for (let i = 0; i < tileCount; i++) {
       const s = slots[tileSlots[i]]
       const key = `${s.w}x${s.h}`
-      ;(groups[key] ??= []).push(i)
+        ; (groups[key] ??= []).push(i)
     }
     return Object.values(groups).filter(g => g.length >= 2)
   }, [tileCount, slots, tileSlots])
@@ -455,7 +473,7 @@ function MasonryGrid({
         for (const u of fresh) {
           if (!visible.has(u) && !existing.has(u)) reservePool.current.push(u)
         }
-      }).catch(() => {})
+      }).catch(() => { })
     }
 
     if (!nextUrl) { isBusy.current = false; return }
@@ -569,12 +587,22 @@ function Skeleton() {
   return (
     <View style={styles.scrollContent}>
       <Animated.View style={[styles.skeletonHeader, { opacity: pulse }]} />
-      <View style={styles.pillsRow}>
+      {/* Stat bar skeleton */}
+      <View style={styles.statBar}>
         {Array.from({ length: 3 }).map((_, i) => (
           <Animated.View key={i} style={[styles.skeletonPill, { opacity: pulse }]} />
         ))}
       </View>
-      <View style={{ height: 16 }} />
+      {/* Bento grid skeleton */}
+      <View style={styles.bentoGrid}>
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Animated.View
+            key={i}
+            style={[styles.bentoCard, { backgroundColor: 'rgba(255,255,255,0.04)' }, { opacity: pulse }]}
+          />
+        ))}
+      </View>
+      {/* Masonry skeleton */}
       <View style={{ flexDirection: 'row', gap: GRID_GAP }}>
         <Animated.View style={[{ flex: 1, height: GRID_CELL * 2, borderRadius: 10, backgroundColor: 'rgba(255,255,255,0.04)' }, { opacity: pulse }]} />
         <View style={{ flex: 1, gap: GRID_GAP }}>
@@ -675,46 +703,31 @@ export default function DashboardScreen() {
               </TouchableOpacity>
             </View>
 
-            {/* ── Stats Pills ── */}
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.pillsRow}
-            >
-              <StatPill
-                icon={<CoinsIcon />}
-                label="Credits"
-                value={balance !== null ? balance : '--'}
-                pillBg="rgba(245,158,11,0.10)"
-                pillBorder="rgba(245,158,11,0.22)"
-                pillText="#FBBF24"
-                onPress={() => router.push('/account/credits')}
-              />
-              <StatPill
-                icon={<SparklesIcon />}
-                label="Plan"
-                value={planLabel}
-                pillBg="rgba(139,92,246,0.10)"
-                pillBorder="rgba(139,92,246,0.22)"
-                pillText="#A78BFA"
-                onPress={() => router.push('/account/pricing')}
-              />
+            {/* ── Stats Bar ── */}
+            <StatBar
+              credits={balance}
+              planLabel={planLabel}
+              onCreditsPress={() => router.push('/account/credits')}
+              onPlanPress={() => router.push('/account/pricing')}
+            />
 
-              {/* Separator */}
-              <View style={styles.separator} />
-
-              {/* Quick Links */}
-              {QUICK_LINKS.map((link) => (
-                <QuickLinkPill
-                  key={link.label}
-                  label={link.label}
-                  bg={link.bg}
-                  border={link.border}
-                  text={link.text}
-                  onPress={() => router.push(link.route)}
+            {/* ── Bento Grid ── */}
+            <View style={styles.bentoGrid}>
+              {BENTO_CARDS.map((card) => (
+                <BentoCard
+                  key={card.label}
+                  label={card.label}
+                  description={card.description}
+                  preview={card.preview}
+                  gradientColors={card.gradientColors}
+                  pro={card.pro}
+                  onPress={() => router.push(card.route)}
                 />
               ))}
-            </ScrollView>
+            </View>
+
+            {/* ── Utility Row ── */}
+            <UtilityRow onPress={(route) => router.push(route as any)} />
 
             {/* ── Section Header ── */}
             {hasImages && (
@@ -816,7 +829,7 @@ const styles = StyleSheet.create({
     gap: 4,
     paddingHorizontal: 16,
     paddingVertical: 8,
-    borderRadius: 20,
+    borderRadius: 10,
     overflow: 'hidden',
   },
   newBtnText: {
@@ -825,42 +838,116 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
 
-  // Pills
-  pillsRow: {
-    flexDirection: 'row',
-    gap: 8,
-    paddingBottom: 4,
-    marginBottom: 20,
-  },
-  pill: {
+  // Stat Bar
+  statBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    minHeight: 44,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1,
+    gap: 10,
+    marginBottom: 16,
   },
-  pillLabel: {
+  statItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  statLabel: {
     fontSize: 11,
-    fontWeight: '500',
-    opacity: 0.8,
+    color: MUTED,
   },
-  pillValue: {
+  statValue: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  statDivider: {
+    width: 1,
+    height: 14,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+  },
+
+  // Bento Grid
+  bentoGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 16,
+  },
+  bentoCard: {
+    width: (SCREEN_WIDTH - 32 - 8) / 2,
+    height: 150,
+    aspectRatio: 16 / 10,
+    borderRadius: 16,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+  },
+  bentoImage: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  bentoGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  bentoContent: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: 10,
+  },
+  bentoTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  bentoLabel: {
     fontSize: 13,
     fontWeight: '700',
+    color: '#FFFFFF',
   },
-  pillLinkLabel: {
-    fontSize: 12,
+  bentoBadge: {
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderRadius: 8,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+  },
+  bentoBadgeText: {
+    fontSize: 7,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    letterSpacing: 0.5,
+  },
+  bentoDesc: {
+    fontSize: 10,
+    color: 'rgba(255,255,255,0.7)',
+    marginTop: 2,
+  },
+
+  // Utility Row
+  utilityRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 20,
+  },
+  utilityLink: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: 'rgba(255,255,255,0.03)',
+  },
+  utilityLinkText: {
+    fontSize: 11,
     fontWeight: '600',
-  },
-  separator: {
-    width: 1,
-    height: 24,
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    alignSelf: 'center',
-    marginHorizontal: 4,
+    color: MUTED,
   },
 
   // Section
@@ -933,7 +1020,7 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingHorizontal: 24,
     paddingVertical: 12,
-    borderRadius: 20,
+    borderRadius: 10,
     overflow: 'hidden',
   },
   emptyCtaText: {

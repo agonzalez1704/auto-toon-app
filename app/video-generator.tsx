@@ -1,27 +1,27 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  ScrollView,
-  StatusBar,
-  Dimensions,
-  Modal,
-  FlatList,
-} from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import { Image } from 'expo-image'
-import { useRouter } from 'expo-router'
-import { LinearGradient } from 'expo-linear-gradient'
-import Svg, { Path as SvgPath, Circle, Rect } from 'react-native-svg'
-import { useVideoStore } from '@/stores/use-video-store'
+import { ParticleSphere } from '@/components/particle-sphere'
+import { AI_MODELS, getCostLabel } from '@/lib/ai-models'
+import { analyzeProductForVideo, generateVideoSSE } from '@/lib/api'
 import { useCreditsStore } from '@/stores/use-credits-store'
 import { useSubscriptionStore } from '@/stores/use-subscription-store'
 import { useTermsConsentStore } from '@/stores/use-terms-consent-store'
-import { getCostLabel, AI_MODELS } from '@/lib/ai-models'
-import { analyzeProductForVideo, generateVideoSSE } from '@/lib/api'
-import { ParticleSphere } from '@/components/particle-sphere'
+import { useVideoStore } from '@/stores/use-video-store'
+import { Image } from 'expo-image'
+import { LinearGradient } from 'expo-linear-gradient'
+import { useRouter } from 'expo-router'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import {
+  Dimensions,
+  FlatList,
+  Modal,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
+import Svg, { Circle, Rect, Path as SvgPath } from 'react-native-svg'
 
 const { width: SCREEN_W } = Dimensions.get('window')
 
@@ -271,6 +271,7 @@ export default function VideoGeneratorScreen() {
         store.sourceImageUrl,
         store.productName || undefined
       )
+      console.log("🚀 ~ VideoGeneratorScreen ~ result:", result)
       store.setAiPlan(result)
     } catch (error: any) {
       store.setAnalysisError(error?.message || 'Failed to analyze product')
