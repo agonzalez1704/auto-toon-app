@@ -142,7 +142,7 @@ export default function ModelSelectorScreen() {
           <Text style={styles.sectionTitle}>Select Model</Text>
           <Text style={styles.sectionSub}>Choose your AI model for the photoshoot</Text>
 
-          <View style={styles.modelGrid}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.modelRow}>
             {savedModels.map((m) => {
               const selected = store.selectedModelId === m.id
               return (
@@ -175,7 +175,7 @@ export default function ModelSelectorScreen() {
               <PlusIcon />
               <Text style={styles.modelEmptyText}>Create New</Text>
             </TouchableOpacity>
-          </View>
+          </ScrollView>
 
           {/* ── Style Preset ── */}
           <Text style={[styles.sectionTitle, { marginTop: 28 }]}>Style</Text>
@@ -244,7 +244,7 @@ const styles = StyleSheet.create({
   sectionSub: { fontSize: 13, color: MUTED, marginBottom: 14 },
 
   // Model grid
-  modelGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  modelRow: { flexDirection: 'row', gap: 12, paddingRight: 16 },
   modelCard: {
     width: MODEL_CARD_W,
     height: MODEL_CARD_W * 1.3,

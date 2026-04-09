@@ -1,33 +1,33 @@
-import { useCallback, useRef, useState, useEffect } from 'react'
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  ScrollView,
-  StatusBar,
-  Dimensions,
-  Alert,
-  Platform,
-  ActionSheetIOS,
-} from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import { Image } from 'expo-image'
-import { useRouter } from 'expo-router'
-import { LinearGradient } from 'expo-linear-gradient'
-import * as FileSystem from 'expo-file-system/legacy'
-import * as MediaLibrary from 'expo-media-library'
-import Svg, { Path as SvgPath } from 'react-native-svg'
-import {
-  useFashionEditorialStore,
-  POSE_PRESETS,
-} from '@/stores/use-fashion-editorial-store'
+import { ParticleSphere } from '@/components/particle-sphere'
+import { AI_MODELS, getCostLabel } from '@/lib/ai-models'
+import { generateFashionVariations } from '@/lib/api'
 import { useCreditsStore } from '@/stores/use-credits-store'
+import {
+  POSE_PRESETS,
+  useFashionEditorialStore,
+} from '@/stores/use-fashion-editorial-store'
 import { useSubscriptionStore } from '@/stores/use-subscription-store'
 import { useTermsConsentStore } from '@/stores/use-terms-consent-store'
-import { generateFashionVariations } from '@/lib/api'
-import { getCostLabel, AI_MODELS } from '@/lib/ai-models'
-import { ParticleSphere } from '@/components/particle-sphere'
+import * as FileSystem from 'expo-file-system/legacy'
+import { Image } from 'expo-image'
+import { LinearGradient } from 'expo-linear-gradient'
+import * as MediaLibrary from 'expo-media-library'
+import { useRouter } from 'expo-router'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import {
+  ActionSheetIOS,
+  Alert,
+  Dimensions,
+  Platform,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
+import Svg, { Path as SvgPath } from 'react-native-svg'
 
 const { width: SCREEN_W } = Dimensions.get('window')
 const BG = '#193153'
@@ -84,7 +84,7 @@ export default function CampaignScreen() {
 
   const handleGenerate = useCallback(async () => {
     if (!store.canGenerateVariations()) return
-    if (requireConsent) return
+    if (!requireConsent(() => handleGenerate())) return
 
     const creditCost = AI_MODELS.GEMINI_3_IMAGE.credits ?? 3
     if (!isPayPerUse && balance !== null && balance < creditCost) {
@@ -114,10 +114,10 @@ export default function CampaignScreen() {
         poseStyle: store.poseStyle,
         mainProductInfo: mainProduct?.analysis
           ? {
-              productName: mainProduct.analysis.productName,
-              productType: mainProduct.analysis.productType,
-              clothingAnalysis: mainProduct.analysis.clothingAnalysis,
-            }
+            productName: mainProduct.analysis.productName,
+            productType: mainProduct.analysis.productType,
+            clothingAnalysis: mainProduct.analysis.clothingAnalysis,
+          }
           : undefined,
         makeupAnalysis: store.makeupRef?.phase === 'ready' ? store.makeupRef.analysis! : undefined,
         hairstyleAnalysis,
