@@ -185,8 +185,8 @@ export default function RestoreScreen() {
       return
     }
 
-    store.setPhase('restoring')
     store.setError(null)
+    store.setPhase('restoring')
 
     try {
       const result = await restoreImage({

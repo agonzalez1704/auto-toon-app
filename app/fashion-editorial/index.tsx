@@ -1,27 +1,25 @@
-import { useCallback } from 'react'
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  ScrollView,
-  StatusBar,
-  Dimensions,
-  FlatList,
-} from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import { Image } from 'expo-image'
-import { useRouter } from 'expo-router'
-import { LinearGradient } from 'expo-linear-gradient'
-import Svg, { Path as SvgPath } from 'react-native-svg'
-import { useModelFactoryStore } from '@/stores/use-model-factory-store'
-import {
-  useFashionEditorialStore,
-  STYLE_PRESETS,
   BACKGROUND_PRESETS,
+  STYLE_PRESETS,
+  useFashionEditorialStore,
   type PresetOption,
 } from '@/stores/use-fashion-editorial-store'
-import { CONFIG } from '@/lib/config'
+import { useModelFactoryStore } from '@/stores/use-model-factory-store'
+import { Image } from 'expo-image'
+import { LinearGradient } from 'expo-linear-gradient'
+import { useRouter } from 'expo-router'
+import { useCallback } from 'react'
+import {
+  Dimensions,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
+} from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
+import Svg, { Path as SvgPath } from 'react-native-svg'
 
 const { width: SCREEN_W } = Dimensions.get('window')
 const BG = '#193153'
@@ -79,7 +77,7 @@ function PresetCard({
       activeOpacity={0.8}
     >
       <Image
-        source={{ uri: `${CONFIG.API_BASE_URL}/previews/${item.preview}` }}
+        source={item.preview}
         style={styles.presetImage}
         contentFit="cover"
         transition={200}

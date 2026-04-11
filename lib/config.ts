@@ -17,3 +17,4 @@ export const CONFIG = {
   /** App URL scheme for deep linking */
   APP_SCHEME: 'autotoonapp',
 } as const
+console.log('API_BASE_URL is:', CONFIG.API_BASE_URL)

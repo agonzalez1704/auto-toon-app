@@ -1,10 +1,12 @@
-import * as FileSystem from 'expo-file-system/legacy'
 import * as Crypto from 'expo-crypto'
-import { getUploadUrl, confirmUpload } from './api'
+import * as FileSystem from 'expo-file-system/legacy'
+
+import { confirmUpload, getUploadUrl } from './api'
 
 /**
- * Upload a local image to Supabase via the signed URL pipeline.
+ * Upload a local image to R2 via the signed URL pipeline.
  * Mirrors the web app's upload flow with hash-based deduplication.
+ * HEIC files are converted to JPEG server-side in the API routes.
  */
 export async function uploadImage(localUri: string): Promise<string> {
   // 1. Get file info
@@ -36,7 +38,7 @@ export async function uploadImage(localUri: string): Promise<string> {
     throw new Error('Failed to get upload URL')
   }
 
-  // 5. Upload binary to Supabase signed URL
+  // 5. Upload binary to R2 signed URL
   await FileSystem.uploadAsync(uploadData.signedUrl, localUri, {
     httpMethod: 'PUT',
     headers: { 'Content-Type': mimeType },

@@ -1,5 +1,5 @@
-import { create } from 'zustand'
 import type { FashionImageAnalysis } from '@/lib/api'
+import { create } from 'zustand'
 
 // ─── Types ──────────────────────────────────────────────────────────
 
@@ -38,39 +38,39 @@ export type GenerationPhase = 'idle' | 'generating' | 'complete' | 'error'
 export interface PresetOption {
   id: string
   label: string
-  preview: string // relative path under API_BASE_URL/previews/
+  preview: number // bundled asset module id from require()
 }
 
 export const STYLE_PRESETS: PresetOption[] = [
-  { id: 'ugc-selfie', label: 'UGC Selfie', preview: 'style-ugc-selfie.jpg' },
-  { id: 'influencer-lifestyle', label: 'Lifestyle', preview: 'style-lifestyle.jpg' },
-  { id: 'editorial-vogue', label: 'Editorial', preview: 'style-editorial.jpg' },
-  { id: 'ecommerce', label: 'E-commerce', preview: 'style-ecommerce.jpg' },
-  { id: 'lookbook', label: 'Lookbook', preview: 'style-lookbook.jpg' },
-  { id: 'street-style', label: 'Street Style', preview: 'style-street.jpg' },
-  { id: 'minimalist-clean', label: 'Minimalist', preview: 'style-minimalist.jpg' },
+  { id: 'ugc-selfie', label: 'UGC Selfie', preview: require('@/assets/images/previews/style-ugc-selfie.png') },
+  { id: 'influencer-lifestyle', label: 'Lifestyle', preview: require('@/assets/images/previews/style-lifestyle.jpg') },
+  { id: 'editorial-vogue', label: 'Editorial', preview: require('@/assets/images/previews/style-editorial.jpg') },
+  { id: 'ecommerce', label: 'E-commerce', preview: require('@/assets/images/previews/style-ecommerce.jpg') },
+  { id: 'lookbook', label: 'Lookbook', preview: require('@/assets/images/previews/style-lookbook.jpg') },
+  { id: 'street-style', label: 'Street Style', preview: require('@/assets/images/previews/style-street.jpg') },
+  { id: 'minimalist-clean', label: 'Minimalist', preview: require('@/assets/images/previews/style-minimalist.jpg') },
 ]
 
 export const BACKGROUND_PRESETS: PresetOption[] = [
-  { id: 'studio-white', label: 'Studio White', preview: 'bg-studio-white.jpg' },
-  { id: 'studio-gray', label: 'Studio Gray', preview: 'bg-studio-gray.jpg' },
-  { id: 'coffee-shop', label: 'Coffee Shop', preview: 'bg-coffee-shop.jpg' },
-  { id: 'urban-street', label: 'Urban Street', preview: 'bg-urban-street.jpg' },
-  { id: 'beach-sunset', label: 'Beach', preview: 'bg-beach.jpg' },
-  { id: 'park', label: 'Park', preview: 'bg-park.jpg' },
-  { id: 'bedroom-morning', label: 'Bedroom', preview: 'bg-bedroom.jpg' },
+  { id: 'studio-white', label: 'Studio White', preview: require('@/assets/images/previews/bg-studio-white.jpg') },
+  { id: 'studio-gray', label: 'Studio Gray', preview: require('@/assets/images/previews/bg-studio-gray.jpg') },
+  { id: 'coffee-shop', label: 'Coffee Shop', preview: require('@/assets/images/previews/bg-coffee-shop.jpg') },
+  { id: 'urban-street', label: 'Urban Street', preview: require('@/assets/images/previews/bg-urban-street.jpg') },
+  { id: 'beach-sunset', label: 'Beach', preview: require('@/assets/images/previews/bg-beach.jpg') },
+  { id: 'park', label: 'Park', preview: require('@/assets/images/previews/bg-park.jpg') },
+  { id: 'bedroom-morning', label: 'Bedroom', preview: require('@/assets/images/previews/bg-bedroom.jpg') },
 ]
 
-export const POSE_PRESETS = [
-  { id: 'selfie-mirror', label: 'Selfie' },
-  { id: 'story-casual', label: 'Casual' },
-  { id: 'lifestyle', label: 'Lifestyle' },
-  { id: 'editorial', label: 'Editorial' },
-  { id: 'product-focus', label: 'Product Focus' },
-  { id: 'walking', label: 'Walking' },
-  { id: 'dynamic', label: 'Dynamic' },
-  { id: 'static', label: 'Static' },
-] as const
+export const POSE_PRESETS: PresetOption[] = [
+  { id: 'selfie-mirror', label: 'Selfie', preview: require('@/assets/images/previews/pose-selfie-mirror.png') },
+  { id: 'story-casual', label: 'Casual', preview: require('@/assets/images/previews/pose-story-casual.png') },
+  { id: 'lifestyle', label: 'Lifestyle', preview: require('@/assets/images/previews/pose-lifestyle.jpg') },
+  { id: 'editorial', label: 'Editorial', preview: require('@/assets/images/previews/pose-editorial.png') },
+  { id: 'product-focus', label: 'Product Focus', preview: require('@/assets/images/previews/pose-product-focus.png') },
+  { id: 'walking', label: 'Walking', preview: require('@/assets/images/previews/pose-walking.jpg') },
+  { id: 'dynamic', label: 'Dynamic', preview: require('@/assets/images/previews/pose-dynamic.jpg') },
+  { id: 'static', label: 'Static', preview: require('@/assets/images/previews/pose-static.jpg') },
+]
 
 // ─── Store ──────────────────────────────────────────────────────────
 

@@ -39,6 +39,8 @@ const CARD_BORDER = 'rgba(255,255,255,0.08)'
 
 const GRID_GAP = 4
 const VARIATION_CELL = (SCREEN_W - 40 - GRID_GAP * 2) / 3
+const POSE_CARD_W = 110
+const POSE_CARD_H = 140
 
 // ─── Icons ─────────────────────────────────────────────────────────
 
@@ -207,11 +209,22 @@ export default function CampaignScreen() {
               return (
                 <TouchableOpacity
                   key={p.id}
-                  style={[styles.posePill, active && styles.posePillActive]}
+                  style={[styles.poseCard, active && styles.poseCardActive]}
                   onPress={() => store.setPoseStyle(p.id)}
-                  activeOpacity={0.7}
+                  activeOpacity={0.8}
                 >
-                  <Text style={[styles.posePillText, active && styles.posePillTextActive]}>{p.label}</Text>
+                  <Image
+                    source={p.preview}
+                    style={styles.poseImage}
+                    contentFit="cover"
+                    transition={200}
+                  />
+                  <LinearGradient
+                    colors={['transparent', 'rgba(0,0,0,0.75)']}
+                    style={styles.poseOverlay}
+                  />
+                  <Text style={styles.poseLabel}>{p.label}</Text>
+                  {active && <View style={styles.poseCheck} />}
                 </TouchableOpacity>
               )
             })}
@@ -298,12 +311,30 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: 18, fontWeight: '700', color: '#FFFFFF', marginBottom: 2 },
   sectionSub: { fontSize: 13, color: MUTED, marginBottom: 14 },
 
-  // Pose pills
-  poseRow: { gap: 8, marginBottom: 24 },
-  posePill: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12, borderWidth: 1, borderColor: CARD_BORDER, backgroundColor: CARD_BG },
-  posePillActive: { borderColor: ACCENT, backgroundColor: 'rgba(251,191,36,0.1)' },
-  posePillText: { fontSize: 14, fontWeight: '500', color: MUTED },
-  posePillTextActive: { color: ACCENT, fontWeight: '600' },
+  // Pose cards
+  poseRow: { gap: 10, paddingRight: 16, marginBottom: 24 },
+  poseCard: {
+    width: POSE_CARD_W,
+    height: POSE_CARD_H,
+    borderRadius: 14,
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: 'transparent',
+    backgroundColor: CARD_BG,
+  },
+  poseCardActive: { borderColor: ACCENT },
+  poseImage: { width: '100%', height: '100%' },
+  poseOverlay: { position: 'absolute', bottom: 0, left: 0, right: 0, height: 50 },
+  poseLabel: { position: 'absolute', bottom: 8, left: 8, right: 8, fontSize: 12, fontWeight: '600', color: '#FFFFFF' },
+  poseCheck: {
+    position: 'absolute',
+    top: 6,
+    right: 6,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: ACCENT,
+  },
 
   // Generate
   generateBtn: { paddingVertical: 18, borderRadius: 16, alignItems: 'center', overflow: 'hidden' },

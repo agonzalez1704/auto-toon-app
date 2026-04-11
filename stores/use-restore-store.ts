@@ -61,7 +61,11 @@ export const useRestoreStore = create<RestoreState>()(
         set(updates)
       },
       setRestoredImageUrl: (url) => set({ restoredImageUrl: url }),
-      setError: (error) => set({ error, phase: error ? 'error' : 'idle' }),
+      setError: (error) => set((state) => ({
+        error,
+        // Only transition phase when setting an error; clearing should not reset phase
+        phase: error ? 'error' : state.phase,
+      })),
       resetForNew: () =>
         set({
           localImageUri: null,
