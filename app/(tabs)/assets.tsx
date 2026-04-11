@@ -163,6 +163,48 @@ export default function AssetsScreen() {
     return items
   }, [assets, videos])
 
+  // Count per filter category — used to hide empty filters and show badge counts
+  const filterCounts = useMemo(() => {
+    const counts: Record<FilterType, number> = {
+      all: displayItems.length,
+      fashion_editorial: 0,
+      video: 0,
+      restored: 0,
+      vignette: 0,
+      elements: 0,
+      poster: 0,
+      '3x3': 0,
+      food: 0,
+      upscaled: 0,
+    }
+    for (const d of displayItems) {
+      if (d.isVideo) { counts.video++; continue }
+      if (d.batchUrls) { counts.upscaled++; continue }
+      const t = d.asset?.secondImageType
+      if (t === 'restore') counts.restored++
+      else if (t === 'fashion_editorial') counts.fashion_editorial++
+      else if (t === 'vignette') counts.vignette++
+      else if (t === 'elements') counts.elements++
+      else if (t === 'poster') counts.poster++
+      else if (t === '3x3') counts['3x3']++
+      else if (t === 'food') counts.food++
+    }
+    return counts
+  }, [displayItems])
+
+  // Only show "All" + filters with at least one item
+  const visibleFilters = useMemo(
+    () => FILTERS.filter((f) => f.value === 'all' || filterCounts[f.value] > 0),
+    [filterCounts]
+  )
+
+  // If the active filter loses all its items (e.g. after delete), fall back to All
+  useEffect(() => {
+    if (filter !== 'all' && filterCounts[filter] === 0) {
+      setFilter('all')
+    }
+  }, [filter, filterCounts])
+
   const filteredItems = useMemo(() => {
     if (filter === 'all') return displayItems
     if (filter === 'video') return displayItems.filter((d) => d.isVideo)
@@ -306,6 +348,43 @@ export default function AssetsScreen() {
           <Text style={styles.pageTitle}>Assets</Text>
         </View>
 
+        {/* Sticky filter rail — persists while scrolling the gallery */}
+        <View style={styles.filterRailWrap}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.filterRail}
+          >
+            {visibleFilters.map((f) => {
+              const isActive = filter === f.value
+              const count = filterCounts[f.value]
+              return (
+                <TouchableOpacity
+                  key={f.value}
+                  style={[styles.filterChip, isActive && styles.filterChipActive]}
+                  onPress={() => setFilter(f.value)}
+                  activeOpacity={0.75}
+                >
+                  <Text style={[styles.filterLabel, isActive && styles.filterLabelActive]}>
+                    {f.label}
+                  </Text>
+                  <Text style={[styles.filterCount, isActive && styles.filterCountActive]}>
+                    {count}
+                  </Text>
+                </TouchableOpacity>
+              )
+            })}
+          </ScrollView>
+          {/* Right-edge fade — signals there's more to scroll */}
+          <LinearGradient
+            colors={['rgba(25,49,83,0)', AURORA_NAVY]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.filterRailFade}
+            pointerEvents="none"
+          />
+        </View>
+
         <FlatList
           data={filteredItems}
           keyExtractor={(item) => item.key}
@@ -314,33 +393,6 @@ export default function AssetsScreen() {
           columnWrapperStyle={styles.row}
           contentContainerStyle={styles.list}
           showsVerticalScrollIndicator={false}
-          ListHeaderComponent={
-            <View style={styles.filterBar}>
-              {FILTERS.map((f) => {
-                const isActive = filter === f.value
-                return (
-                  <TouchableOpacity
-                    key={f.value}
-                    style={[
-                      styles.filterChip,
-                      isActive && styles.filterChipActive,
-                    ]}
-                    onPress={() => setFilter(f.value)}
-                    activeOpacity={0.7}
-                  >
-                    <Text
-                      style={[
-                        styles.filterLabel,
-                        isActive && styles.filterLabelActive,
-                      ]}
-                    >
-                      {f.label}
-                    </Text>
-                  </TouchableOpacity>
-                )
-              })}
-            </View>
-          }
           ListEmptyComponent={
             isLoading ? (
               <View style={styles.centered}>
@@ -390,33 +442,53 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
 
-  filterBar: {
+  filterRailWrap: {
+    position: 'relative',
+  },
+  filterRail: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
     gap: 8,
-    paddingVertical: 12,
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 12,
+    paddingRight: 32, // room so the last chip clears the right-edge fade
   },
   filterChip: {
-    paddingHorizontal: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 14,
     paddingVertical: 8,
-    minHeight: 44,
-    justifyContent: 'center' as const,
-    borderRadius: 8,
-    borderWidth: 1,
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    borderColor: 'rgba(255,255,255,0.08)',
+    minHeight: 36,
+    borderRadius: 999,
+    backgroundColor: 'rgba(255,255,255,0.06)',
   },
   filterChipActive: {
-    backgroundColor: 'rgba(251,191,36,0.15)',
-    borderColor: AURORA_MAGENTA,
+    backgroundColor: AURORA_MAGENTA,
   },
   filterLabel: {
     fontSize: 13,
     fontWeight: '600',
-    color: 'rgba(255,255,255,0.6)',
+    color: 'rgba(255,255,255,0.72)',
   },
   filterLabelActive: {
-    color: '#FFFFFF',
+    color: AURORA_NAVY,
+  },
+  filterCount: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: 'rgba(255,255,255,0.42)',
+    fontVariant: ['tabular-nums'],
+  },
+  filterCountActive: {
+    color: 'rgba(25,49,83,0.65)',
+  },
+  filterRailFade: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    right: 0,
+    width: 32,
   },
 
   list: {
