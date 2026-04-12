@@ -23,6 +23,9 @@ export type ImageModelId =
   | 'GEMINI_3_1_FLASH_IMAGE'
   | 'SEEDREAM_4_5'
   | 'SEEDREAM_5_LITE'
+  | 'IDEOGRAM_V3_TURBO'
+  | 'IDEOGRAM_V3_DEFAULT'
+  | 'IDEOGRAM_V3_QUALITY'
 
 export interface PromptCustomizations {
   background?: string
@@ -317,6 +320,7 @@ export const useProductEnhancerStore = create<ProductEnhancerState>()(
             const modelMap: Record<string, ImageModelId> = {
               gemini: 'GEMINI_3_IMAGE',
               seedream: 'SEEDREAM_4_5',
+              ideogram: 'IDEOGRAM_V3_TURBO',
             }
             updates.selectedModel = modelMap[analysis.suggestedModel] ?? state.selectedModel
           }

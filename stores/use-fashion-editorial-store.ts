@@ -130,6 +130,7 @@ interface FashionEditorialState {
   setHeroGenerating: () => void
   setHeroResult: (imageUrl: string) => void
   setHeroError: (error: string) => void
+  resetHero: () => void
 
   // Actions — Campaign
   setPoseStyle: (v: string) => void
@@ -210,6 +211,7 @@ export const useFashionEditorialStore = create<FashionEditorialState>()((set, ge
   setHeroGenerating: () => set({ heroPhase: 'generating', heroError: null }),
   setHeroResult: (imageUrl) => set({ heroPhase: 'complete', heroImageUrl: imageUrl }),
   setHeroError: (error) => set({ heroPhase: 'error', heroError: error }),
+  resetHero: () => set({ heroPhase: 'idle', heroImageUrl: null, heroError: null }),
 
   // Campaign
   setPoseStyle: (v) => set({ poseStyle: v }),

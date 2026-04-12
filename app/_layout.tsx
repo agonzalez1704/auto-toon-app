@@ -43,8 +43,12 @@ function AuthGate({ children }: { children: React.ReactNode }) {
   }, [isLoaded, isSignedIn, getToken])
 
   // Register for push notifications after sign-in
+  // Must run after the token getter is wired so API calls are authenticated
   useEffect(() => {
     if (!isLoaded || !isSignedIn) return
+
+    // Ensure auth interceptor is set before making API calls
+    setTokenGetter(getToken)
 
     registerForPushNotifications().then((token) => {
       setHasPrompted()

@@ -43,10 +43,11 @@ const AURORA_TEAL = '#0B5777'
 const AURORA_MAGENTA = '#FBBF24'
 const AURORA_PINK = '#F9D4E0'
 
-// Only show these two models to users
+// Only show these models to users
 const VISIBLE_MODELS: { id: ImageModelId; label: string }[] = [
   { id: 'GEMINI_3_IMAGE', label: 'Pro' },
   { id: 'GEMINI_3_1_FLASH_IMAGE', label: 'V2' },
+  { id: 'IDEOGRAM_V3_TURBO', label: 'Ideogram' },
 ]
 
 const ASPECT_RATIOS = [
@@ -207,6 +208,20 @@ function GeminiIcon({ size = 14 }: { size?: number }) {
       <SvgPath d={d} fill="url(#gf0)" />
       <SvgPath d={d} fill="url(#gf1)" />
       <SvgPath d={d} fill="url(#gf2)" />
+    </Svg>
+  )
+}
+
+function IdeogramIcon({ size = 14 }: { size?: number }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 900 900" fill="none">
+      <SvgPath d="M377.87 204.44H237.22" stroke="white" strokeWidth={70} strokeLinecap="round" strokeLinejoin="round" />
+      <SvgPath d="M377.87 696.3H237.22" stroke="white" strokeWidth={70} strokeLinecap="round" strokeLinejoin="round" />
+      <SvgPath d="M44.01 450.58H378.23" stroke="white" strokeWidth={70} strokeLinecap="round" strokeLinejoin="round" />
+      <SvgPath d="m390.12 816.41h-34.3zm0-244.02c67.39 0 122.01 54.63 122.01 122.01s-54.63 122.01-122.01 122.01m0-732.92h-34.3zm0 488.9H117.42m272.7 0H117.42m272.7 0c9.26 0 18.28 1.88 26.94 3.83 54.42 12.27 95.07 60.9 95.07 119.03 0 67.39-54.63 122.01-122.01 122.01m0-488.9c67.39 0 122.01 54.63 122.01 122.01s-54.63 122.01-122.01 122.01" stroke="white" strokeWidth={70} strokeLinecap="round" strokeLinejoin="round" />
+      <SvgPath d="m665.61 313.66c0-36.55-20.93-69.88-53.86-85.75-11.7-5.64-24.43-8.83-37.4-9.36-22.87-.95-45.32 6.38-63.23 20.64m297.28-7.97c-29.45-17-65.74-17-95.19 0-29.45 17-47.6 48.43-47.6 82.44" stroke="white" strokeWidth={70} strokeLinecap="round" strokeLinejoin="round" />
+      <SvgPath d="m667.66 523.69c-5.75-30.22-25.74-55.81-53.68-68.68-12.05-5.55-25.11-8.52-38.33-8.72-1.89-.03-3.78 0-5.67.08-15.15.66-29.92 4.94-43.08 12.47l.05.02c-5.91 3.38-11.35 7.32-16.27 11.72m157 53.12c8.9 42.22 45 72.92 87.63 75.37l-.02.11c9.09.53 18-.24 26.51-2.17" stroke="white" strokeWidth={70} strokeLinecap="round" strokeLinejoin="round" />
+      <SvgPath d="m474.21 798.36c-1.74-3.44-3.28-6.99-4.59-10.63M776 219.96C764.22 159.53 726.61 107.27 673.05 76.9c-30.45-17.26-64.71-26.67-99.7-27.38-43.87-.89-86.92 11.93-123.15 36.68m310.6 322.65c38.5 0 73.21-23.19 87.95-58.77 14.73-35.57 6.59-76.52-20.64-103.74-14.18-14.04-32.41-23.27-52.12-26.38m-125.87 321.92c22.06 33.77 63.01 49.97 102.2 40.44 39.19-9.54 68.12-42.74 72.2-82.87 3.71-36.59-13.99-72.05-45.47-91.08 46.65-9.64 79-52.27 75.71-99.8-3.46-49.9-44.95-88.6-94.97-88.6m-289.48 488.3c22.26 43.26 73.55 62.78 118.94 45.25 45.38-17.52 70.25-66.45 57.66-113.44M450.2 86.2c-3.04 2.16-6.01 4.4-8.92 6.7" stroke="white" strokeWidth={70} strokeLinecap="round" strokeLinejoin="round" />
     </Svg>
   )
 }
@@ -898,9 +913,9 @@ export default function CreateScreen() {
 
               {/* Powered by label */}
               <View style={styles.poweredByRow}>
-                <GeminiIcon size={13} />
+                {store.selectedModel.startsWith('IDEOGRAM') ? <IdeogramIcon size={13} /> : <GeminiIcon size={13} />}
                 <Text style={styles.poweredByText}>
-                  Powered by {store.selectedModel === 'GEMINI_3_IMAGE' ? 'Nano Banana Pro' : 'Nano Banana 2'}
+                  Powered by {AI_MODELS[store.selectedModel].name}
                 </Text>
               </View>
 

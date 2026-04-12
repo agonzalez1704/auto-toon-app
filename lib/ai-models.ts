@@ -1,7 +1,7 @@
 // ⚠️  SYNC: exact copy of toon-converter/lib/ai-models.ts
 // When adding or changing models/credits, update the web file first then copy here.
 
-export type AiProvider = 'google' | 'openai' | 'replicate' | 'minimax' | 'kling';
+export type AiProvider = 'google' | 'openai' | 'replicate' | 'minimax' | 'kling' | 'ideogram';
 
 export type AiModelType = 'text' | 'image' | 'analysis' | 'video';
 
@@ -183,6 +183,49 @@ export const AI_MODELS = {
     },
     payPerUseRate: 0.108, // $0.06 × 1.8
   },
+  // Ideogram V3 Models
+  IDEOGRAM_V3_TURBO: {
+    id: 'ideogram-v3-turbo',
+    name: 'Ideogram V3 Turbo',
+    provider: 'ideogram',
+    type: 'image',
+    credits: 1,
+    cost: {
+      perImage: 0.03
+    },
+    payPerUseRate: 0.054, // $0.03 × 1.8
+    inputConfig: {
+      maxImages: 8,
+    },
+  },
+  IDEOGRAM_V3_DEFAULT: {
+    id: 'ideogram-v3-default',
+    name: 'Ideogram V3',
+    provider: 'ideogram',
+    type: 'image',
+    credits: 2,
+    cost: {
+      perImage: 0.06
+    },
+    payPerUseRate: 0.108, // $0.06 × 1.8
+    inputConfig: {
+      maxImages: 8,
+    },
+  },
+  IDEOGRAM_V3_QUALITY: {
+    id: 'ideogram-v3-quality',
+    name: 'Ideogram V3 Quality',
+    provider: 'ideogram',
+    type: 'image',
+    credits: 3,
+    cost: {
+      perImage: 0.09
+    },
+    payPerUseRate: 0.162, // $0.09 × 1.8
+    inputConfig: {
+      maxImages: 8,
+    },
+  },
   // Video Models
   KLING_V3: {
     id: 'kling-v3',
@@ -224,6 +267,18 @@ export const IMAGE_MODEL_IDS = Object.values(AI_MODELS)
 // Check if a model ID is a Seedream model
 export function isSeedreamModel(modelId: string): boolean {
   return modelId.includes('seedream');
+}
+
+// Check if a model ID is an Ideogram model
+export function isIdeogramModel(modelId: string): boolean {
+  return modelId.startsWith('ideogram-');
+}
+
+// Get the Ideogram rendering speed from a model ID
+export function getIdeogramRenderingSpeed(modelId: string): 'TURBO' | 'DEFAULT' | 'QUALITY' {
+  if (modelId.includes('turbo')) return 'TURBO'
+  if (modelId.includes('quality')) return 'QUALITY'
+  return 'DEFAULT'
 }
 
 // Check if a model ID is the Flash-tier Gemini image model (Nano Banana 2)
