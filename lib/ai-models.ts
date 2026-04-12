@@ -189,7 +189,7 @@ export const AI_MODELS = {
     name: 'Ideogram V3 Turbo',
     provider: 'ideogram',
     type: 'image',
-    credits: 1,
+    credits: 2,
     cost: {
       perImage: 0.03
     },
@@ -203,7 +203,7 @@ export const AI_MODELS = {
     name: 'Ideogram V3',
     provider: 'ideogram',
     type: 'image',
-    credits: 2,
+    credits: 3,
     cost: {
       perImage: 0.06
     },
@@ -217,7 +217,7 @@ export const AI_MODELS = {
     name: 'Ideogram V3 Quality',
     provider: 'ideogram',
     type: 'image',
-    credits: 3,
+    credits: 5,
     cost: {
       perImage: 0.09
     },
