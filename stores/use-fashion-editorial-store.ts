@@ -98,15 +98,39 @@ interface FashionEditorialState {
   heroImageUrl: string | null
   heroError: string | null
 
+  // Main product (for UGC showcase)
+  mainProductId: string | null
+
   // Campaign variations
   poseStyle: string
   variationsPhase: GenerationPhase
   variationUrls: string[]
   variationsError: string | null
 
+  // Multi-angle camera grid
+  multiAngleSourceUrl: string | null
+  multiAnglePhase: GenerationPhase
+  multiAngleGridUrl: string | null
+  multiAngleUrls: string[]
+  multiAngleError: string | null
+
+  // Product showcase (UGC)
+  showcasePhase: GenerationPhase
+  showcaseUrls: string[]
+  showcaseError: string | null
+
+  // Upscale
+  upscalePhase: GenerationPhase
+  upscaleProgress: string
+  upscaledUrls: string[]
+  upscaleError: string | null
+
   // Actions — Model
   selectModel: (id: string, imageUrl: string) => void
   clearModel: () => void
+
+  // Actions — Main Product
+  setMainProduct: (id: string | null) => void
 
   // Actions — Clothing
   addClothingItem: (localUri: string) => ClothingItem
@@ -138,9 +162,31 @@ interface FashionEditorialState {
   setVariationsResult: (urls: string[]) => void
   setVariationsError: (error: string) => void
 
+  // Actions — Multi-Angle
+  setMultiAngleSource: (url: string) => void
+  setMultiAngleGenerating: () => void
+  setMultiAngleResult: (gridUrl: string, urls: string[]) => void
+  setMultiAngleError: (error: string) => void
+  resetMultiAngle: () => void
+
+  // Actions — Showcase
+  setShowcaseGenerating: () => void
+  setShowcaseResult: (urls: string[]) => void
+  setShowcaseError: (error: string) => void
+  resetShowcase: () => void
+
+  // Actions — Upscale
+  setUpscaleGenerating: () => void
+  setUpscaleProgress: (msg: string) => void
+  addUpscaledUrl: (url: string) => void
+  setUpscaleComplete: () => void
+  setUpscaleError: (error: string) => void
+  resetUpscale: () => void
+
   // Guards
   canGenerateHero: () => boolean
   canGenerateVariations: () => boolean
+  canShowcaseProduct: () => boolean
 
   // Reset
   reset: () => void
@@ -150,6 +196,7 @@ const INITIAL_STATE = {
   selectedModelId: null,
   selectedModelImageUrl: null,
   clothingItems: [],
+  mainProductId: null,
   makeupRef: null,
   hairstyleRef: null,
   stylePreset: 'editorial-vogue',
@@ -162,6 +209,18 @@ const INITIAL_STATE = {
   variationsPhase: 'idle' as GenerationPhase,
   variationUrls: [],
   variationsError: null,
+  multiAngleSourceUrl: null,
+  multiAnglePhase: 'idle' as GenerationPhase,
+  multiAngleGridUrl: null,
+  multiAngleUrls: [] as string[],
+  multiAngleError: null,
+  showcasePhase: 'idle' as GenerationPhase,
+  showcaseUrls: [] as string[],
+  showcaseError: null,
+  upscalePhase: 'idle' as GenerationPhase,
+  upscaleProgress: '',
+  upscaledUrls: [] as string[],
+  upscaleError: null,
 }
 
 export const useFashionEditorialStore = create<FashionEditorialState>()((set, get) => ({
@@ -170,6 +229,9 @@ export const useFashionEditorialStore = create<FashionEditorialState>()((set, ge
   // Model
   selectModel: (id, imageUrl) => set({ selectedModelId: id, selectedModelImageUrl: imageUrl }),
   clearModel: () => set({ selectedModelId: null, selectedModelImageUrl: null }),
+
+  // Main Product
+  setMainProduct: (id) => set({ mainProductId: id }),
 
   // Clothing
   addClothingItem: (localUri) => {
@@ -188,7 +250,10 @@ export const useFashionEditorialStore = create<FashionEditorialState>()((set, ge
       clothingItems: s.clothingItems.map((c) => (c.id === id ? { ...c, ...updates } : c)),
     })),
   removeClothingItem: (id) =>
-    set((s) => ({ clothingItems: s.clothingItems.filter((c) => c.id !== id) })),
+    set((s) => ({
+      clothingItems: s.clothingItems.filter((c) => c.id !== id),
+      mainProductId: s.mainProductId === id ? null : s.mainProductId,
+    })),
 
   // Makeup
   setMakeupRef: (ref) => set({ makeupRef: ref }),
@@ -219,12 +284,37 @@ export const useFashionEditorialStore = create<FashionEditorialState>()((set, ge
   setVariationsResult: (urls) => set({ variationsPhase: 'complete', variationUrls: urls }),
   setVariationsError: (error) => set({ variationsPhase: 'error', variationsError: error }),
 
+  // Multi-Angle
+  setMultiAngleSource: (url) => set({ multiAngleSourceUrl: url }),
+  setMultiAngleGenerating: () => set({ multiAnglePhase: 'generating', multiAngleError: null }),
+  setMultiAngleResult: (gridUrl, urls) => set({ multiAnglePhase: 'complete', multiAngleGridUrl: gridUrl, multiAngleUrls: urls }),
+  setMultiAngleError: (error) => set({ multiAnglePhase: 'error', multiAngleError: error }),
+  resetMultiAngle: () => set({ multiAnglePhase: 'idle', multiAngleGridUrl: null, multiAngleUrls: [], multiAngleError: null, multiAngleSourceUrl: null }),
+
+  // Showcase
+  setShowcaseGenerating: () => set({ showcasePhase: 'generating', showcaseError: null }),
+  setShowcaseResult: (urls) => set({ showcasePhase: 'complete', showcaseUrls: urls }),
+  setShowcaseError: (error) => set({ showcasePhase: 'error', showcaseError: error }),
+  resetShowcase: () => set({ showcasePhase: 'idle', showcaseUrls: [], showcaseError: null }),
+
+  // Upscale
+  setUpscaleGenerating: () => set({ upscalePhase: 'generating', upscaleError: null, upscaledUrls: [], upscaleProgress: '' }),
+  setUpscaleProgress: (msg) => set({ upscaleProgress: msg }),
+  addUpscaledUrl: (url) => set((s) => ({ upscaledUrls: [...s.upscaledUrls, url] })),
+  setUpscaleComplete: () => set({ upscalePhase: 'complete' }),
+  setUpscaleError: (error) => set({ upscalePhase: 'error', upscaleError: error }),
+  resetUpscale: () => set({ upscalePhase: 'idle', upscaleProgress: '', upscaledUrls: [], upscaleError: null }),
+
   // Guards
   canGenerateHero: () => {
     const s = get()
     return !!s.selectedModelId && s.clothingItems.some((c) => c.phase === 'ready')
   },
   canGenerateVariations: () => !!get().heroImageUrl,
+  canShowcaseProduct: () => {
+    const s = get()
+    return !!s.heroImageUrl && !!s.mainProductId
+  },
 
   // Reset
   reset: () => set(INITIAL_STATE),

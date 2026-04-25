@@ -71,6 +71,15 @@ function RelightIcon() {
   )
 }
 
+function CameraIcon() {
+  return (
+    <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
+      <SvgPath d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" stroke="#FFFFFF" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+      <Circle cx={12} cy={13} r={4} stroke="#FFFFFF" strokeWidth={2} />
+    </Svg>
+  )
+}
+
 function AngleIcon() {
   return (
     <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
@@ -169,6 +178,7 @@ export default function ImageViewerScreen() {
     title?: string
     hideVideo?: string
     assetType?: string // fashion_editorial | upscale_batch | vignette | elements | poster | etc.
+    modelId?: string // When viewing a saved model — shows "Create Photoshoot" CTA
   }>()
 
   const urls: string[] = params.urls ? JSON.parse(params.urls) : []
@@ -177,6 +187,7 @@ export default function ImageViewerScreen() {
   const hideVideo = params.hideVideo === '1'
   const assetType = params.assetType || ''
   const isFashion = assetType === 'fashion_editorial'
+  const modelId = params.modelId || ''
 
   const [currentIndex, setCurrentIndex] = useState(initialIndex)
   const [isSaving, setIsSaving] = useState(false)
@@ -305,6 +316,23 @@ export default function ImageViewerScreen() {
 
       {/* Bottom overlay: contextual actions */}
       <SafeAreaView style={styles.bottomOverlay} edges={['bottom']} pointerEvents="box-none">
+        {!!modelId && (
+          <View style={styles.actionsRow}>
+            <TouchableOpacity
+              style={styles.actionPill}
+              onPress={() => {
+                useFashionEditorialStore.getState().reset()
+                useFashionEditorialStore.getState().selectModel(modelId, urls[currentIndex])
+                router.push('/fashion-editorial')
+              }}
+              activeOpacity={0.8}
+            >
+              <LinearGradient colors={['#FBBF24', '#F59E0B', '#B45309']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFillObject} />
+              <CameraIcon />
+              <Text style={styles.actionText}>Create Photoshoot</Text>
+            </TouchableOpacity>
+          </View>
+        )}
         {!hideVideo && (
           <ScrollView
             horizontal
@@ -358,20 +386,18 @@ export default function ImageViewerScreen() {
             </TouchableOpacity>
 
             {/* Multi-angle — available for all types */}
-            {isFashion && (
-              <TouchableOpacity
-                style={styles.actionPill}
-                onPress={() => {
-                  useFashionEditorialStore.getState().setHeroResult(urls[currentIndex])
-                  router.push('/fashion-editorial/campaign')
-                }}
-                activeOpacity={0.8}
-              >
-                <LinearGradient colors={['#06B6D4', '#3B82F6']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFillObject} />
-                <AngleIcon />
-                <Text style={styles.actionText}>Multi-Angle</Text>
-              </TouchableOpacity>
-            )}
+            <TouchableOpacity
+              style={styles.actionPill}
+              onPress={() => {
+                useFashionEditorialStore.getState().setMultiAngleSource(urls[currentIndex])
+                router.push('/fashion-editorial/multi-angle' as any)
+              }}
+              activeOpacity={0.8}
+            >
+              <LinearGradient colors={['#06B6D4', '#3B82F6']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFillObject} />
+              <AngleIcon />
+              <Text style={styles.actionText}>Multi-Angle</Text>
+            </TouchableOpacity>
           </ScrollView>
         )}
         <Text style={styles.hintText} pointerEvents="none">Hold image to save or share</Text>

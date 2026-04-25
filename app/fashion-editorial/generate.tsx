@@ -23,6 +23,7 @@ import { useSubscriptionStore } from '@/stores/use-subscription-store'
 import { useTermsConsentStore } from '@/stores/use-terms-consent-store'
 import { generateFashionEditorial } from '@/lib/api'
 import { getCostLabel, AI_MODELS } from '@/lib/ai-models'
+import { MidjourneyParamsPanel, DEFAULT_MJ_PARAMS, buildMjFlags, type MjParams } from '@/components/midjourney-params'
 import { ParticleSphere } from '@/components/particle-sphere'
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window')
@@ -39,6 +40,7 @@ const MODEL_OPTIONS = [
   { key: 'SEEDREAM_4_5', id: AI_MODELS.SEEDREAM_4_5.id, label: 'SeeDream 4.5', credits: AI_MODELS.SEEDREAM_4_5.credits ?? 1, Icon: ByteDanceIcon },
   { key: 'SEEDREAM_5_LITE', id: AI_MODELS.SEEDREAM_5_LITE.id, label: 'SeeDream 5 Lite', credits: AI_MODELS.SEEDREAM_5_LITE.credits ?? 2, Icon: ByteDanceIcon },
   { key: 'IDEOGRAM_V3_TURBO', id: AI_MODELS.IDEOGRAM_V3_TURBO.id, label: 'Ideogram V3 Turbo', credits: AI_MODELS.IDEOGRAM_V3_TURBO.credits ?? 1, Icon: IdeogramIcon },
+  { key: 'MIDJOURNEY_V7', id: AI_MODELS.MIDJOURNEY_V7.id, label: 'Midjourney V7', credits: AI_MODELS.MIDJOURNEY_V7.credits ?? 5, Icon: MidjourneyIcon },
 ]
 
 const ASPECT_RATIOS = [
@@ -146,6 +148,17 @@ function IdeogramIcon({ size = 16 }: { size?: number }) {
   )
 }
 
+function MidjourneyIcon({ size = 16 }: { size?: number }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 1024 1024" fill="none">
+      <SvgPath d="m 267.7,229.5 c 128.6,55 305,208.1 337.4,412 -148.3,-59.8 -261.2,-27.9 -339.8,20.6 119.9,-152.4 66.1,-325.7 2.4,-432.6 z" fill="none" stroke="white" strokeWidth={18} strokeLinecap="round" strokeLinejoin="round" />
+      <SvgPath d="m 242.4,752.2 -22.9,-43.8 590,-38 c -46.4,42.2 -106,76.4 -166.3,104.4" fill="none" stroke="white" strokeWidth={18} strokeLinecap="round" strokeLinejoin="round" />
+      <SvgPath d="M 454.4,300.4 C 554.8,331.1 695.2,479.4 743,638.8 716.8,628.5 697.2,618 660.4,627.4 624.8,497.9 561.1,374.2 454.4,300.4 Z" fill="none" stroke="white" strokeWidth={18} strokeLinecap="round" strokeLinejoin="round" />
+      <SvgPath d="m 174,794 c 20,0 50,-42 85,-48 20,0 35,42 85,48 35,0 50,-42 85,-42 35,0 50,42 85,42 35,0 50,-42 85,-42 35,0 50,42 85,42 35,0 50,-42 85,-42 35,0 50,42 85,42" fill="none" stroke="white" strokeWidth={18} strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  )
+}
+
 // ─── Timer ─────────────────────────────────────────────────────────
 
 function GenerationTimer() {
@@ -173,6 +186,7 @@ export default function GenerateScreen() {
   const [showSettings, setShowSettings] = useState(false)
   const [selectedAiModel, setSelectedAiModel] = useState(MODEL_OPTIONS[0])
   const [selectedAspectRatio, setSelectedAspectRatio] = useState('3:4')
+  const [mjParams, setMjParams] = useState<MjParams>(DEFAULT_MJ_PARAMS)
   const settingsAnim = useRef(new Animated.Value(0)).current
 
   // Clear stale hero result when entering the generate screen fresh
@@ -236,6 +250,7 @@ export default function GenerateScreen() {
         promptModifier: store.promptModifier || undefined,
         aiModel: selectedAiModel.id,
         aspectRatio: selectedAspectRatio,
+        ...(selectedAiModel.key === 'MIDJOURNEY_V7' ? { mjParams } : {}),
         models: [{
           modelId: store.selectedModelId!,
           clothingImageUrls: clothingUrls,
@@ -306,6 +321,15 @@ export default function GenerateScreen() {
             activeOpacity={0.7}
           >
             <Text style={styles.regenerateBtnText}>Regenerate</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.showcaseBtn}
+            onPress={() => router.push('/fashion-editorial/showcase')}
+            activeOpacity={0.8}
+          >
+            <LinearGradient colors={['#0B5777', '#0891B2', '#0B5777']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFillObject} />
+            <Text style={styles.showcaseBtnText}>Showcase Product</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -393,6 +417,15 @@ export default function GenerateScreen() {
               })}
             </View>
           </View>
+
+          {/* Midjourney V7 params — visible when MJ is selected */}
+          {selectedAiModel.key === 'MIDJOURNEY_V7' && (
+            <MidjourneyParamsPanel
+              params={mjParams}
+              onChange={setMjParams}
+              showImageWeight={false}
+            />
+          )}
 
           {/* Aspect Ratio selector */}
           <View style={styles.aspectSection}>
@@ -535,6 +568,8 @@ const styles = StyleSheet.create({
   resultTitle: { position: 'absolute', top: 18, left: 0, right: 0, textAlign: 'center', fontSize: 17, fontWeight: '700', color: '#FFFFFF' },
   regenerateBtn: { paddingHorizontal: 24, paddingVertical: 12, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.15)' },
   regenerateBtnText: { fontSize: 14, fontWeight: '600', color: '#FFFFFF' },
+  showcaseBtn: { alignItems: 'center', justifyContent: 'center', paddingVertical: 16, borderRadius: 14, overflow: 'hidden', width: '100%' },
+  showcaseBtnText: { fontSize: 16, fontWeight: '700', color: '#FFFFFF' },
   campaignBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 16, borderRadius: 14, overflow: 'hidden', width: '100%' },
   campaignBtnText: { fontSize: 16, fontWeight: '700', color: '#FFFFFF' },
 })

@@ -62,6 +62,20 @@ function RemoveIcon() {
   )
 }
 
+function StarIcon({ filled }: { filled: boolean }) {
+  return (
+    <Svg width={16} height={16} viewBox="0 0 24 24" fill={filled ? ACCENT : 'none'}>
+      <SvgPath
+        d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+        stroke={filled ? ACCENT : 'rgba(255,255,255,0.5)'}
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  )
+}
+
 function ArrowRightIcon() {
   return (
     <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
@@ -116,7 +130,17 @@ function useImagePicker() {
 
 // ─── Clothing Cell ─────────────────────────────────────────────────
 
-function ClothingCell({ item, onRemove }: { item: ClothingItem; onRemove: () => void }) {
+function ClothingCell({
+  item,
+  onRemove,
+  isMainProduct,
+  onToggleStar,
+}: {
+  item: ClothingItem
+  onRemove: () => void
+  isMainProduct: boolean
+  onToggleStar: () => void
+}) {
   const isLoading = item.phase === 'uploading' || item.phase === 'analyzing'
   return (
     <View style={styles.cell}>
@@ -138,6 +162,11 @@ function ClothingCell({ item, onRemove }: { item: ClothingItem; onRemove: () => 
         <View style={[styles.cellBadge, { backgroundColor: 'rgba(239,68,68,0.85)' }]}>
           <Text style={styles.cellBadgeText}>Error</Text>
         </View>
+      )}
+      {item.phase === 'ready' && (
+        <TouchableOpacity style={styles.cellStar} onPress={onToggleStar}>
+          <StarIcon filled={isMainProduct} />
+        </TouchableOpacity>
       )}
       <TouchableOpacity style={styles.cellRemove} onPress={onRemove}>
         <RemoveIcon />
@@ -212,6 +241,8 @@ export default function ClothingScreen() {
                 key={item.id}
                 item={item}
                 onRemove={() => store.removeClothingItem(item.id)}
+                isMainProduct={store.mainProductId === item.id}
+                onToggleStar={() => store.setMainProduct(store.mainProductId === item.id ? null : item.id)}
               />
             ))}
 
@@ -221,6 +252,10 @@ export default function ClothingScreen() {
               <Text style={styles.addCellText}>Add</Text>
             </TouchableOpacity>
           </View>
+
+          <Text style={styles.starHint}>
+            Tap the star to set a hero product for UGC showcase
+          </Text>
 
           {/* ── Optional: Makeup & Hairstyle links ── */}
           <View style={styles.optionalSection}>
@@ -305,6 +340,8 @@ const styles = StyleSheet.create({
   cellBadge: { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: 'rgba(0,0,0,0.65)', paddingHorizontal: 6, paddingVertical: 4 },
   cellBadgeText: { fontSize: 10, fontWeight: '600', color: '#FFFFFF' },
   cellRemove: { position: 'absolute', top: 6, right: 6, width: 24, height: 24, borderRadius: 12, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', alignItems: 'center' },
+  cellStar: { position: 'absolute', top: 6, left: 6, width: 28, height: 28, borderRadius: 14, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' },
+  starHint: { fontSize: 12, color: MUTED, marginTop: 8, textAlign: 'center' },
 
   addCell: {
     width: CELL_SIZE,

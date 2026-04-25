@@ -128,6 +128,7 @@ export default function ModelsScreen() {
           urls: JSON.stringify(urls),
           title: model.name,
           hideVideo: '1',
+          modelId: model.id,
         },
       })
     },

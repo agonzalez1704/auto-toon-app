@@ -7,6 +7,7 @@ import { useCreditsStore } from '@/stores/use-credits-store'
 import { useSubscriptionStore } from '@/stores/use-subscription-store'
 import { AI_MODELS, getModelCredits, GOAL_MAP, useProductEnhancerStore, type GoalId, type ImageModelId } from '@/stores/use-product-enhancer-store'
 import { getCostLabel } from '@/lib/ai-models'
+import { MidjourneyParamsPanel, DEFAULT_MJ_PARAMS, buildMjFlags, type MjParams } from '@/components/midjourney-params'
 import { useTermsConsentStore } from '@/stores/use-terms-consent-store'
 import { Image } from 'expo-image'
 import * as ImagePicker from 'expo-image-picker'
@@ -48,7 +49,10 @@ const VISIBLE_MODELS: { id: ImageModelId; label: string }[] = [
   { id: 'GEMINI_3_IMAGE', label: 'Pro' },
   { id: 'GEMINI_3_1_FLASH_IMAGE', label: 'V2' },
   { id: 'IDEOGRAM_V3_TURBO', label: 'Ideogram' },
+  { id: 'MIDJOURNEY_V7', label: 'MJ V7' },
 ]
+
+// MJ params state is managed inside the component via useState
 
 const ASPECT_RATIOS = [
   { value: '3:4', w: 12, h: 16 },
@@ -226,6 +230,16 @@ function IdeogramIcon({ size = 14 }: { size?: number }) {
   )
 }
 
+function MidjourneyIcon({ size = 14 }: { size?: number }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 1024 1024" fill="none">
+      <SvgPath d="m 267.7,229.5 c 128.6,55 305,208.1 337.4,412 -148.3,-59.8 -261.2,-27.9 -339.8,20.6 119.9,-152.4 66.1,-325.7 2.4,-432.6 z" fill="none" stroke="white" strokeWidth={18} strokeLinecap="round" strokeLinejoin="round" />
+      <SvgPath d="m 242.4,752.2 -22.9,-43.8 590,-38 c -46.4,42.2 -106,76.4 -166.3,104.4" fill="none" stroke="white" strokeWidth={18} strokeLinecap="round" strokeLinejoin="round" />
+      <SvgPath d="M 454.4,300.4 C 554.8,331.1 695.2,479.4 743,638.8 716.8,628.5 697.2,618 660.4,627.4 624.8,497.9 561.1,374.2 454.4,300.4 Z" fill="none" stroke="white" strokeWidth={18} strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  )
+}
+
 const GOAL_ICONS: Record<GoalId, () => React.JSX.Element> = {
   'instagram-feed': InstagramIcon,
   'product-advantages': SparkleGoalIcon,
@@ -281,6 +295,7 @@ export default function CreateScreen() {
   const [configModalVisible, setConfigModalVisible] = useState(false)
   const [newElement, setNewElement] = useState('')
   const [newEnhancer, setNewEnhancer] = useState('')
+  const [mjParams, setMjParams] = useState<MjParams>(DEFAULT_MJ_PARAMS)
 
   const store = useProductEnhancerStore()
   const { balance, fetchCredits, setShowExhaustionModal } = useCreditsStore()
@@ -382,6 +397,7 @@ export default function CreateScreen() {
         imageUrl: store.uploadedImageUrl,
         productName: store.productName,
         model: AI_MODELS[store.selectedModel].id,
+        ...(store.selectedModel === 'MIDJOURNEY_V7' ? { mjParams } : {}),
         generationMode: store.generationMode,
         secondImageConfig: goalConfig?.secondImageType
           ? {
@@ -891,6 +907,15 @@ export default function CreateScreen() {
                 })}
               </View>
 
+              {/* Midjourney V7 params — visible when MJ is selected */}
+              {store.selectedModel === 'MIDJOURNEY_V7' && (
+                <MidjourneyParamsPanel
+                  params={mjParams}
+                  onChange={setMjParams}
+                  showImageWeight={!!store.uploadedImageUrl}
+                />
+              )}
+
               {/* Aspect Ratio Selector */}
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.aspectRow}>
                 {ASPECT_RATIOS.map((ratio) => {
@@ -913,7 +938,7 @@ export default function CreateScreen() {
 
               {/* Powered by label */}
               <View style={styles.poweredByRow}>
-                {store.selectedModel.startsWith('IDEOGRAM') ? <IdeogramIcon size={13} /> : <GeminiIcon size={13} />}
+                {store.selectedModel === 'MIDJOURNEY_V7' ? <MidjourneyIcon size={13} /> : store.selectedModel.startsWith('IDEOGRAM') ? <IdeogramIcon size={13} /> : <GeminiIcon size={13} />}
                 <Text style={styles.poweredByText}>
                   Powered by {AI_MODELS[store.selectedModel].name}
                 </Text>

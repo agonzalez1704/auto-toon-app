@@ -1,7 +1,7 @@
 // ⚠️  SYNC: exact copy of toon-converter/lib/ai-models.ts
 // When adding or changing models/credits, update the web file first then copy here.
 
-export type AiProvider = 'google' | 'openai' | 'replicate' | 'minimax' | 'kling' | 'ideogram';
+export type AiProvider = 'google' | 'openai' | 'replicate' | 'minimax' | 'kling' | 'ideogram' | 'evolink';
 
 export type AiModelType = 'text' | 'image' | 'analysis' | 'video';
 
@@ -225,6 +225,21 @@ export const AI_MODELS = {
     inputConfig: {
       maxImages: 8,
     },
+  },
+  // Midjourney V7 via EvoLink
+  MIDJOURNEY_V7: {
+    id: 'mj-v7',
+    name: 'Midjourney V7',
+    provider: 'evolink' as AiProvider,
+    type: 'image',
+    credits: 5,
+    cost: {
+      perImage: 0.18 // ~1.8 credits reserved per EvoLink call, 4 images returned
+    },
+    payPerUseRate: 0.324, // $0.18 × 1.8
+    inputConfig: {
+      maxImages: 4
+    }
   },
   // Video Models
   KLING_V3: {

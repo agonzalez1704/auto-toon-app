@@ -1,36 +1,36 @@
-import { useCallback, useState, useRef, useEffect } from 'react'
+import { ParticleSphere } from '@/components/particle-sphere'
+import { generateCharacterSheet } from '@/lib/api'
+import { useCreditsStore } from '@/stores/use-credits-store'
+import { useFashionEditorialStore } from '@/stores/use-fashion-editorial-store'
+import { useModelFactoryStore } from '@/stores/use-model-factory-store'
+import * as FileSystem from 'expo-file-system/legacy'
+import { Image } from 'expo-image'
+import { LinearGradient } from 'expo-linear-gradient'
+import * as MediaLibrary from 'expo-media-library'
+import { useLocalSearchParams, useRouter } from 'expo-router'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  StatusBar,
-  Dimensions,
-  Alert,
-  ActivityIndicator,
-  Share,
-  Platform,
   ActionSheetIOS,
-  TextInput,
+  ActivityIndicator,
+  Alert,
+  Dimensions,
   KeyboardAvoidingView,
+  Platform,
+  Share,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { Image } from 'expo-image'
-import { useLocalSearchParams, useRouter } from 'expo-router'
-import * as FileSystem from 'expo-file-system/legacy'
-import * as MediaLibrary from 'expo-media-library'
 import Svg, { Path as SvgPath } from 'react-native-svg'
-import { LinearGradient } from 'expo-linear-gradient'
-import { useModelFactoryStore } from '@/stores/use-model-factory-store'
-import { useCreditsStore } from '@/stores/use-credits-store'
-import { generateCharacterSheet } from '@/lib/api'
-import { ParticleSphere } from '@/components/particle-sphere'
 
 const { width: SCREEN_W } = Dimensions.get('window')
 
 const AURORA_NAVY = '#193153'
 const AURORA_MAGENTA = '#FBBF24'
-const AURORA_TEAL = '#0B5777'
 
 function CloseIcon() {
   return (
@@ -41,6 +41,25 @@ function CloseIcon() {
         strokeWidth={2}
         strokeLinecap="round"
         strokeLinejoin="round"
+      />
+    </Svg>
+  )
+}
+
+function CameraIcon() {
+  return (
+    <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
+      <SvgPath
+        d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"
+        stroke="#FFFFFF"
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <SvgPath
+        d="M12 17a4 4 0 100-8 4 4 0 000 8z"
+        stroke="#FFFFFF"
+        strokeWidth={2}
       />
     </Svg>
   )
@@ -131,14 +150,14 @@ export default function ModelResultScreen() {
         (buttonIndex) => {
           if (buttonIndex === 0) saveToPhotos()
           else if (buttonIndex === 1) {
-            Share.share({ url: imageUrl }).catch(() => {})
+            Share.share({ url: imageUrl }).catch(() => { })
           }
         }
       )
     } else {
       Alert.alert('Image Options', undefined, [
         { text: 'Save to Photos', onPress: saveToPhotos },
-        { text: 'Share', onPress: () => Share.share({ message: imageUrl }).catch(() => {}) },
+        { text: 'Share', onPress: () => Share.share({ message: imageUrl }).catch(() => { }) },
         { text: 'Cancel', style: 'cancel' },
       ])
     }
@@ -179,11 +198,11 @@ export default function ModelResultScreen() {
       const updated = store.savedModels.map((m) =>
         m.id === tempId
           ? {
-              ...m,
-              id: result.model.id,
-              imageUrl: result.model.imageUrl,
-              characterSheetUrl: result.model.characterSheetUrl,
-            }
+            ...m,
+            id: result.model.id,
+            imageUrl: result.model.imageUrl,
+            characterSheetUrl: result.model.characterSheetUrl,
+          }
           : m
       )
       useModelFactoryStore.setState({ savedModels: updated })
@@ -210,6 +229,17 @@ export default function ModelResultScreen() {
   const handleRefine = useCallback(() => {
     router.push('/model-wizard')
   }, [router])
+
+  const handleCreatePhotoshoot = useCallback(() => {
+    if (!imageUrl) return
+    // Pre-select this model in the editorial store and navigate
+    const editorialStore = useFashionEditorialStore.getState()
+    editorialStore.reset()
+    // Use modelId from params if we have one, otherwise use the imageUrl as temp id
+    const id = params.modelId || `unsaved_${Date.now()}`
+    editorialStore.selectModel(id, imageUrl)
+    router.push('/fashion-editorial')
+  }, [imageUrl, params.modelId, router])
 
   if (!imageUrl) {
     router.back()
@@ -281,9 +311,18 @@ export default function ModelResultScreen() {
             <Text style={styles.actionButtonText}>Refine</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.actionButton, styles.actionButtonPrimary]}
+            style={styles.actionButton}
             onPress={handleSaveToGallery}
             activeOpacity={0.7}
+          >
+            <Text style={styles.actionButtonText}>Save to Models</Text>
+          </TouchableOpacity>
+        </View>
+        <View style={styles.photoshootAction}>
+          <TouchableOpacity
+            style={styles.photoshootBtn}
+            onPress={handleCreatePhotoshoot}
+            activeOpacity={0.8}
           >
             <LinearGradient
               colors={['#FBBF24', '#F59E0B', '#B45309']}
@@ -291,9 +330,8 @@ export default function ModelResultScreen() {
               end={{ x: 1, y: 0 }}
               style={StyleSheet.absoluteFillObject}
             />
-            <Text style={[styles.actionButtonText, styles.actionButtonTextPrimary]}>
-              Save to Models
-            </Text>
+            <CameraIcon />
+            <Text style={styles.photoshootBtnText}>Create Photoshoot</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -407,15 +445,27 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     overflow: 'hidden',
   },
-  actionButtonPrimary: {
-    backgroundColor: AURORA_MAGENTA,
-  },
   actionButtonText: {
     fontSize: 15,
     fontWeight: '700',
     color: '#FFFFFF',
   },
-  actionButtonTextPrimary: {
+  photoshootAction: {
+    paddingHorizontal: 16,
+    paddingBottom: 8,
+  },
+  photoshootBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    paddingVertical: 16,
+    borderRadius: 14,
+    overflow: 'hidden',
+  },
+  photoshootBtnText: {
+    fontSize: 17,
+    fontWeight: '700',
     color: '#FFFFFF',
   },
 

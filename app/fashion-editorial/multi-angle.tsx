@@ -1,12 +1,9 @@
 import { ParticleSphere } from '@/components/particle-sphere'
 import { AI_MODELS, getCostLabel, getModelCredits } from '@/lib/ai-models'
-import { generateFashionVariations, upscaleFashionEditorial, type UpscaleProgress } from '@/lib/api'
+import { generateMultiAngle, upscaleFashionEditorial, type UpscaleProgress } from '@/lib/api'
 import { queryKeys } from '@/lib/query'
 import { useCreditsStore } from '@/stores/use-credits-store'
-import {
-  POSE_PRESETS,
-  useFashionEditorialStore,
-} from '@/stores/use-fashion-editorial-store'
+import { useFashionEditorialStore } from '@/stores/use-fashion-editorial-store'
 import { useSubscriptionStore } from '@/stores/use-subscription-store'
 import { useTermsConsentStore } from '@/stores/use-terms-consent-store'
 import { useQueryClient } from '@tanstack/react-query'
@@ -29,8 +26,7 @@ import {
   View,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import Svg, { Path as SvgPath } from 'react-native-svg'
-import { MidjourneyParamsPanel, DEFAULT_MJ_PARAMS, buildMjFlags, type MjParams } from '@/components/midjourney-params'
+import Svg, { Path as SvgPath, Defs, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg'
 
 const { width: SCREEN_W } = Dimensions.get('window')
 const BG = '#193153'
@@ -42,15 +38,63 @@ const CARD_BG = 'rgba(255,255,255,0.05)'
 const CARD_BORDER = 'rgba(255,255,255,0.08)'
 
 const GRID_GAP = 4
-const VARIATION_CELL = (SCREEN_W - 40 - GRID_GAP * 2) / 3
-const POSE_CARD_W = 110
-const POSE_CARD_H = 140
+const CELL_SIZE = (SCREEN_W - 40 - GRID_GAP * 2) / 3
 const CREDITS_PER_UPSCALE = AI_MODELS.GEMINI_3_IMAGE.credits ?? 3
 
-const CAMPAIGN_MODEL_OPTIONS = [
-  { value: AI_MODELS.GEMINI_3_IMAGE.id, label: 'Nano Banana Pro', credits: getModelCredits(AI_MODELS.GEMINI_3_IMAGE.id) },
-  { value: AI_MODELS.GEMINI_3_1_FLASH_IMAGE.id, label: 'Nano Banana 2', credits: getModelCredits(AI_MODELS.GEMINI_3_1_FLASH_IMAGE.id) },
-  { value: AI_MODELS.MIDJOURNEY_V7.id, label: 'Midjourney V7', credits: getModelCredits(AI_MODELS.MIDJOURNEY_V7.id) },
+// Fixed grid order — MUST match the row/column order produced by the API prompt.
+// Row 1 (eye-level, wide → med-wide) | Row 2 (eye-level, tighter) | Row 3 (angle variations)
+const ANGLE_LABELS = [
+  'Wide', 'Full', 'Med-Wide',
+  'Medium', 'Med CU', 'Close-Up',
+  'Low', 'High', 'Dutch',
+] as const
+
+const ASPECT_RATIOS = [
+  { value: '1:1', label: 'Square' },
+  { value: '3:4', label: 'Portrait' },
+  { value: '9:16', label: 'Story' },
+]
+
+// ─── Model provider icons ──────────────────────────────────────────
+
+function GeminiIcon({ size = 16 }: { size?: number }) {
+  const d = "M20.616 10.835a14.147 14.147 0 01-4.45-3.001 14.111 14.111 0 01-3.678-6.452.503.503 0 00-.975 0 14.134 14.134 0 01-3.679 6.452 14.155 14.155 0 01-4.45 3.001c-.65.28-1.318.505-2.002.678a.502.502 0 000 .975c.684.172 1.35.397 2.002.677a14.147 14.147 0 014.45 3.001 14.112 14.112 0 013.679 6.453.502.502 0 00.975 0c.172-.685.397-1.351.677-2.003a14.145 14.145 0 013.001-4.45 14.113 14.113 0 016.453-3.678.503.503 0 000-.975 13.245 13.245 0 01-2.003-.678z"
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24">
+      <SvgPath d={d} fill="#3186FF" />
+      <Defs>
+        <SvgLinearGradient id="ma-g0" x1="7" y1="15.5" x2="11" y2="12" gradientUnits="userSpaceOnUse">
+          <Stop stopColor="#08B962" /><Stop offset="1" stopColor="#08B962" stopOpacity={0} />
+        </SvgLinearGradient>
+        <SvgLinearGradient id="ma-g1" x1="8" y1="5.5" x2="11.5" y2="11" gradientUnits="userSpaceOnUse">
+          <Stop stopColor="#F94543" /><Stop offset="1" stopColor="#F94543" stopOpacity={0} />
+        </SvgLinearGradient>
+        <SvgLinearGradient id="ma-g2" x1="3.5" y1="13.5" x2="17.5" y2="12" gradientUnits="userSpaceOnUse">
+          <Stop stopColor="#FABC12" /><Stop offset="0.46" stopColor="#FABC12" stopOpacity={0} />
+        </SvgLinearGradient>
+      </Defs>
+      <SvgPath d={d} fill="url(#ma-g0)" />
+      <SvgPath d={d} fill="url(#ma-g1)" />
+      <SvgPath d={d} fill="url(#ma-g2)" />
+    </Svg>
+  )
+}
+
+function ByteDanceIcon({ size = 16 }: { size?: number }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24">
+      <SvgPath d="M14.944 18.587l-1.704-.445V10.01l1.824-.462c1-.254 1.84-.461 1.88-.453.032 0 .056 2.235.056 4.972v4.973l-.176-.008c-.104 0-.952-.207-1.88-.446z" fill="#00C8D2" />
+      <SvgPath d="M7 16.542c0-2.736.024-4.98.064-4.98.032-.008.872.2 1.88.454l1.816.461-.016 4.05-.024 4.049-1.632.422c-.896.23-1.736.445-1.856.469L7 21.523v-4.98z" fill="#3C8CFF" />
+      <SvgPath d="M19.24 12.477c0-9.03.008-9.515.144-9.475.072.024.784.207 1.576.406.792.207 1.576.405 1.744.445l.296.08-.016 8.56-.024 8.568-1.624.414c-.888.23-1.728.437-1.856.47l-.24.055v-9.523z" fill="#78E6DC" />
+      <SvgPath d="M1 12.509c0-4.678.024-8.505.064-8.505.032 0 .872.207 1.872.454l1.824.461v7.582c0 4.16-.016 7.574-.032 7.574-.024 0-.872.215-1.88.47L1 21.013v-8.505z" fill="#325AB4" />
+    </Svg>
+  )
+}
+
+const MODEL_OPTIONS = [
+  { value: AI_MODELS.GEMINI_3_1_FLASH_IMAGE.id, label: AI_MODELS.GEMINI_3_1_FLASH_IMAGE.name, credits: getModelCredits(AI_MODELS.GEMINI_3_1_FLASH_IMAGE.id), Icon: GeminiIcon },
+  { value: AI_MODELS.GEMINI_3_IMAGE.id, label: AI_MODELS.GEMINI_3_IMAGE.name, credits: getModelCredits(AI_MODELS.GEMINI_3_IMAGE.id), Icon: GeminiIcon },
+  { value: AI_MODELS.SEEDREAM_5_LITE.id, label: AI_MODELS.SEEDREAM_5_LITE.name, credits: getModelCredits(AI_MODELS.SEEDREAM_5_LITE.id), Icon: ByteDanceIcon },
 ]
 
 // ─── Icons ─────────────────────────────────────────────────────────
@@ -87,6 +131,14 @@ function UpscaleIcon() {
   )
 }
 
+function Grid3x3Icon() {
+  return (
+    <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
+      <SvgPath d="M3 3h18v18H3V3zM9 3v18M15 3v18M3 9h18M3 15h18" stroke="#FFFFFF" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  )
+}
+
 // ─── Timer ─────────────────────────────────────────────────────────
 
 function GenerationTimer({ label }: { label: string }) {
@@ -102,7 +154,7 @@ function GenerationTimer({ label }: { label: string }) {
 
 // ─── Main Screen ───────────────────────────────────────────────────
 
-export default function CampaignScreen() {
+export default function MultiAngleScreen() {
   const router = useRouter()
   const store = useFashionEditorialStore()
   const queryClient = useQueryClient()
@@ -110,12 +162,13 @@ export default function CampaignScreen() {
   const isPayPerUse = useSubscriptionStore((s) => s.plan) === 'PAYPERUSE'
   const { requireConsent } = useTermsConsentStore()
 
+  const [selectedModel, setSelectedModel] = useState<string>(AI_MODELS.GEMINI_3_1_FLASH_IMAGE.id)
+  const [aspectRatio, setAspectRatio] = useState('1:1')
   const [selectedForUpscale, setSelectedForUpscale] = useState<number[]>([])
-  const [selectedModel, setSelectedModel] = useState<string>(AI_MODELS.GEMINI_3_IMAGE.id)
-  const [mjParams, setMjParams] = useState<MjParams>(DEFAULT_MJ_PARAMS)
 
   const costLabel = getCostLabel(selectedModel, isPayPerUse)
   const upscaleCost = selectedForUpscale.length * CREDITS_PER_UPSCALE
+  const sourceUrl = store.multiAngleSourceUrl
 
   const toggleUpscaleSelection = useCallback((index: number) => {
     setSelectedForUpscale((prev) =>
@@ -124,7 +177,7 @@ export default function CampaignScreen() {
   }, [])
 
   const handleGenerate = useCallback(async () => {
-    if (!store.canGenerateVariations()) return
+    if (!sourceUrl) return
     if (!requireConsent(() => handleGenerate())) return
 
     const creditCost = getModelCredits(selectedModel)
@@ -133,46 +186,21 @@ export default function CampaignScreen() {
       return
     }
 
-    store.setVariationsGenerating()
+    store.setMultiAngleGenerating()
     setSelectedForUpscale([])
+
     try {
-      const clothingUrls = store.clothingItems
-        .filter((c) => c.phase === 'ready' && c.uploadedUrl)
-        .map((c) => c.uploadedUrl!)
-
-      const mainProduct = store.clothingItems.find((c) => c.phase === 'ready' && c.analysis)
-
-      let hairstyleAnalysis: string | undefined
-      if (store.hairstyleRef?.phase === 'ready') {
-        hairstyleAnalysis = [store.hairstyleRef.styleAnalysis, store.hairstyleRef.colorAnalysis]
-          .filter(Boolean)
-          .join(' ')
-      }
-
-      const result = await generateFashionVariations({
-        baseImageUrl: store.heroImageUrl!,
-        modelImageUrls: store.selectedModelImageUrl ? [store.selectedModelImageUrl] : undefined,
-        clothingImageUrls: clothingUrls,
-        poseStyle: store.poseStyle,
+      const result = await generateMultiAngle({
+        baseImageUrl: sourceUrl,
         model: selectedModel,
-        ...(selectedModel === AI_MODELS.MIDJOURNEY_V7.id ? { mjParams } : {}),
-        mainProductInfo: mainProduct?.analysis
-          ? {
-            productName: mainProduct.analysis.productName,
-            productType: mainProduct.analysis.productType,
-            clothingAnalysis: mainProduct.analysis.clothingAnalysis,
-          }
-          : undefined,
-        makeupAnalysis: store.makeupRef?.phase === 'ready' ? store.makeupRef.analysis! : undefined,
-        hairstyleAnalysis,
+        aspectRatio,
       })
-
-      store.setVariationsResult(result.variations)
+      store.setMultiAngleResult(result.gridImageUrl, result.variations)
       fetchCredits()
     } catch (err: any) {
-      store.setVariationsError(err?.message || 'Variations failed')
+      store.setMultiAngleError(err?.message || 'Multi-angle generation failed')
     }
-  }, [store, selectedModel, balance, isPayPerUse, requireConsent, fetchCredits, setShowExhaustionModal])
+  }, [sourceUrl, selectedModel, aspectRatio, store, balance, isPayPerUse, requireConsent, fetchCredits, setShowExhaustionModal])
 
   const handleUpscale = useCallback(async () => {
     if (selectedForUpscale.length === 0) return
@@ -183,11 +211,11 @@ export default function CampaignScreen() {
       return
     }
 
-    const imageUrls = selectedForUpscale.map((i) => store.variationUrls[i])
+    const imageUrls = selectedForUpscale.map((i) => store.multiAngleUrls[i])
     store.setUpscaleGenerating()
 
     try {
-      const result = await upscaleFashionEditorial(imageUrls, '3:4', (event: UpscaleProgress) => {
+      const result = await upscaleFashionEditorial(imageUrls, aspectRatio, (event: UpscaleProgress) => {
         if (event.type === 'progress' && event.message) {
           store.setUpscaleProgress(event.message)
         }
@@ -205,18 +233,17 @@ export default function CampaignScreen() {
           pathname: '/image-viewer',
           params: {
             urls: JSON.stringify(result.urls),
-            title: 'Upscaled Variations',
+            title: 'Upscaled Multi-Angle',
           },
         })
       }
     } catch (err: any) {
       store.setUpscaleError(err?.message || 'Upscale failed')
     }
-  }, [selectedForUpscale, store, balance, isPayPerUse, upscaleCost, requireConsent, fetchCredits, setShowExhaustionModal, queryClient, router])
+  }, [selectedForUpscale, store, aspectRatio, balance, isPayPerUse, upscaleCost, requireConsent, fetchCredits, setShowExhaustionModal, queryClient, router])
 
   const handleSave = useCallback(async () => {
-    const urls = [...store.variationUrls]
-    if (store.heroImageUrl) urls.unshift(store.heroImageUrl)
+    const urls = [...store.multiAngleUrls]
     if (urls.length === 0) return
 
     const doSave = async (toSave: string[]) => {
@@ -227,7 +254,7 @@ export default function CampaignScreen() {
           return
         }
         for (const url of toSave) {
-          const fileUri = `${FileSystem.cacheDirectory}editorial_${Date.now()}.jpg`
+          const fileUri = `${FileSystem.cacheDirectory}multi_angle_${Date.now()}.jpg`
           await FileSystem.downloadAsync(url, fileUri)
           await MediaLibrary.saveToLibraryAsync(fileUri)
         }
@@ -248,13 +275,13 @@ export default function CampaignScreen() {
   }, [store])
 
   // ── Generating state ──
-  if (store.variationsPhase === 'generating') {
+  if (store.multiAnglePhase === 'generating') {
     return (
       <View style={styles.root}>
         <StatusBar barStyle="light-content" />
         <View style={styles.loadingScreen}>
           <ParticleSphere width={140} height={140} phase="generating" />
-          <GenerationTimer label="Generating variations..." />
+          <GenerationTimer label="Generating camera angles..." />
           <Text style={styles.loadingHint}>This usually takes 60-120 seconds</Text>
         </View>
       </View>
@@ -285,11 +312,11 @@ export default function CampaignScreen() {
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity style={styles.headerBtn} onPress={() => router.back()} activeOpacity={0.7}>
+          <TouchableOpacity style={styles.headerBtn} onPress={() => { store.resetMultiAngle(); router.back() }} activeOpacity={0.7}>
             <BackIcon />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Campaign</Text>
-          {store.variationUrls.length > 0 ? (
+          <Text style={styles.headerTitle}>Camera Angles</Text>
+          {store.multiAngleUrls.length > 0 ? (
             <TouchableOpacity style={styles.headerBtn} onPress={handleSave} activeOpacity={0.7}>
               <SaveIcon />
             </TouchableOpacity>
@@ -299,100 +326,101 @@ export default function CampaignScreen() {
         </View>
 
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-          {/* Model picker */}
-          <Text style={styles.sectionTitle}>AI Model</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, marginBottom: 20 }}>
-            {CAMPAIGN_MODEL_OPTIONS.map((opt) => {
-              const active = selectedModel === opt.value
-              return (
-                <TouchableOpacity
-                  key={opt.value}
-                  style={{
-                    paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12,
-                    backgroundColor: active ? 'rgba(251,191,36,0.12)' : CARD_BG,
-                    borderWidth: 1, borderColor: active ? ACCENT : CARD_BORDER,
-                    alignItems: 'center',
-                  }}
-                  onPress={() => setSelectedModel(opt.value)}
-                  activeOpacity={0.8}
-                >
-                  <Text style={{ fontSize: 13, fontWeight: '600', color: active ? ACCENT : 'rgba(255,255,255,0.6)' }}>{opt.label}</Text>
-                  <Text style={{ fontSize: 10, color: active ? 'rgba(251,191,36,0.7)' : 'rgba(255,255,255,0.3)', marginTop: 2 }}>{opt.credits} cr</Text>
-                </TouchableOpacity>
-              )
-            })}
-          </ScrollView>
-
-          {/* Midjourney V7 params — visible when MJ is selected */}
-          {selectedModel === AI_MODELS.MIDJOURNEY_V7.id && (
-            <MidjourneyParamsPanel
-              params={mjParams}
-              onChange={setMjParams}
-              showImageWeight={!!store.heroImageUrl}
-            />
+          {/* Source image preview */}
+          {sourceUrl && store.multiAngleUrls.length === 0 && (
+            <View style={styles.sourceSection}>
+              <Image source={{ uri: sourceUrl }} style={styles.sourceImage} contentFit="cover" transition={200} />
+              <View style={styles.sourceOverlay}>
+                <Grid3x3Icon />
+                <Text style={styles.sourceLabel}>Source Image</Text>
+              </View>
+            </View>
           )}
 
-          {/* Pose selection */}
-          <Text style={styles.sectionTitle}>Pose Style</Text>
-          <Text style={styles.sectionSub}>Choose the pose for your variations</Text>
-
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.poseRow}>
-            {POSE_PRESETS.map((p) => {
-              const active = store.poseStyle === p.id
-              return (
-                <TouchableOpacity
-                  key={p.id}
-                  style={[styles.poseCard, active && styles.poseCardActive]}
-                  onPress={() => store.setPoseStyle(p.id)}
-                  activeOpacity={0.8}
-                >
-                  <Image
-                    source={p.preview}
-                    style={styles.poseImage}
-                    contentFit="cover"
-                    transition={200}
-                  />
-                  <LinearGradient
-                    colors={['transparent', 'rgba(0,0,0,0.75)']}
-                    style={styles.poseOverlay}
-                  />
-                  <Text style={styles.poseLabel}>{p.label}</Text>
-                  {active && <View style={styles.poseCheck} />}
-                </TouchableOpacity>
-              )
-            })}
-          </ScrollView>
-
-          {/* Generate button */}
-          {store.variationUrls.length === 0 && (
+          {/* Angle preview labels (pre-generation) */}
+          {store.multiAngleUrls.length === 0 && (
             <>
+              <Text style={styles.sectionTitle}>9 Camera Angles</Text>
+              <Text style={styles.sectionSub}>Same subject, same pose — only the camera moves</Text>
+              <View style={styles.labelGrid}>
+                {ANGLE_LABELS.map((label) => (
+                  <View key={label} style={styles.labelCell}>
+                    <Text style={styles.labelText}>{label}</Text>
+                  </View>
+                ))}
+              </View>
+
+              {/* Model picker */}
+              <Text style={[styles.sectionTitle, { marginTop: 20 }]}>AI Model</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
+                {MODEL_OPTIONS.map((opt) => {
+                  const active = selectedModel === opt.value
+                  return (
+                    <TouchableOpacity
+                      key={opt.value}
+                      style={[styles.chip, styles.modelChip, active && styles.chipActive]}
+                      onPress={() => setSelectedModel(opt.value)}
+                      activeOpacity={0.8}
+                    >
+                      <opt.Icon size={16} />
+                      <View style={styles.modelChipText}>
+                        <Text style={[styles.chipText, active && styles.chipTextActive]}>{opt.label}</Text>
+                        <Text style={[styles.chipSub, active && styles.chipSubActive]}>{opt.credits} cr</Text>
+                      </View>
+                    </TouchableOpacity>
+                  )
+                })}
+              </ScrollView>
+
+              {/* Aspect ratio picker */}
+              <Text style={[styles.sectionTitle, { marginTop: 16 }]}>Aspect Ratio</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
+                {ASPECT_RATIOS.map((opt) => {
+                  const active = aspectRatio === opt.value
+                  return (
+                    <TouchableOpacity
+                      key={opt.value}
+                      style={[styles.chip, active && styles.chipActive]}
+                      onPress={() => setAspectRatio(opt.value)}
+                      activeOpacity={0.8}
+                    >
+                      <Text style={[styles.chipText, active && styles.chipTextActive]}>{opt.label}</Text>
+                      <Text style={[styles.chipSub, active && styles.chipSubActive]}>{opt.value}</Text>
+                    </TouchableOpacity>
+                  )
+                })}
+              </ScrollView>
+
+              {/* Generate button */}
               <TouchableOpacity
-                style={styles.generateBtn}
+                style={[styles.generateBtn, !sourceUrl && { opacity: 0.4 }]}
                 onPress={handleGenerate}
                 activeOpacity={0.8}
+                disabled={!sourceUrl}
               >
-                <LinearGradient colors={[TEAL, '#0891B2', BG]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFillObject} />
-                <Text style={styles.generateBtnText}>Generate 9 Variations ({costLabel})</Text>
+                <LinearGradient colors={['#06B6D4', '#3B82F6', BG]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFillObject} />
+                <Text style={styles.generateBtnText}>Generate Camera Angles ({costLabel})</Text>
               </TouchableOpacity>
 
-              {store.variationsPhase === 'error' && (
-                <Text style={styles.errorText}>{store.variationsError || 'Generation failed'}</Text>
+              {store.multiAnglePhase === 'error' && (
+                <Text style={styles.errorText}>{store.multiAngleError || 'Generation failed'}</Text>
               )}
             </>
           )}
 
-          {/* Variations grid */}
-          {store.variationUrls.length > 0 && (
+          {/* Post-generation: 3×3 grid */}
+          {store.multiAngleUrls.length > 0 && (
             <>
-              <Text style={[styles.sectionTitle, { marginTop: 20 }]}>
-                {store.variationUrls.length} Variations
+              <Text style={styles.sectionTitle}>
+                {store.multiAngleUrls.length} Camera Angles
               </Text>
               <Text style={styles.sectionSub}>
                 Tap to select images to upscale to 4K
               </Text>
               <View style={styles.grid}>
-                {store.variationUrls.map((url, i) => {
+                {store.multiAngleUrls.map((url, i) => {
                   const isSelected = selectedForUpscale.includes(i)
+                  const label = ANGLE_LABELS[i] ?? `#${i + 1}`
                   return (
                     <TouchableOpacity
                       key={i}
@@ -403,14 +431,17 @@ export default function CampaignScreen() {
                         router.push({
                           pathname: '/image-viewer',
                           params: {
-                            urls: JSON.stringify(store.variationUrls),
+                            urls: JSON.stringify(store.multiAngleUrls),
                             initialIndex: String(i),
-                            title: 'Campaign Variations',
+                            title: 'Camera Angles',
                           },
                         })
                       }
                     >
                       <Image source={{ uri: url }} style={styles.gridImage} contentFit="cover" transition={200} />
+                      <View style={styles.angleLabel}>
+                        <Text style={styles.angleLabelText}>{label}</Text>
+                      </View>
                       {isSelected && (
                         <View style={styles.checkBadge}>
                           <CheckIcon />
@@ -475,41 +506,67 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: 18, fontWeight: '700', color: '#FFFFFF', marginBottom: 2 },
   sectionSub: { fontSize: 13, color: MUTED, marginBottom: 14 },
 
-  // Pose cards
-  poseRow: { gap: 10, paddingRight: 16, marginBottom: 24 },
-  poseCard: {
-    width: POSE_CARD_W,
-    height: POSE_CARD_H,
-    borderRadius: 14,
-    overflow: 'hidden',
-    borderWidth: 2,
-    borderColor: 'transparent',
+  // Source image
+  sourceSection: { width: 120, height: 160, borderRadius: 14, overflow: 'hidden', marginBottom: 20, alignSelf: 'center' },
+  sourceImage: { width: '100%', height: '100%' },
+  sourceOverlay: {
+    position: 'absolute', bottom: 0, left: 0, right: 0,
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    paddingHorizontal: 10, paddingVertical: 8,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+  },
+  sourceLabel: { fontSize: 11, fontWeight: '600', color: '#FFFFFF' },
+
+  // Angle label grid (pre-generation)
+  labelGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginBottom: 16 },
+  labelCell: {
+    width: CELL_SIZE,
+    height: 36,
+    borderRadius: 8,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.06)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  labelText: { fontSize: 10, fontWeight: '600', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: 0.5 },
+
+  // Chip pickers (model + aspect ratio)
+  chipRow: { gap: 8, marginBottom: 8 },
+  chip: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 12,
     backgroundColor: CARD_BG,
+    borderWidth: 1,
+    borderColor: CARD_BORDER,
+    alignItems: 'center',
   },
-  poseCardActive: { borderColor: ACCENT },
-  poseImage: { width: '100%', height: '100%' },
-  poseOverlay: { position: 'absolute', bottom: 0, left: 0, right: 0, height: 50 },
-  poseLabel: { position: 'absolute', bottom: 8, left: 8, right: 8, fontSize: 12, fontWeight: '600', color: '#FFFFFF' },
-  poseCheck: {
-    position: 'absolute',
-    top: 6,
-    right: 6,
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    backgroundColor: ACCENT,
-  },
+  chipActive: { borderColor: '#06B6D4', backgroundColor: 'rgba(6,182,212,0.12)' },
+  modelChip: { flexDirection: 'row', gap: 8 },
+  modelChipText: { alignItems: 'center' },
+  chipText: { fontSize: 13, fontWeight: '600', color: 'rgba(255,255,255,0.6)' },
+  chipTextActive: { color: '#06B6D4' },
+  chipSub: { fontSize: 10, color: 'rgba(255,255,255,0.3)', marginTop: 2 },
+  chipSubActive: { color: 'rgba(6,182,212,0.7)' },
 
   // Generate
-  generateBtn: { paddingVertical: 18, borderRadius: 16, alignItems: 'center', overflow: 'hidden' },
+  generateBtn: { paddingVertical: 18, borderRadius: 16, alignItems: 'center', overflow: 'hidden', marginTop: 16 },
   generateBtnText: { fontSize: 17, fontWeight: '700', color: '#FFFFFF' },
   errorText: { fontSize: 13, color: '#EF4444', marginTop: 12, textAlign: 'center' },
 
   // Grid
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: GRID_GAP, marginTop: 12 },
-  gridCell: { width: VARIATION_CELL, height: VARIATION_CELL, borderRadius: 12, overflow: 'hidden', backgroundColor: CARD_BG, borderWidth: 2, borderColor: 'transparent' },
+  gridCell: { width: CELL_SIZE, height: CELL_SIZE, borderRadius: 12, overflow: 'hidden', backgroundColor: CARD_BG, borderWidth: 2, borderColor: 'transparent' },
   gridCellSelected: { borderColor: UPSCALE_BLUE },
   gridImage: { width: '100%', height: '100%' },
+  angleLabel: {
+    position: 'absolute', bottom: 4, left: 4,
+    paddingHorizontal: 5, paddingVertical: 2,
+    borderRadius: 4,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+  },
+  angleLabelText: { fontSize: 8, fontWeight: '700', color: 'rgba(255,255,255,0.9)', textTransform: 'uppercase', letterSpacing: 0.3 },
   checkBadge: {
     position: 'absolute',
     top: 6,

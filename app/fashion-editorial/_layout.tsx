@@ -14,7 +14,9 @@ export default function FashionEditorialLayout() {
       <Stack.Screen name="makeup" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
       <Stack.Screen name="hairstyle" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
       <Stack.Screen name="generate" />
+      <Stack.Screen name="showcase" />
       <Stack.Screen name="campaign" />
+      <Stack.Screen name="multi-angle" />
     </Stack>
   )
 }

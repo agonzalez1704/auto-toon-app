@@ -171,6 +171,8 @@ export interface EnhanceRequest {
   suggestedStyleVariant?: string | null
   styleVariantOverride?: string | null
   extractedText?: string[]
+  /** Midjourney V7 advanced params (only sent when model is mj-v7) */
+  mjParams?: { stylize?: number; chaos?: number; negativePrompt?: string; imageWeight?: number; styleRefUrl?: string; seed?: string; speed?: 'draft' | 'fast' | 'turbo' }
 }
 export interface EnhanceResponse {
   text: string
@@ -604,6 +606,8 @@ export interface FashionEditorialRequest {
   aspectRatio?: string
   /** Inline model data — used by mobile app where models aren't in the DB */
   models?: { modelId: string; clothingImageUrls: string[]; imageUrl?: string; prompt?: string; characterSheetUrl?: string }[]
+  /** Midjourney V7 advanced params (only sent when aiModel is mj-v7) */
+  mjParams?: { stylize?: number; chaos?: number; negativePrompt?: string; imageWeight?: number; styleRefUrl?: string; seed?: string; speed?: 'draft' | 'fast' | 'turbo' }
 }
 
 export async function generateFashionEditorial(params: FashionEditorialRequest) {
@@ -613,6 +617,16 @@ export async function generateFashionEditorial(params: FashionEditorialRequest) 
     { timeout: 300_000 }
   )
   return data
+}
+
+export interface UgcControls {
+  subMode: 'selfie' | 'product-ugc' | 'product-ugc-selfie'
+  environment: string
+  lighting: string
+  cameraType: string
+  pose: string
+  flash: boolean
+  productInteraction?: string
 }
 
 export interface FashionVariationsRequest {
@@ -625,6 +639,9 @@ export interface FashionVariationsRequest {
   makeupAnalysis?: string
   hairstyleAnalysis?: string
   model?: string
+  styleData?: { style: string; mode?: string; ugcControls?: UgcControls }
+  /** Midjourney V7 advanced params (only sent when model is mj-v7) */
+  mjParams?: { stylize?: number; chaos?: number; negativePrompt?: string; imageWeight?: number; styleRefUrl?: string; seed?: string; speed?: 'draft' | 'fast' | 'turbo' }
 }
 
 export async function generateFashionVariations(params: FashionVariationsRequest) {
@@ -634,6 +651,105 @@ export async function generateFashionVariations(params: FashionVariationsRequest
     { timeout: 300_000 }
   )
   return data
+}
+
+// Multi-Angle Camera Grid (3×3)
+export interface MultiAngleRequest {
+  baseImageUrl: string
+  model?: string
+  aspectRatio?: string
+}
+export interface MultiAngleResponse {
+  success: boolean
+  gridImageUrl: string
+  variations: string[]
+}
+export async function generateMultiAngle(params: MultiAngleRequest) {
+  const { data } = await api.post<MultiAngleResponse>(
+    '/api/fashion-editorial/multi-angle',
+    params,
+    { timeout: 300_000 } // Gemini grids can take 2–4 min
+  )
+  return data
+}
+
+// Midjourney V7 via EvoLink
+export interface MidjourneyV7Request {
+  prompt: string
+  speed?: 'draft' | 'fast' | 'turbo'
+  aspectRatio?: string
+  baseImageUrl?: string
+  mjParams?: {
+    stylize?: number
+    chaos?: number
+    negativePrompt?: string
+    imageWeight?: number
+    styleRefUrl?: string
+    seed?: string
+  }
+}
+export interface MidjourneyV7Response {
+  success: boolean
+  images: string[]
+  taskId: string
+  model: string
+  speed: string
+}
+export async function generateMidjourneyV7(params: MidjourneyV7Request) {
+  const { data } = await api.post<MidjourneyV7Response>(
+    '/api/evolink/generate',
+    params,
+    { timeout: 300_000 } // MJ V7 can take up to 5 min
+  )
+  return data
+}
+
+// Fashion Editorial Upscale (SSE streaming)
+export interface UpscaleProgress {
+  type: 'progress' | 'success' | 'error' | 'complete'
+  index?: number
+  imageUrl?: string
+  current?: number
+  total?: number
+  message?: string
+  totalUpscaled?: number
+  totalRequested?: number
+}
+
+export async function upscaleFashionEditorial(
+  imageUrls: string[],
+  aspectRatio = '3:4',
+  onProgress?: (event: UpscaleProgress) => void
+): Promise<{ urls: string[]; totalUpscaled: number }> {
+  const token = tokenGetter ? await tokenGetter() : null
+  const res = await fetch(`${CONFIG.API_BASE_URL}/api/fashion-editorial/upscale`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify({ imageUrls, aspectRatio }),
+  })
+
+  if (!res.ok) throw new Error(`Upscale failed: ${res.status}`)
+
+  // React Native fetch doesn't support ReadableStream (res.body is null).
+  // Read the full SSE response as text and parse events from it.
+  const text = await res.text()
+  const urls: string[] = []
+
+  for (const line of text.split('\n')) {
+    if (!line.startsWith('data: ')) continue
+    try {
+      const event: UpscaleProgress = JSON.parse(line.slice(6))
+      if (event.type === 'success' && event.imageUrl) {
+        urls.push(event.imageUrl)
+      }
+      onProgress?.(event)
+    } catch { /* skip malformed */ }
+  }
+
+  return { urls, totalUpscaled: urls.length }
 }
 
 // Relight

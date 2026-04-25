@@ -26,6 +26,7 @@ export type ImageModelId =
   | 'IDEOGRAM_V3_TURBO'
   | 'IDEOGRAM_V3_DEFAULT'
   | 'IDEOGRAM_V3_QUALITY'
+  | 'MIDJOURNEY_V7'
 
 export interface PromptCustomizations {
   background?: string
