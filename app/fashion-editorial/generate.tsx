@@ -9,6 +9,7 @@ import {
   TextInput,
   Animated,
   ScrollView,
+  ActivityIndicator,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Image } from 'expo-image'
@@ -21,7 +22,7 @@ import { useModelFactoryStore } from '@/stores/use-model-factory-store'
 import { useCreditsStore } from '@/stores/use-credits-store'
 import { useSubscriptionStore } from '@/stores/use-subscription-store'
 import { useTermsConsentStore } from '@/stores/use-terms-consent-store'
-import { generateFashionEditorial } from '@/lib/api'
+import { generateFashionEditorial, generateFashionEditorialStream, editImageStream } from '@/lib/api'
 import { getCostLabel, AI_MODELS } from '@/lib/ai-models'
 import { MidjourneyParamsPanel, DEFAULT_MJ_PARAMS, buildMjFlags, type MjParams } from '@/components/midjourney-params'
 import { ParticleSphere } from '@/components/particle-sphere'
@@ -37,6 +38,7 @@ const CARD_BORDER = 'rgba(255,255,255,0.08)'
 const MODEL_OPTIONS = [
   { key: 'GEMINI_3_IMAGE', id: AI_MODELS.GEMINI_3_IMAGE.id, label: 'Nano Banana Pro', credits: AI_MODELS.GEMINI_3_IMAGE.credits ?? 3, Icon: GeminiIcon },
   { key: 'GEMINI_3_1_FLASH_IMAGE', id: AI_MODELS.GEMINI_3_1_FLASH_IMAGE.id, label: 'Nano Banana 2', credits: AI_MODELS.GEMINI_3_1_FLASH_IMAGE.credits ?? 3, Icon: GeminiIcon },
+  { key: 'GPT_IMAGE_2', id: AI_MODELS.GPT_IMAGE_2.id, label: 'GPT Image 2', credits: AI_MODELS.GPT_IMAGE_2.credits ?? 3, Icon: OpenAIIcon },
   { key: 'SEEDREAM_4_5', id: AI_MODELS.SEEDREAM_4_5.id, label: 'SeeDream 4.5', credits: AI_MODELS.SEEDREAM_4_5.credits ?? 1, Icon: ByteDanceIcon },
   { key: 'SEEDREAM_5_LITE', id: AI_MODELS.SEEDREAM_5_LITE.id, label: 'SeeDream 5 Lite', credits: AI_MODELS.SEEDREAM_5_LITE.credits ?? 2, Icon: ByteDanceIcon },
   { key: 'IDEOGRAM_V3_TURBO', id: AI_MODELS.IDEOGRAM_V3_TURBO.id, label: 'Ideogram V3 Turbo', credits: AI_MODELS.IDEOGRAM_V3_TURBO.credits ?? 1, Icon: IdeogramIcon },
@@ -148,6 +150,14 @@ function IdeogramIcon({ size = 16 }: { size?: number }) {
   )
 }
 
+function OpenAIIcon({ size = 16 }: { size?: number }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="white">
+      <SvgPath d="M22.282 9.821a5.985 5.985 0 0 0-.516-4.91 6.046 6.046 0 0 0-6.51-2.9A6.065 6.065 0 0 0 4.981 4.18a5.985 5.985 0 0 0-3.998 2.9 6.046 6.046 0 0 0 .743 7.097 5.98 5.98 0 0 0 .51 4.911 6.051 6.051 0 0 0 6.515 2.9A5.985 5.985 0 0 0 13.26 24a6.056 6.056 0 0 0 5.772-4.206 5.99 5.99 0 0 0 3.997-2.9 6.056 6.056 0 0 0-.747-7.073zM13.26 22.43a4.476 4.476 0 0 1-2.876-1.04l.141-.081 4.779-2.758a.795.795 0 0 0 .392-.681v-6.737l2.02 1.168a.071.071 0 0 1 .038.052v5.583a4.504 4.504 0 0 1-4.494 4.494zM3.6 18.304a4.47 4.47 0 0 1-.535-3.014l.142.085 4.783 2.759a.771.771 0 0 0 .78 0l5.843-3.369v2.332a.082.082 0 0 1-.033.062L9.74 19.95a4.5 4.5 0 0 1-6.14-1.646zM2.34 7.896a4.485 4.485 0 0 1 2.366-1.973V11.6a.766.766 0 0 0 .388.676l5.815 3.355-2.02 1.168a.076.076 0 0 1-.071 0l-4.83-2.786A4.504 4.504 0 0 1 2.34 7.872zm16.597 3.855l-5.833-3.387L15.119 7.2a.076.076 0 0 1 .071 0l4.83 2.791a4.494 4.494 0 0 1-.676 8.105v-5.678a.79.79 0 0 0-.407-.667zm2.01-3.023l-.141-.085-4.774-2.782a.776.776 0 0 0-.785 0L9.409 9.23V6.897a.066.066 0 0 1 .028-.061l4.83-2.787a4.5 4.5 0 0 1 6.68 4.66zm-12.64 4.135l-2.02-1.164a.08.08 0 0 1-.038-.057V6.075a4.5 4.5 0 0 1 7.375-3.453l-.142.08L8.704 5.46a.795.795 0 0 0-.393.681zm1.097-2.365l2.602-1.5 2.607 1.5v2.999l-2.597 1.5-2.607-1.5z" />
+    </Svg>
+  )
+}
+
 function MidjourneyIcon({ size = 16 }: { size?: number }) {
   return (
     <Svg width={size} height={size} viewBox="0 0 1024 1024" fill="none">
@@ -188,6 +198,10 @@ export default function GenerateScreen() {
   const [selectedAspectRatio, setSelectedAspectRatio] = useState('3:4')
   const [mjParams, setMjParams] = useState<MjParams>(DEFAULT_MJ_PARAMS)
   const settingsAnim = useRef(new Animated.Value(0)).current
+
+  // Inline edit/refine
+  const [editPrompt, setEditPrompt] = useState('')
+  const [editing, setEditing] = useState(false)
 
   // Clear stale hero result when entering the generate screen fresh
   useEffect(() => {
@@ -240,7 +254,7 @@ export default function GenerateScreen() {
       // Resolve model data from local store for inline payload
       const savedModel = savedModels.find(m => m.id === store.selectedModelId)
 
-      const result = await generateFashionEditorial({
+      const requestPayload = {
         modelId: store.selectedModelId!,
         clothingImageUrls: clothingUrls,
         makeupAnalysis: store.makeupRef?.phase === 'ready' ? store.makeupRef.analysis! : undefined,
@@ -258,16 +272,75 @@ export default function GenerateScreen() {
           prompt: savedModel?.prompt,
           characterSheetUrl: savedModel?.characterSheetUrl,
         }],
-      })
+      }
 
-      store.setHeroResult(result.imageUrl)
-      useCreditsStore.getState().setCredits(result.creditsRemaining)
-      fetchCredits()
-      queryClient.invalidateQueries({ queryKey: ['assets'] })
+      if (selectedAiModel.key === 'GPT_IMAGE_2') {
+        await new Promise<void>((resolve, reject) => {
+          generateFashionEditorialStream(
+            { ...requestPayload, partialImages: 2 },
+            {
+              onPartial: ({ b64 }) => {
+                store.setHeroPartial(`data:image/png;base64,${b64}`)
+              },
+              onFinal: ({ imageUrl, creditsRemaining }) => {
+                store.setHeroResult(imageUrl)
+                useCreditsStore.getState().setCredits(creditsRemaining)
+                fetchCredits()
+                queryClient.invalidateQueries({ queryKey: ['assets'] })
+                resolve()
+              },
+              onError: (message) => {
+                reject(new Error(message))
+              },
+            }
+          )
+        })
+      } else {
+        const result = await generateFashionEditorial(requestPayload)
+        store.setHeroResult(result.imageUrl)
+        useCreditsStore.getState().setCredits(result.creditsRemaining)
+        fetchCredits()
+        queryClient.invalidateQueries({ queryKey: ['assets'] })
+      }
     } catch (err: any) {
       store.setHeroError(err?.message || 'Generation failed')
     }
   }, [store, balance, isPayPerUse, requireConsent, fetchCredits, setShowExhaustionModal, savedModels, selectedAiModel])
+
+  const handleEditImage = useCallback(() => {
+    if (!editPrompt.trim() || editing || !store.heroImageUrl) return
+    setEditing(true)
+    const isOpenAIRefine = selectedAiModel.key === 'GPT_IMAGE_2'
+    editImageStream(
+      {
+        baseImageUrl: store.heroImageUrl,
+        prompt: editPrompt.trim(),
+        aiModel: selectedAiModel.id,
+        aspectRatio: selectedAspectRatio,
+        partialImages: isOpenAIRefine ? 2 : 0,
+      },
+      {
+        onPartial: ({ b64 }) => {
+          store.setHeroPartial(`data:image/png;base64,${b64}`)
+        },
+        onFinal: ({ imageUrl, creditsRemaining }) => {
+          store.setHeroResult(imageUrl)
+          useCreditsStore.getState().setCredits(creditsRemaining)
+          fetchCredits()
+          queryClient.invalidateQueries({ queryKey: ['assets'] })
+          setEditPrompt('')
+          setEditing(false)
+        },
+        onError: (message) => {
+          setEditing(false)
+          store.setHeroError(message)
+        },
+        onComplete: () => {
+          setEditing(false)
+        },
+      }
+    )
+  }, [editPrompt, editing, store, selectedAspectRatio, fetchCredits, queryClient])
 
   // ── Generating state ──
   if (store.heroPhase === 'generating') {
@@ -300,9 +373,19 @@ export default function GenerateScreen() {
             })
           }
         >
-          <Image source={{ uri: store.heroImageUrl }} style={StyleSheet.absoluteFillObject} contentFit="cover" transition={300} />
+          <Image source={{ uri: store.heroImageUrl }} style={StyleSheet.absoluteFillObject} contentFit="cover" transition={300} blurRadius={store.heroStreamingPartial ? 8 : 0} />
           <LinearGradient colors={['rgba(0,0,0,0.5)', 'transparent', 'transparent', 'rgba(0,0,0,0.7)']} style={StyleSheet.absoluteFillObject} locations={[0, 0.2, 0.6, 1]} />
         </TouchableOpacity>
+
+        {/* Streaming partial badge */}
+        {store.heroStreamingPartial && (
+          <SafeAreaView style={styles.partialBadgeContainer} edges={['top']} pointerEvents="none">
+            <View style={styles.partialBadge}>
+              <ActivityIndicator size="small" color="#A5B4FC" />
+              <Text style={styles.partialBadgeText}>Refining…</Text>
+            </View>
+          </SafeAreaView>
+        )}
 
         {/* Top bar */}
         <SafeAreaView style={styles.resultTopBar} edges={['top']} pointerEvents="box-none">
@@ -315,6 +398,32 @@ export default function GenerateScreen() {
 
         {/* Bottom actions */}
         <SafeAreaView style={styles.resultBottomBar} edges={['bottom']} pointerEvents="box-none">
+          {/* Inline edit prompt */}
+          <View style={styles.editPromptRow}>
+            <TextInput
+              style={styles.editPromptInput}
+              placeholder="Edit: change angle, zoom, expression…"
+              placeholderTextColor="rgba(255,255,255,0.4)"
+              value={editPrompt}
+              onChangeText={setEditPrompt}
+              editable={!editing && !store.heroStreamingPartial}
+              multiline
+              maxLength={500}
+            />
+            <TouchableOpacity
+              style={[styles.editSendBtn, (!editPrompt.trim() || editing || store.heroStreamingPartial) && { opacity: 0.4 }]}
+              onPress={handleEditImage}
+              disabled={!editPrompt.trim() || editing || store.heroStreamingPartial}
+              activeOpacity={0.7}
+            >
+              {editing ? (
+                <ActivityIndicator size="small" color="#FFFFFF" />
+              ) : (
+                <Text style={styles.editSendBtnText}>↑</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+
           <TouchableOpacity
             style={styles.regenerateBtn}
             onPress={handleGenerate}
@@ -562,6 +671,13 @@ const styles = StyleSheet.create({
   loadingHint: { fontSize: 13, color: MUTED, textAlign: 'center' },
 
   // Result overlay
+  partialBadgeContainer: { position: 'absolute', top: 0, left: 0, right: 0, alignItems: 'center', paddingTop: 6 },
+  partialBadge: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999, backgroundColor: 'rgba(0,0,0,0.7)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)' },
+  partialBadgeText: { fontSize: 12, fontWeight: '600', color: '#FFFFFF', letterSpacing: 0.3 },
+  editPromptRow: { flexDirection: 'row', alignItems: 'flex-end', gap: 8, width: '100%', paddingHorizontal: 4, marginBottom: 4 },
+  editPromptInput: { flex: 1, minHeight: 44, maxHeight: 100, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 22, backgroundColor: 'rgba(0,0,0,0.6)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.18)', color: '#FFFFFF', fontSize: 14 },
+  editSendBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#0891B2', justifyContent: 'center', alignItems: 'center' },
+  editSendBtnText: { fontSize: 22, fontWeight: '700', color: '#FFFFFF', lineHeight: 24 },
   resultTopBar: { position: 'absolute', top: 0, left: 0, right: 0 },
   resultBottomBar: { position: 'absolute', bottom: 0, left: 0, right: 0, padding: 16, gap: 10, alignItems: 'center' },
   resultBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', marginLeft: 16, marginTop: 10 },

@@ -82,6 +82,21 @@ export const AI_MODELS = {
       defaultResolution: '2K'
     }
   },
+  GPT_IMAGE_2: {
+    id: 'gpt-image-2',
+    name: 'GPT Image 2',
+    provider: 'openai',
+    type: 'image',
+    credits: 10,
+    cost: {
+      perImage: 0.211 // high quality, 1024x1024
+    },
+    payPerUseRate: 0.38, // $0.211 × 1.8
+    inputConfig: {
+      defaultResolution: '1024x1024',
+      maxImages: 1
+    }
+  },
   GEMINI_3_1_FLASH_IMAGE: {
     id: 'gemini-3.1-flash-image-preview',
     name: 'Nano Banana 2',

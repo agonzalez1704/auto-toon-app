@@ -97,6 +97,7 @@ interface FashionEditorialState {
   heroPhase: GenerationPhase
   heroImageUrl: string | null
   heroError: string | null
+  heroStreamingPartial: boolean
 
   // Main product (for UGC showcase)
   mainProductId: string | null
@@ -153,6 +154,7 @@ interface FashionEditorialState {
   // Actions — Hero
   setHeroGenerating: () => void
   setHeroResult: (imageUrl: string) => void
+  setHeroPartial: (imageUrl: string) => void
   setHeroError: (error: string) => void
   resetHero: () => void
 
@@ -204,6 +206,7 @@ const INITIAL_STATE = {
   promptModifier: '',
   heroPhase: 'idle' as GenerationPhase,
   heroImageUrl: null,
+  heroStreamingPartial: false,
   heroError: null,
   poseStyle: 'editorial',
   variationsPhase: 'idle' as GenerationPhase,
@@ -273,10 +276,11 @@ export const useFashionEditorialStore = create<FashionEditorialState>()((set, ge
   setPromptModifier: (v) => set({ promptModifier: v }),
 
   // Hero
-  setHeroGenerating: () => set({ heroPhase: 'generating', heroError: null }),
-  setHeroResult: (imageUrl) => set({ heroPhase: 'complete', heroImageUrl: imageUrl }),
-  setHeroError: (error) => set({ heroPhase: 'error', heroError: error }),
-  resetHero: () => set({ heroPhase: 'idle', heroImageUrl: null, heroError: null }),
+  setHeroGenerating: () => set({ heroPhase: 'generating', heroError: null, heroStreamingPartial: false }),
+  setHeroResult: (imageUrl) => set({ heroPhase: 'complete', heroImageUrl: imageUrl, heroStreamingPartial: false }),
+  setHeroPartial: (imageUrl) => set({ heroPhase: 'complete', heroImageUrl: imageUrl, heroStreamingPartial: true }),
+  setHeroError: (error) => set({ heroPhase: 'error', heroError: error, heroStreamingPartial: false }),
+  resetHero: () => set({ heroPhase: 'idle', heroImageUrl: null, heroError: null, heroStreamingPartial: false }),
 
   // Campaign
   setPoseStyle: (v) => set({ poseStyle: v }),

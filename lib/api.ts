@@ -619,6 +619,228 @@ export async function generateFashionEditorial(params: FashionEditorialRequest) 
   return data
 }
 
+export interface EditImageRequest {
+  baseImageUrl: string
+  prompt: string
+  aiModel?: string
+  aspectRatio?: string
+  partialImages?: number
+}
+
+/**
+ * Streaming image-edit (gpt-image-2). Refines a base image with a text prompt.
+ * Emits partial images then a final R2-hosted URL.
+ */
+export function editImageStream(
+  params: EditImageRequest,
+  callbacks: {
+    onPartial: (event: { index: number; b64: string }) => void
+    onFinal: (event: { imageUrl: string; creditsRemaining: number; prompt: string }) => void
+    onError: (message: string, code?: string) => void
+    onComplete?: () => void
+  }
+): { abort: () => void } {
+  const xhr = new XMLHttpRequest()
+  let buffer = ''
+  let lastIndex = 0
+  let errorHandled = false
+  let aborted = false
+
+  const parseBuffer = () => {
+    const lines = buffer.split('\n')
+    buffer = lines.pop() || ''
+    for (const line of lines) {
+      const trimmed = line.trim()
+      if (!trimmed) continue
+      try {
+        const event = JSON.parse(trimmed)
+        if (event.type === 'partial') {
+          callbacks.onPartial({ index: event.index, b64: event.b64 })
+        } else if (event.type === 'final') {
+          callbacks.onFinal(event)
+        } else if (event.type === 'error') {
+          callbacks.onError(event.message || 'Edit failed', event.code)
+        }
+      } catch {
+        // ignore malformed
+      }
+    }
+  }
+
+  const startRequest = async () => {
+    let authToken: string | null = null
+    if (tokenGetter) authToken = await tokenGetter()
+
+    xhr.open('POST', `${CONFIG.API_BASE_URL}/api/fashion-editorial/edit-image`)
+    xhr.setRequestHeader('Content-Type', 'application/json')
+    if (authToken) xhr.setRequestHeader('Authorization', `Bearer ${authToken}`)
+
+    xhr.onreadystatechange = () => {
+      if (aborted) return
+      if (xhr.readyState === 4 && !errorHandled) {
+        if (xhr.status !== 200) {
+          errorHandled = true
+          let message = 'Edit failed'
+          try {
+            const body = JSON.parse(xhr.responseText)
+            message = body.error || message
+          } catch {
+            if (xhr.statusText) message = xhr.statusText
+          }
+          callbacks.onError(`${message} (${xhr.status})`)
+          callbacks.onComplete?.()
+          return
+        }
+      }
+      if (xhr.readyState >= 3 && xhr.responseText) {
+        const newText = xhr.responseText.substring(lastIndex)
+        lastIndex = xhr.responseText.length
+        if (newText) {
+          buffer += newText
+          parseBuffer()
+        }
+      }
+      if (xhr.readyState === 4 && !errorHandled) {
+        callbacks.onComplete?.()
+      }
+    }
+
+    xhr.onerror = () => {
+      if (!errorHandled) {
+        errorHandled = true
+        callbacks.onError('Network error')
+        callbacks.onComplete?.()
+      }
+    }
+
+    xhr.send(JSON.stringify({ ...params, stream: true, partialImages: params.partialImages ?? 2 }))
+  }
+
+  startRequest().catch((err) => {
+    if (!errorHandled) {
+      errorHandled = true
+      callbacks.onError(err?.message || 'Failed to start request')
+      callbacks.onComplete?.()
+    }
+  })
+
+  return {
+    abort: () => {
+      aborted = true
+      try { xhr.abort() } catch {}
+    },
+  }
+}
+
+/**
+ * Streaming variant of generateFashionEditorial — emits partial images as they arrive
+ * (gpt-image-2 only). Uses XMLHttpRequest for React Native NDJSON compatibility.
+ * Returns abort handle.
+ */
+export function generateFashionEditorialStream(
+  params: FashionEditorialRequest & { partialImages?: number },
+  callbacks: {
+    onPartial: (event: { index: number; b64: string }) => void
+    onFinal: (event: { imageUrl: string; creditsRemaining: number; prompt: string; fallbackUsed?: boolean }) => void
+    onError: (message: string, code?: string) => void
+    onComplete?: () => void
+  }
+): { abort: () => void } {
+  const xhr = new XMLHttpRequest()
+  let buffer = ''
+  let lastIndex = 0
+  let errorHandled = false
+  let aborted = false
+
+  const parseBuffer = () => {
+    const lines = buffer.split('\n')
+    buffer = lines.pop() || ''
+    for (const line of lines) {
+      const trimmed = line.trim()
+      if (!trimmed) continue
+      try {
+        const event = JSON.parse(trimmed)
+        if (event.type === 'partial') {
+          callbacks.onPartial({ index: event.index, b64: event.b64 })
+        } else if (event.type === 'final') {
+          callbacks.onFinal(event)
+        } else if (event.type === 'error') {
+          callbacks.onError(event.message || 'Generation failed', event.code)
+        }
+      } catch {
+        // ignore malformed line
+      }
+    }
+  }
+
+  const startRequest = async () => {
+    let authToken: string | null = null
+    if (tokenGetter) authToken = await tokenGetter()
+
+    xhr.open('POST', `${CONFIG.API_BASE_URL}/api/fashion-editorial/generate`)
+    xhr.setRequestHeader('Content-Type', 'application/json')
+    if (authToken) xhr.setRequestHeader('Authorization', `Bearer ${authToken}`)
+
+    xhr.onreadystatechange = () => {
+      if (aborted) return
+
+      if (xhr.readyState === 4 && !errorHandled) {
+        if (xhr.status !== 200) {
+          errorHandled = true
+          let message = 'Generation failed'
+          try {
+            const body = JSON.parse(xhr.responseText)
+            message = body.error || message
+          } catch {
+            if (xhr.statusText) message = xhr.statusText
+          }
+          callbacks.onError(`${message} (${xhr.status})`)
+          callbacks.onComplete?.()
+          return
+        }
+      }
+
+      if (xhr.readyState >= 3 && xhr.responseText) {
+        const newText = xhr.responseText.substring(lastIndex)
+        lastIndex = xhr.responseText.length
+        if (newText) {
+          buffer += newText
+          parseBuffer()
+        }
+      }
+
+      if (xhr.readyState === 4 && !errorHandled) {
+        callbacks.onComplete?.()
+      }
+    }
+
+    xhr.onerror = () => {
+      if (!errorHandled) {
+        errorHandled = true
+        callbacks.onError('Network error')
+        callbacks.onComplete?.()
+      }
+    }
+
+    xhr.send(JSON.stringify({ ...params, stream: true, partialImages: params.partialImages ?? 2 }))
+  }
+
+  startRequest().catch((err) => {
+    if (!errorHandled) {
+      errorHandled = true
+      callbacks.onError(err?.message || 'Failed to start request')
+      callbacks.onComplete?.()
+    }
+  })
+
+  return {
+    abort: () => {
+      aborted = true
+      try { xhr.abort() } catch {}
+    },
+  }
+}
+
 export interface UgcControls {
   subMode: 'selfie' | 'product-ugc' | 'product-ugc-selfie'
   environment: string
