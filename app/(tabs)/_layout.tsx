@@ -7,6 +7,7 @@ import type {
 import type { ParamListBase, TabNavigationState } from '@react-navigation/native'
 import { Platform } from 'react-native'
 import { TermsConsentModal } from '@/components/terms-consent-modal'
+import { theme } from '@/constants/theme'
 
 const { Navigator } = createNativeBottomTabNavigator()
 
@@ -17,7 +18,8 @@ const Tabs = withLayoutContext<
   NativeBottomTabNavigationEventMap
 >(Navigator)
 
-const ACCENT = '#FBBF24'
+const ACCENT = theme.palette.violet
+const TAB_BG = '#16102A' // matches theme.colors.bg
 
 export default function TabLayout() {
   return (
@@ -26,11 +28,11 @@ export default function TabLayout() {
         screenOptions={{
           tabBarActiveTintColor: ACCENT,
           ...(Platform.OS === 'android' && {
-            tabBarInactiveTintColor: '#64748b',
-            tabBarActiveIndicatorColor: 'rgba(251,191,36,0.15)',
+            tabBarInactiveTintColor: theme.colors.textDim,
+            tabBarActiveIndicatorColor: 'rgba(124,58,237,0.18)',
           }),
           tabBarStyle: {
-            backgroundColor: '#111B2E',
+            backgroundColor: TAB_BG,
           },
           headerShown: false,
         }}

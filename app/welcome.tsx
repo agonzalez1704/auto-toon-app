@@ -21,15 +21,16 @@ import Svg, {
 
 const { width: SCREEN_W } = Dimensions.get('window')
 
-// Aurora Blossom palette
+// Brand palette (web brand book — violet/cyan/slate)
 const AURORA_NAVY = '#193153'
-const AURORA_TEAL = '#0B5777'
-const AURORA_MAGENTA = '#FBBF24'
-const AURORA_PINK = '#F9D4E0'
+const AURORA_TEAL = '#06B6D4' // theme.palette.cyan
+const AURORA_MAGENTA = '#7C3AED' // theme.palette.violet
+const AURORA_PINK = '#A78BFA' // theme.palette.violetLight
 
 // ─── Confetti Particle ──────────────────────────────────────────────────
 
-const CONFETTI_COLORS = [AURORA_MAGENTA, AURORA_TEAL, '#FBBF24', AURORA_PINK, '#34D399', '#9333EA']
+// Brand confetti — violet primary + fuchsia secondary + accent supports
+const CONFETTI_COLORS = [AURORA_MAGENTA, '#D946EF', '#E879F9', AURORA_PINK, '#10B981', '#22D3EE']
 
 function ConfettiParticle({ delay, color, left }: { delay: number; color: string; left: number }) {
   const translateY = useRef(new Animated.Value(-20)).current
@@ -75,12 +76,12 @@ function CreditsBadge() {
     <Svg width={80} height={80} viewBox="0 0 80 80">
       <Defs>
         <SvgLinearGradient id="coinGrad" x1="0" y1="0" x2="1" y2="1">
-          <Stop offset="0" stopColor="#FBBF24" />
-          <Stop offset="1" stopColor="#F59E0B" />
+          <Stop offset="0" stopColor="#7C3AED" />
+          <Stop offset="1" stopColor="#D946EF" />
         </SvgLinearGradient>
         <SvgLinearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
           <Stop offset="0" stopColor={AURORA_MAGENTA} />
-          <Stop offset="1" stopColor={AURORA_TEAL} />
+          <Stop offset="1" stopColor="#D946EF" />
         </SvgLinearGradient>
       </Defs>
       {/* Outer glow ring */}
@@ -194,7 +195,7 @@ export default function WelcomeScreen() {
   return (
     <View style={styles.root}>
       <LinearGradient
-        colors={[AURORA_NAVY, '#0D2E4A', '#1C1240', AURORA_NAVY]}
+        colors={[AURORA_NAVY, '#0D2E4A', '#1A0F3A', AURORA_NAVY]}
         locations={[0, 0.35, 0.65, 1]}
         style={StyleSheet.absoluteFillObject}
       />
@@ -262,7 +263,7 @@ export default function WelcomeScreen() {
             activeOpacity={0.85}
           >
             <LinearGradient
-              colors={['#FBBF24', '#F59E0B', '#B45309']}
+              colors={[AURORA_MAGENTA, '#D946EF']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={StyleSheet.absoluteFillObject}
@@ -350,7 +351,7 @@ const styles = StyleSheet.create({
   creditsNumber: {
     fontSize: 56,
     fontWeight: '900',
-    color: '#FBBF24',
+    color: '#A78BFA',
     lineHeight: 64,
   },
   creditsLabel: {

@@ -28,11 +28,11 @@ import Svg, {
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window')
 
-// Aurora Blossom palette (from reference)
+// Brand palette (web brand book — violet/cyan/slate)
 const AURORA_NAVY = '#193153'
-const AURORA_TEAL = '#0B5777'
-const AURORA_MAGENTA = '#FBBF24'
-const AURORA_PINK = '#F9D4E0'
+const AURORA_TEAL = '#06B6D4' // theme.palette.cyan
+const AURORA_MAGENTA = '#7C3AED' // theme.palette.violet
+const AURORA_PINK = '#A78BFA' // theme.palette.violetLight
 
 const COLUMN_COUNT = 3
 const IMAGE_GAP = 4
@@ -126,7 +126,7 @@ function GradientCTA({
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={0.85}>
       <LinearGradient
-        colors={['#FBBF24', '#F59E0B', '#B45309']}
+        colors={[AURORA_MAGENTA, '#D946EF']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={[styles.ctaButton, large && styles.ctaLarge]}
@@ -403,7 +403,7 @@ function CoinSvg({ size }: { size: number }) {
   return (
     <Svg width={size} height={size} viewBox="0 0 48 48">
       {/* Outer ring */}
-      <Circle cx="24" cy="24" r="22" fill="#F59E0B" />
+      <Circle cx="24" cy="24" r="22" fill="#A78BFA" />
       <Circle cx="24" cy="24" r="22" fill="url(#coinGrad)" />
       {/* Inner ring */}
       <Circle cx="24" cy="24" r="18" fill="none" stroke="#FCD34D" strokeWidth="1.5" opacity={0.6} />
@@ -506,13 +506,13 @@ function CreditsScreen({
           <Svg width={140} height={140} viewBox="0 0 140 140">
             <Defs>
               <SvgLinearGradient id="bigCoinGrad" x1="0" y1="0" x2="0" y2="1">
-                <Stop offset="0" stopColor="#FBBF24" />
-                <Stop offset="0.5" stopColor="#F59E0B" />
+                <Stop offset="0" stopColor="#7C3AED" />
+                <Stop offset="0.5" stopColor="#A78BFA" />
                 <Stop offset="1" stopColor="#D97706" />
               </SvgLinearGradient>
               <SvgLinearGradient id="innerGlow" x1="0" y1="0" x2="0" y2="1">
                 <Stop offset="0" stopColor="#FEF3C7" stopOpacity="0.3" />
-                <Stop offset="1" stopColor="#F59E0B" stopOpacity="0" />
+                <Stop offset="1" stopColor="#06B6D4" stopOpacity="0" />
               </SvgLinearGradient>
             </Defs>
             {/* Shadow */}

@@ -19,7 +19,7 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.autotoon.app",
       "entitlements": {
-        "aps-environment": "development"
+        "aps-environment": "production"
       },
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false

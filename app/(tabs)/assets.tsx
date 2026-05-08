@@ -19,9 +19,12 @@ import { useRouter } from 'expo-router'
 import Svg, { Path as SvgPath } from 'react-native-svg'
 import { getAssets, getUserVideos, deleteAsset, type Asset, type VideoGeneration } from '@/lib/api'
 import { queryKeys } from '@/lib/query'
+import { theme } from '@/constants/theme'
+import { GlassPill } from '@/components/glass'
 
 const AURORA_NAVY = '#193153'
-const AURORA_MAGENTA = '#FBBF24'
+// Brand-aligned accent (violet, mirrors web brand book)
+const AURORA_MAGENTA = '#7C3AED'
 
 type FilterType = 'all' | 'fashion_editorial' | 'vignette' | 'elements' | 'poster' | '3x3' | 'food' | 'upscaled' | 'restored' | 'video'
 
@@ -361,16 +364,21 @@ export default function AssetsScreen() {
               return (
                 <TouchableOpacity
                   key={f.value}
-                  style={[styles.filterChip, isActive && styles.filterChipActive]}
                   onPress={() => setFilter(f.value)}
                   activeOpacity={0.75}
+                  hitSlop={theme.hitSlop(4)}
+                  accessibilityLabel={`Filter ${f.label}`}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: isActive }}
                 >
-                  <Text style={[styles.filterLabel, isActive && styles.filterLabelActive]}>
-                    {f.label}
-                  </Text>
-                  <Text style={[styles.filterCount, isActive && styles.filterCountActive]}>
-                    {count}
-                  </Text>
+                  <GlassPill active={isActive} style={styles.filterChip}>
+                    <Text style={[styles.filterLabel, isActive && styles.filterLabelActive]}>
+                      {f.label}
+                    </Text>
+                    <Text style={[styles.filterCount, isActive && styles.filterCountActive]}>
+                      {count}
+                    </Text>
+                  </GlassPill>
                 </TouchableOpacity>
               )
             })}
@@ -413,7 +421,7 @@ export default function AssetsScreen() {
           }
           refreshControl={
             <RefreshControl
-              refreshing={false}
+              refreshing={isLoading}
               onRefresh={refetch}
               tintColor={AURORA_MAGENTA}
             />
@@ -454,17 +462,9 @@ const styles = StyleSheet.create({
     paddingRight: 32, // room so the last chip clears the right-edge fade
   },
   filterChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    minHeight: 36,
-    borderRadius: 999,
-    backgroundColor: 'rgba(255,255,255,0.06)',
-  },
-  filterChipActive: {
-    backgroundColor: AURORA_MAGENTA,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    minHeight: 40,
   },
   filterLabel: {
     fontSize: 13,
@@ -472,7 +472,7 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.72)',
   },
   filterLabelActive: {
-    color: AURORA_NAVY,
+    color: '#FFFFFF',
   },
   filterCount: {
     fontSize: 12,
@@ -481,7 +481,7 @@ const styles = StyleSheet.create({
     fontVariant: ['tabular-nums'],
   },
   filterCountActive: {
-    color: 'rgba(25,49,83,0.65)',
+    color: 'rgba(255,255,255,0.85)',
   },
   filterRailFade: {
     position: 'absolute',
@@ -538,14 +538,15 @@ const styles = StyleSheet.create({
     padding: 12,
   },
   assetName: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '600',
     color: '#FFFFFF',
   },
   assetType: {
-    fontSize: 11,
+    fontSize: 12,
+    fontWeight: '500',
     marginTop: 2,
-    color: 'rgba(255,255,255,0.45)',
+    color: 'rgba(255,255,255,0.65)',
   },
   deleteOverlay: {
     ...StyleSheet.absoluteFillObject,

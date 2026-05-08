@@ -30,11 +30,11 @@ WebBrowser.maybeCompleteAuthSession()
 
 const { width: SCREEN_W } = Dimensions.get('window')
 
-// Aurora Blossom palette
+// Brand palette (rebound to web brand book — violet/cyan/slate)
 const AURORA_NAVY = '#193153'
-const AURORA_TEAL = '#0B5777'
-const AURORA_MAGENTA = '#FBBF24'
-const AURORA_PINK = '#F9D4E0'
+const AURORA_TEAL = '#06B6D4' // theme.palette.cyan
+const AURORA_MAGENTA = '#7C3AED' // theme.palette.violet
+const AURORA_PINK = '#A78BFA' // theme.palette.violetLight
 
 // ─── SVG Icons ──────────────────────────────────────────────────────────
 
@@ -279,7 +279,7 @@ export default function SignInScreen() {
       <View style={styles.root}>
         <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
         <LinearGradient
-          colors={[AURORA_NAVY, '#0D2E4A', '#1C1240']}
+          colors={[AURORA_NAVY, '#0D2E4A', '#1A0F3A']}
           locations={[0, 0.5, 1]}
           style={StyleSheet.absoluteFillObject}
         />
@@ -337,7 +337,7 @@ export default function SignInScreen() {
                   style={loading ? { opacity: 0.6 } : undefined}
                 >
                   <LinearGradient
-                    colors={['#FBBF24', '#F59E0B', '#B45309']}
+                    colors={[AURORA_MAGENTA, '#D946EF']}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
                     style={styles.emailButton}
@@ -474,7 +474,7 @@ export default function SignInScreen() {
                 style={loading ? { opacity: 0.6 } : undefined}
               >
                 <LinearGradient
-                  colors={['#FBBF24', '#F59E0B', '#B45309']}
+                  colors={[AURORA_MAGENTA, '#D946EF']}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                   style={styles.emailButton}
