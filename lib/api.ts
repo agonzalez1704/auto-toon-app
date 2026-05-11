@@ -559,10 +559,32 @@ export interface FashionImageAnalysis {
   itemCount: number
 }
 
-export async function analyzeFashionImage(imageUrl: string) {
+export async function analyzeFashionImage(imageUrl: string, category?: 'clothing' | 'shoe') {
   const { data } = await api.post<{ success: boolean } & FashionImageAnalysis>(
     '/api/fashion-editorial/analyze-image',
-    { imageUrl }
+    { imageUrl, category }
+  )
+  return data
+}
+
+export interface PreviewModifierRequest {
+  kind: 'lighting' | 'surface' | 'shotType'
+  value: string
+  prompt: string
+  subjectImageUrl?: string
+  footwearImageUrl?: string
+}
+
+export interface PreviewModifierResult {
+  imageUrl: string
+  value: string
+  kind: string
+}
+
+export async function previewModifier(req: PreviewModifierRequest) {
+  const { data } = await api.post<PreviewModifierResult>(
+    '/api/fashion-editorial/preview-modifier',
+    req
   )
   return data
 }
@@ -601,11 +623,16 @@ export interface FashionEditorialRequest {
   hairstyleAnalysis?: string
   styleData?: { style: string; customStyle?: string }
   backgroundData?: { background: string; customBackground?: string }
+  lightingData?: { lighting?: string; customLighting?: string }
   promptModifier?: string
   aiModel?: string
   aspectRatio?: string
   /** Inline model data — used by mobile app where models aren't in the DB */
   models?: { modelId: string; clothingImageUrls: string[]; imageUrl?: string; prompt?: string; characterSheetUrl?: string }[]
+  /** Footwear pack (Phase 1) */
+  shoes?: { shoeImageUrl: string; shoeName?: string; shoeType?: string; shoeAnalysis?: string }[]
+  shotPrompt?: string
+  surfacePrompt?: string
   /** Midjourney V7 advanced params (only sent when aiModel is mj-v7) */
   mjParams?: { stylize?: number; chaos?: number; negativePrompt?: string; imageWeight?: number; styleRefUrl?: string; seed?: string; speed?: 'draft' | 'fast' | 'turbo' }
 }

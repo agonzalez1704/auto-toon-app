@@ -251,6 +251,26 @@ export default function GenerateScreen() {
           .join(' ')
       }
 
+      // Footwear pack: shoes + shotPrompt + surfacePrompt
+      const { SHOT_TYPE_PRESETS, SURFACE_PRESETS, LIGHTING_PRESETS } = await import('@/stores/use-fashion-editorial-store')
+      const shoes = store.shoeItems
+        .filter((s) => s.phase === 'ready' && s.uploadedUrl)
+        .map((s) => ({
+          shoeImageUrl: s.uploadedUrl!,
+          shoeName: s.shoeName || undefined,
+          shoeType: s.shoeType || undefined,
+          shoeAnalysis: s.shoeAnalysis || undefined,
+        }))
+      const shotPrompt = store.shotType === 'custom'
+        ? store.customShot.trim() || undefined
+        : SHOT_TYPE_PRESETS.find((p) => p.id === store.shotType)?.prompt
+      const surfacePrompt = store.surface === 'custom'
+        ? store.customSurface.trim() || undefined
+        : SURFACE_PRESETS.find((p) => p.id === store.surface)?.prompt
+      const lightingPrompt = store.lighting === 'custom'
+        ? store.customLighting.trim() || undefined
+        : LIGHTING_PRESETS.find((p) => p.id === store.lighting)?.prompt
+
       // Resolve model data from local store for inline payload
       const savedModel = savedModels.find(m => m.id === store.selectedModelId)
 
@@ -272,6 +292,13 @@ export default function GenerateScreen() {
           prompt: savedModel?.prompt,
           characterSheetUrl: savedModel?.characterSheetUrl,
         }],
+        // Footwear pack (Phase 1)
+        ...(shoes.length > 0 ? { shoes } : {}),
+        ...(shotPrompt ? { shotPrompt } : {}),
+        ...(surfacePrompt ? { surfacePrompt } : {}),
+        ...(lightingPrompt
+          ? { lightingData: { ...(typeof store.lighting === 'string' ? { lighting: store.lighting } : {}), customLighting: lightingPrompt } }
+          : {}),
       }
 
       if (selectedAiModel.key === 'GPT_IMAGE_2') {

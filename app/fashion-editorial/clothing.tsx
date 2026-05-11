@@ -293,6 +293,65 @@ export default function ClothingScreen() {
                 {store.hairstyleRef?.phase === 'ready' && <View style={styles.optionalDot} />}
               </TouchableOpacity>
             </View>
+
+            {/* Footwear pack (Phase 1) */}
+            <View style={[styles.optionalRow, { marginTop: 12 }]}>
+              <TouchableOpacity
+                style={styles.optionalCard}
+                onPress={() => router.push('/fashion-editorial/shoe')}
+                activeOpacity={0.7}
+              >
+                {store.shoeItems[0]?.localUri ? (
+                  <Image source={{ uri: store.shoeItems[0].localUri }} style={styles.optionalThumb} contentFit="cover" />
+                ) : (
+                  <Text style={styles.optionalIcon}>👟</Text>
+                )}
+                <Text style={styles.optionalLabel}>
+                  {store.shoeItems.some(s => s.phase === 'ready')
+                    ? `Shoes (${store.shoeItems.filter(s => s.phase === 'ready').length})`
+                    : 'Add Shoes'}
+                </Text>
+                {store.shoeItems.some(s => s.phase === 'ready') && <View style={styles.optionalDot} />}
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.optionalCard}
+                onPress={() => router.push('/fashion-editorial/shot-type')}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.optionalIcon}>📷</Text>
+                <Text style={styles.optionalLabel}>
+                  {store.shotType ? 'Shot Type Set' : 'Shot Type'}
+                </Text>
+                {!!store.shotType && <View style={styles.optionalDot} />}
+              </TouchableOpacity>
+            </View>
+
+            <View style={[styles.optionalRow, { marginTop: 12 }]}>
+              <TouchableOpacity
+                style={styles.optionalCard}
+                onPress={() => router.push('/fashion-editorial/surface')}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.optionalIcon}>🪞</Text>
+                <Text style={styles.optionalLabel}>
+                  {store.surface ? 'Surface Set' : 'Surface'}
+                </Text>
+                {!!store.surface && <View style={styles.optionalDot} />}
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.optionalCard}
+                onPress={() => router.push('/fashion-editorial/lighting')}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.optionalIcon}>💡</Text>
+                <Text style={styles.optionalLabel}>
+                  {store.lighting ? 'Lighting Set' : 'Lighting'}
+                </Text>
+                {!!store.lighting && <View style={styles.optionalDot} />}
+              </TouchableOpacity>
+            </View>
           </View>
 
           <View style={{ height: 120 }} />
