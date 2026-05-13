@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <!-- B6.1 Pure Frames — small-size fallback (favicon, tab icons ≤ 48px). -->
+  <rect x="14" y="26" width="34" height="46" rx="5" fill="#FBBF24" transform="rotate(-15 31 49)" />
+  <rect x="52" y="26" width="34" height="46" rx="5" fill="#A78BFA" transform="rotate(15 69 49)" />
+</svg>

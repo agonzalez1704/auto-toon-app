@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AutoToon · Logo B6 Refinement</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0B0F14;
+    --bg-raised: #131820;
+    --bg-elevated: #1B222D;
+    --border: rgba(255,255,255,0.08);
+    --border-strong: rgba(255,255,255,0.18);
+    --text: #F8FAFC;
+    --text-muted: rgba(248,250,252,0.72);
+    --text-dim: rgba(248,250,252,0.48);
+    --amber: #FBBF24;
+    --amber-soft: rgba(251,191,36,0.14);
+    --violet: #A78BFA;
+    --emerald: #34D399;
+    --rose: #FB7185;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg); color: var(--text);
+    margin: 0; -webkit-font-smoothing: antialiased; line-height: 1.55;
+  }
+  header { padding: 48px 32px 24px; background: linear-gradient(180deg, #1A1330 0%, var(--bg) 100%); border-bottom: 1px solid var(--border); }
+  .inner, .container { max-width: 1280px; margin: 0 auto; }
+  .container { padding: 32px; }
+  .eyebrow { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--amber); letter-spacing: 0.18em; text-transform: uppercase; margin-bottom: 14px; }
+  h1 { font-size: 38px; font-weight: 800; letter-spacing: -1px; margin: 0 0 12px; }
+  h2 { font-size: 24px; font-weight: 700; letter-spacing: -0.4px; margin: 48px 0 12px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+  h3 { font-size: 17px; font-weight: 700; margin: 24px 0 6px; }
+  .lead { font-size: 16px; color: var(--text-muted); max-width: 720px; }
+  p, li { color: var(--text-muted); font-size: 14px; }
+
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+
+  .variant { background: var(--bg-raised); border: 1px solid var(--border); border-radius: 18px; padding: 22px; }
+  .variant .stage {
+    aspect-ratio: 1; border-radius: 14px; background: linear-gradient(135deg, #0A0D12 0%, #16202B 100%);
+    display: flex; align-items: center; justify-content: center; margin-bottom: 14px;
+    border: 1px solid var(--border);
+  }
+  .variant .stage svg { width: 60%; height: 60%; }
+  .variant .alias { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text-dim); letter-spacing: 0.1em; }
+  .variant .name { font-size: 15px; font-weight: 700; margin: 6px 0 4px; }
+  .variant .desc { font-size: 12px; color: var(--text-muted); line-height: 1.55; }
+  .tag { display: inline-block; font-size: 9px; padding: 2px 7px; border-radius: 999px; font-weight: 700; letter-spacing: 0.04em; }
+  .tag-pro { background: rgba(52,211,153,0.14); color: var(--emerald); margin-right: 4px; }
+  .tag-con { background: rgba(251,113,133,0.14); color: var(--rose); margin-right: 4px; }
+  .meta { margin-top: 8px; }
+
+  .size-test { display: flex; align-items: end; gap: 28px; flex-wrap: wrap; margin: 16px 0; }
+  .size-cell { text-align: center; }
+  .size-cell .label { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text-dim); margin-top: 8px; letter-spacing: 0.1em; }
+  .ios-large { width: 120px; height: 120px; border-radius: 28px; box-shadow: 0 18px 32px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; }
+  .ios-med   { width: 80px; height: 80px; border-radius: 18px; display: flex; align-items: center; justify-content: center; }
+  .ios-small { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; }
+  .ios-mini  { width: 28px; height: 28px; border-radius: 7px; display: flex; align-items: center; justify-content: center; }
+
+  .bg-amber  { background: linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%); }
+  .bg-dark   { background: linear-gradient(135deg, #1B222D 0%, #0B0F14 100%); }
+  .bg-violet { background: linear-gradient(135deg, #A78BFA 0%, #7C3AED 100%); }
+  .bg-mono   { background: #0B0F14; border: 1px solid var(--border-strong); }
+
+  .ios-large svg, .ios-med svg, .ios-small svg, .ios-mini svg { width: 60%; height: 60%; }
+
+  .wm-row { display: flex; flex-wrap: wrap; gap: 28px; align-items: center; padding: 20px; background: var(--bg-raised); border: 1px solid var(--border); border-radius: 14px; }
+  .wm-block { display: flex; align-items: center; gap: 12px; min-width: 220px; }
+  .wm-block svg { width: 36px; height: 36px; }
+  .wm-block .text { font-size: 26px; font-weight: 800; color: var(--text); letter-spacing: -0.02em; }
+  .wm-block .lbl { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--text-dim); margin-left: 10px; }
+
+  .pick-card { padding: 20px; background: linear-gradient(135deg, rgba(251,191,36,0.08), rgba(167,139,250,0.06)); border: 1px solid var(--border); border-radius: 18px; }
+
+  .footer { margin-top: 56px; padding: 24px 0; border-top: 1px solid var(--border); color: var(--text-dim); font-size: 11px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="inner">
+    <div class="eyebrow">AutoToon · Logo · B6 Refinement</div>
+    <h1>Photo-Frame Wings — four flavors. Pick one.</h1>
+    <p class="lead">
+      You picked the Photo-Frame Wings direction. Original B6 was busy at 40px — two tilted polaroids + body + double-rotated frames. Here are four cleaner executions. Each kills detail to survive shrink. Pick the one that still reads as "butterfly made of photos" at the smallest size on this page.
+    </p>
+  </div>
+</header>
+
+<div class="container">
+
+<!-- ─────────── VARIANTS ─────────── -->
+<h2>1. Refined variants</h2>
+
+<div class="grid-4">
+
+  <!-- B6.1 — Original, simplified -->
+  <div class="variant">
+    <div class="stage">
+      <!-- Two tilted frames, no inner cutout, no body — cleaner silhouette -->
+      <svg viewBox="0 0 100 100" fill="none">
+        <rect x="14" y="26" width="34" height="46" rx="5" fill="#FBBF24" transform="rotate(-15 31 49)" />
+        <rect x="52" y="26" width="34" height="46" rx="5" fill="#A78BFA" transform="rotate(15 69 49)" />
+      </svg>
+    </div>
+    <div class="alias">B6.1</div>
+    <div class="name">Pure Frames</div>
+    <div class="desc">Two tilted rectangles. No body, no inner cutouts. Silhouette ONLY. Cleanest, scales infinitely.</div>
+    <div class="meta">
+      <span class="tag tag-pro">scales perfectly</span>
+      <span class="tag tag-pro">monochrome OK</span>
+    </div>
+  </div>
+
+  <!-- B6.2 — Frames with photo inside -->
+  <div class="variant">
+    <div class="stage">
+      <svg viewBox="0 0 100 100" fill="none">
+        <rect x="14" y="26" width="34" height="46" rx="5" fill="#FBBF24" transform="rotate(-15 31 49)" />
+        <rect x="18" y="30" width="26" height="32" rx="2" fill="#0B0F14" transform="rotate(-15 31 49)" />
+        <circle cx="31" cy="46" r="4" fill="#FBBF24" transform="rotate(-15 31 49)" />
+
+        <rect x="52" y="26" width="34" height="46" rx="5" fill="#A78BFA" transform="rotate(15 69 49)" />
+        <rect x="56" y="30" width="26" height="32" rx="2" fill="#0B0F14" transform="rotate(15 69 49)" />
+        <circle cx="69" cy="46" r="4" fill="#A78BFA" transform="rotate(15 69 49)" />
+      </svg>
+    </div>
+    <div class="alias">B6.2</div>
+    <div class="name">Framed Wings</div>
+    <div class="desc">Frames with cutout + tiny dot = "photo on display". Reads as polaroids more clearly. Slightly busier.</div>
+    <div class="meta">
+      <span class="tag tag-pro">clear story</span>
+      <span class="tag tag-con">muddier at 28px</span>
+    </div>
+  </div>
+
+  <!-- B6.3 — Asymmetric / shutter style -->
+  <div class="variant">
+    <div class="stage">
+      <svg viewBox="0 0 100 100" fill="none">
+        <!-- Left wing: 3 stacked horizontal lines, fanned -->
+        <g transform="rotate(-12 30 50)">
+          <rect x="10" y="38" width="38" height="6" rx="2" fill="#FBBF24" />
+          <rect x="12" y="48" width="34" height="6" rx="2" fill="#FBBF24" opacity="0.85" />
+          <rect x="14" y="58" width="30" height="6" rx="2" fill="#FBBF24" opacity="0.7" />
+        </g>
+        <g transform="rotate(12 70 50)">
+          <rect x="52" y="38" width="38" height="6" rx="2" fill="#A78BFA" />
+          <rect x="54" y="48" width="34" height="6" rx="2" fill="#A78BFA" opacity="0.85" />
+          <rect x="56" y="58" width="30" height="6" rx="2" fill="#A78BFA" opacity="0.7" />
+        </g>
+      </svg>
+    </div>
+    <div class="alias">B6.3</div>
+    <div class="name">Shutter Fan</div>
+    <div class="desc">Wings as fanned camera-shutter bars. Pure abstract — only the wing silhouette echoes butterfly. Most "designed".</div>
+    <div class="meta">
+      <span class="tag tag-pro">distinctive</span>
+      <span class="tag tag-con">butterfly read weaker</span>
+    </div>
+  </div>
+
+  <!-- B6.4 — Single seam, no border -->
+  <div class="variant">
+    <div class="stage">
+      <svg viewBox="0 0 100 100" fill="none">
+        <!-- Wing-shaped quads, no rounded corners, kissing in middle -->
+        <path d="M50 24 L18 32 L20 70 L50 60 Z" fill="#FBBF24" />
+        <path d="M50 24 L82 32 L80 70 L50 60 Z" fill="#A78BFA" />
+        <path d="M50 60 L24 78 L40 82 L50 76 Z" fill="#FBBF24" opacity="0.85" />
+        <path d="M50 60 L76 78 L60 82 L50 76 Z" fill="#A78BFA" opacity="0.85" />
+        <!-- Thin seam down middle -->
+        <line x1="50" y1="24" x2="50" y2="78" stroke="#0B0F14" stroke-width="1.5" />
+      </svg>
+    </div>
+    <div class="alias">B6.4</div>
+    <div class="name">Folded Wings</div>
+    <div class="desc">Two trapezoids per side — feels like a folded photo + butterfly hybrid. Cleanest geometric read.</div>
+    <div class="meta">
+      <span class="tag tag-pro">geometric</span>
+      <span class="tag tag-pro">scales</span>
+    </div>
+  </div>
+
+</div>
+
+<!-- ─────────── SCALE TEST ─────────── -->
+<h2>2. Scale test — each variant at real icon sizes</h2>
+<p>Most important check. Anything that disappears below 48px is dead. Eye-test each row.</p>
+
+<h3 style="color:var(--amber);">B6.1 · Pure Frames</h3>
+<div class="size-test">
+  <div class="size-cell">
+    <div class="ios-large bg-amber"><svg viewBox="0 0 100 100"><rect x="14" y="26" width="34" height="46" rx="5" fill="#1A1330" transform="rotate(-15 31 49)" /><rect x="52" y="26" width="34" height="46" rx="5" fill="#1A1330" opacity="0.7" transform="rotate(15 69 49)" /></svg></div>
+    <div class="label">120px</div>
+  </div>
+  <div class="size-cell">
+    <div class="ios-large bg-dark"><svg viewBox="0 0 100 100"><rect x="14" y="26" width="34" height="46" rx="5" fill="#FBBF24" transform="rotate(-15 31 49)" /><rect x="52" y="26" width="34" height="46" rx="5" fill="#A78BFA" transform="rotate(15 69 49)" /></svg></div>
+    <div class="label">120px dark</div>
+  </div>
+  <div class="size-cell">
+    <div class="ios-med bg-dark"><svg viewBox="0 0 100 100"><rect x="14" y="26" width="34" height="46" rx="5" fill="#FBBF24" transform="rotate(-15 31 49)" /><rect x="52" y="26" width="34" height="46" rx="5" fill="#A78BFA" transform="rotate(15 69 49)" /></svg></div>
+    <div class="label">80px</div>
+  </div>
+  <div class="size-cell">
+    <div class="ios-small bg-dark"><svg viewBox="0 0 100 100"><rect x="14" y="26" width="34" height="46" rx="5" fill="#FBBF24" transform="rotate(-15 31 49)" /><rect x="52" y="26" width="34" height="46" rx="5" fill="#A78BFA" transform="rotate(15 69 49)" /></svg></div>
+    <div class="label">48px tab-bar</div>
+  </div>
+  <div class="size-cell">
+    <div class="ios-mini bg-mono"><svg viewBox="0 0 100 100"><rect x="14" y="26" width="34" height="46" rx="5" fill="#FBBF24" transform="rotate(-15 31 49)" /><rect x="52" y="26" width="34" height="46" rx="5" fill="#A78BFA" transform="rotate(15 69 49)" /></svg></div>
+    <div class="label">28px favicon</div>
+  </div>
+</div>
+
+<h3 style="color:var(--amber);">B6.2 · Framed Wings (with cutout)</h3>
+<div class="size-test">
+  <div class="size-cell">
+    <div class="ios-large bg-amber">
+      <svg viewBox="0 0 100 100">
+        <rect x="14" y="26" width="34" height="46" rx="5" fill="#1A1330" transform="rotate(-15 31 49)" />
+        <rect x="18" y="30" width="26" height="32" rx="2" fill="#FBBF24" transform="rotate(-15 31 49)" />
+        <rect x="52" y="26" width="34" height="46" rx="5" fill="#1A1330" transform="rotate(15 69 49)" />
+        <rect x="56" y="30" width="26" height="32" rx="2" fill="#FBBF24" transform="rotate(15 69 49)" />
+      </svg>
+    </div>
+    <div class="label">120px</div>
+  </div>
+  <div class="size-cell">
+    <div class="ios-large bg-dark">
+      <svg viewBox="0 0 100 100">
+        <rect x="14" y="26" width="34" height="46" rx="5" fill="#FBBF24" transform="rotate(-15 31 49)" />
+        <rect x="18" y="30" width="26" height="32" rx="2" fill="#0B0F14" transform="rotate(-15 31 49)" />
+        <circle cx="31" cy="46" r="4" fill="#FBBF24" transform="rotate(-15 31 49)" />
+        <rect x="52" y="26" width="34" height="46" rx="5" fill="#A78BFA" transform="rotate(15 69 49)" />
+        <rect x="56" y="30" width="26" height="32" rx="2" fill="#0B0F14" transform="rotate(15 69 49)" />
+        <circle cx="69" cy="46" r="4" fill="#A78BFA" transform="rotate(15 69 49)" />
+      </svg>
+    </div>
+    <div class="label">120px dark</div>
+  </div>
+  <div class="size-cell">
+    <div class="ios-med bg-dark">
+      <svg viewBox="0 0 100 100">
+        <rect x="14" y="26" width="34" height="46" rx="5" fill="#FBBF24" transform="rotate(-15 31 49)" />
+        <rect x="18" y="30" width="26" height="32" rx="2" fill="#0B0F14" transform="rotate(-15 31 49)" />
+        <rect x="52" y="26" width="34" height="46" rx="5" fill="#A78BFA" transform="rotate(15 69 49)" />
+        <rect x="56" y="30" width="26" height="32" rx="2" fill="#0B0F14" transform="rotate(15 69 49)" />
+      </svg>
+    </div>
+    <div class="label">80px</div>
+  </div>
+  <div class="size-cell">
+    <div class="ios-small bg-dark">
+      <svg viewBox="0 0 100 100">
+        <rect x="14" y="26" width="34" height="46" rx="5" fill="#FBBF24" transform="rotate(-15 31 49)" />
+        <rect x="52" y="26" width="34" height="46" rx="5" fill="#A78BFA" transform="rotate(15 69 49)" />
+      </svg>
+    </div>
+    <div class="label">48px — cutout dies</div>
+  </div>
+  <div class="size-cell">
+    <div class="ios-mini bg-mono">
+      <svg viewBox="0 0 100 100">
+        <rect x="14" y="26" width="34" height="46" rx="5" fill="#FBBF24" transform="rotate(-15 31 49)" />
+        <rect x="52" y="26" width="34" height="46" rx="5" fill="#A78BFA" transform="rotate(15 69 49)" />
+      </svg>
+    </div>
+    <div class="label">28px</div>
+  </div>
+</div>
+
+<h3 style="color:var(--amber);">B6.3 · Shutter Fan</h3>
+<div class="size-test">
+  <div class="size-cell">
+    <div class="ios-large bg-amber">
+      <svg viewBox="0 0 100 100">
+        <g transform="rotate(-12 30 50)"><rect x="10" y="38" width="38" height="6" rx="2" fill="#1A1330" /><rect x="12" y="48" width="34" height="6" rx="2" fill="#1A1330" opacity="0.85" /><rect x="14" y="58" width="30" height="6" rx="2" fill="#1A1330" opacity="0.7" /></g>
+        <g transform="rotate(12 70 50)"><rect x="52" y="38" width="38" height="6" rx="2" fill="#1A1330" /><rect x="54" y="48" width="34" height="6" rx="2" fill="#1A1330" opacity="0.85" /><rect x="56" y="58" width="30" height="6" rx="2" fill="#1A1330" opacity="0.7" /></g>
+      </svg>
+    </div>
+    <div class="label">120px</div>
+  </div>
+  <div class="size-cell">
+    <div class="ios-large bg-dark">
+      <svg viewBox="0 0 100 100">
+        <g transform="rotate(-12 30 50)"><rect x="10" y="38" width="38" height="6" rx="2" fill="#FBBF24" /><rect x="12" y="48" width="34" height="6" rx="2" fill="#FBBF24" opacity="0.85" /><rect x="14" y="58" width="30" height="6" rx="2" fill="#FBBF24" opacity="0.7" /></g>
+        <g transform="rotate(12 70 50)"><rect x="52" y="38" width="38" height="6" rx="2" fill="#A78BFA" /><rect x="54" y="48" width="34" height="6" rx="2" fill="#A78BFA" opacity="0.85" /><rect x="56" y="58" width="30" height="6" rx="2" fill="#A78BFA" opacity="0.7" /></g>
+      </svg>
+    </div>
+    <div class="label">120px dark</div>
+  </div>
+  <div class="size-cell">
+    <div class="ios-med bg-dark">
+      <svg viewBox="0 0 100 100">
+        <g transform="rotate(-12 30 50)"><rect x="10" y="38" width="38" height="6" rx="2" fill="#FBBF24" /><rect x="12" y="48" width="34" height="6" rx="2" fill="#FBBF24" opacity="0.85" /><rect x="14" y="58" width="30" height="6" rx="2" fill="#FBBF24" opacity="0.7" /></g>
+        <g transform="rotate(12 70 50)"><rect x="52" y="38" width="38" height="6" rx="2" fill="#A78BFA" /><rect x="54" y="48" width="34" height="6" rx="2" fill="#A78BFA" opacity="0.85" /><rect x="56" y="58" width="30" height="6" rx="2" fill="#A78BFA" opacity="0.7" /></g>
+      </svg>
+    </div>
+    <div class="label">80px</div>
+  </div>
+  <div class="size-cell">
+    <div class="ios-small bg-dark">
+      <svg viewBox="0 0 100 100">
+        <g transform="rotate(-12 30 50)"><rect x="10" y="38" width="38" height="6" rx="2" fill="#FBBF24" /><rect x="12" y="48" width="34" height="6" rx="2" fill="#FBBF24" opacity="0.85" /><rect x="14" y="58" width="30" height="6" rx="2" fill="#FBBF24" opacity="0.7" /></g>
+        <g transform="rotate(12 70 50)"><rect x="52" y="38" width="38" height="6" rx="2" fill="#A78BFA" /><rect x="54" y="48" width="34" height="6" rx="2" fill="#A78BFA" opacity="0.85" /><rect x="56" y="58" width="30" height="6" rx="2" fill="#A78BFA" opacity="0.7" /></g>
+      </svg>
+    </div>
+    <div class="label">48px</div>
+  </div>
+  <div class="size-cell">
+    <div class="ios-mini bg-mono">
+      <svg viewBox="0 0 100 100">
+        <g transform="rotate(-12 30 50)"><rect x="10" y="38" width="38" height="6" rx="2" fill="#FBBF24" /><rect x="12" y="48" width="34" height="6" rx="2" fill="#FBBF24" opacity="0.85" /><rect x="14" y="58" width="30" height="6" rx="2" fill="#FBBF24" opacity="0.7" /></g>
+        <g transform="rotate(12 70 50)"><rect x="52" y="38" width="38" height="6" rx="2" fill="#A78BFA" /><rect x="54" y="48" width="34" height="6" rx="2" fill="#A78BFA" opacity="0.85" /><rect x="56" y="58" width="30" height="6" rx="2" fill="#A78BFA" opacity="0.7" /></g>
+      </svg>
+    </div>
+    <div class="label">28px</div>
+  </div>
+</div>
+
+<h3 style="color:var(--amber);">B6.4 · Folded Wings</h3>
+<div class="size-test">
+  <div class="size-cell">
+    <div class="ios-large bg-amber">
+      <svg viewBox="0 0 100 100">
+        <path d="M50 24 L18 32 L20 70 L50 60 Z" fill="#1A1330" />
+        <path d="M50 24 L82 32 L80 70 L50 60 Z" fill="#1A1330" opacity="0.7" />
+        <path d="M50 60 L24 78 L40 82 L50 76 Z" fill="#1A1330" opacity="0.85" />
+        <path d="M50 60 L76 78 L60 82 L50 76 Z" fill="#1A1330" opacity="0.55" />
+      </svg>
+    </div>
+    <div class="label">120px</div>
+  </div>
+  <div class="size-cell">
+    <div class="ios-large bg-dark">
+      <svg viewBox="0 0 100 100">
+        <path d="M50 24 L18 32 L20 70 L50 60 Z" fill="#FBBF24" />
+        <path d="M50 24 L82 32 L80 70 L50 60 Z" fill="#A78BFA" />
+        <path d="M50 60 L24 78 L40 82 L50 76 Z" fill="#FBBF24" opacity="0.85" />
+        <path d="M50 60 L76 78 L60 82 L50 76 Z" fill="#A78BFA" opacity="0.85" />
+      </svg>
+    </div>
+    <div class="label">120px dark</div>
+  </div>
+  <div class="size-cell">
+    <div class="ios-med bg-dark">
+      <svg viewBox="0 0 100 100">
+        <path d="M50 24 L18 32 L20 70 L50 60 Z" fill="#FBBF24" />
+        <path d="M50 24 L82 32 L80 70 L50 60 Z" fill="#A78BFA" />
+        <path d="M50 60 L24 78 L40 82 L50 76 Z" fill="#FBBF24" opacity="0.85" />
+        <path d="M50 60 L76 78 L60 82 L50 76 Z" fill="#A78BFA" opacity="0.85" />
+      </svg>
+    </div>
+    <div class="label">80px</div>
+  </div>
+  <div class="size-cell">
+    <div class="ios-small bg-dark">
+      <svg viewBox="0 0 100 100">
+        <path d="M50 24 L18 32 L20 70 L50 60 Z" fill="#FBBF24" />
+        <path d="M50 24 L82 32 L80 70 L50 60 Z" fill="#A78BFA" />
+        <path d="M50 60 L24 78 L40 82 L50 76 Z" fill="#FBBF24" opacity="0.85" />
+        <path d="M50 60 L76 78 L60 82 L50 76 Z" fill="#A78BFA" opacity="0.85" />
+      </svg>
+    </div>
+    <div class="label">48px</div>
+  </div>
+  <div class="size-cell">
+    <div class="ios-mini bg-mono">
+      <svg viewBox="0 0 100 100">
+        <path d="M50 24 L18 32 L20 70 L50 60 Z" fill="#FBBF24" />
+        <path d="M50 24 L82 32 L80 70 L50 60 Z" fill="#A78BFA" />
+      </svg>
+    </div>
+    <div class="label">28px</div>
+  </div>
+</div>
+
+<!-- WORDMARK -->
+<h2>3. Wordmark pairing — B6.1 alongside type</h2>
+<p>Most likely usage: logo + wordmark side-by-side in nav bar, share previews, splash. Three type voices:</p>
+<div class="wm-row">
+  <div class="wm-block">
+    <svg viewBox="0 0 100 100"><rect x="14" y="26" width="34" height="46" rx="5" fill="#FBBF24" transform="rotate(-15 31 49)" /><rect x="52" y="26" width="34" height="46" rx="5" fill="#A78BFA" transform="rotate(15 69 49)" /></svg>
+    <div class="text" style="font-family:'Inter';letter-spacing:-0.03em;">AutoToon</div>
+    <span class="lbl">Inter 800</span>
+  </div>
+  <div class="wm-block">
+    <svg viewBox="0 0 100 100"><rect x="14" y="26" width="34" height="46" rx="5" fill="#FBBF24" transform="rotate(-15 31 49)" /><rect x="52" y="26" width="34" height="46" rx="5" fill="#A78BFA" transform="rotate(15 69 49)" /></svg>
+    <div class="text" style="font-family:'Space Grotesk';">AutoToon</div>
+    <span class="lbl">Space Grotesk 700</span>
+  </div>
+  <div class="wm-block">
+    <svg viewBox="0 0 100 100"><rect x="14" y="26" width="34" height="46" rx="5" fill="#FBBF24" transform="rotate(-15 31 49)" /><rect x="52" y="26" width="34" height="46" rx="5" fill="#A78BFA" transform="rotate(15 69 49)" /></svg>
+    <div class="text" style="font-family:'JetBrains Mono';font-weight:500;font-size:22px;">auto·toon</div>
+    <span class="lbl">JetBrains Mono</span>
+  </div>
+</div>
+
+<!-- ─────────── COLOR STORY ─────────── -->
+<h2>4. Color story</h2>
+<div class="grid-3">
+  <div class="variant">
+    <div class="stage bg-dark"><svg viewBox="0 0 100 100"><rect x="14" y="26" width="34" height="46" rx="5" fill="#FBBF24" transform="rotate(-15 31 49)" /><rect x="52" y="26" width="34" height="46" rx="5" fill="#A78BFA" transform="rotate(15 69 49)" /></svg></div>
+    <div class="name">Primary · Amber + Violet</div>
+    <div class="desc">Default. Amber-left = product (warm), violet-right = AI (cool). Same hues as login + dashboard CTAs.</div>
+  </div>
+  <div class="variant">
+    <div class="stage" style="background:#FBBF24;"><svg viewBox="0 0 100 100"><rect x="14" y="26" width="34" height="46" rx="5" fill="#1A1330" transform="rotate(-15 31 49)" /><rect x="52" y="26" width="34" height="46" rx="5" fill="#1A1330" opacity="0.7" transform="rotate(15 69 49)" /></svg></div>
+    <div class="name">Mono on Amber</div>
+    <div class="desc">For app icon background variant. Dark frames on amber field — high contrast, app-store thumb friendly.</div>
+  </div>
+  <div class="variant">
+    <div class="stage" style="background:#F8FAFC;"><svg viewBox="0 0 100 100"><rect x="14" y="26" width="34" height="46" rx="5" fill="#1A1330" transform="rotate(-15 31 49)" /><rect x="52" y="26" width="34" height="46" rx="5" fill="#1A1330" opacity="0.7" transform="rotate(15 69 49)" /></svg></div>
+    <div class="name">Stencil · Light Mode</div>
+    <div class="desc">Single-color version — invoices, favicons, embroidery, watermarks. Survives anywhere.</div>
+  </div>
+</div>
+
+<!-- ─────────── PICK ─────────── -->
+<h2>5. My recommendation</h2>
+<div class="pick-card">
+  <p style="color:var(--text);font-size:15px;margin:0 0 10px;"><strong>Ship B6.1 (Pure Frames).</strong></p>
+  <ul style="margin:0;">
+    <li>Survives all the way down to 28px (favicon). B6.2's cutout collapses below 48px.</li>
+    <li>Reads as butterfly silhouette AND two polaroids — works whether viewer projects "wings" or "photos".</li>
+    <li>Simplest possible execution. Easier to embroider, animate, license-protect.</li>
+    <li>Amber + violet split = on-brand without needing a third color.</li>
+  </ul>
+</div>
+
+<h3 style="margin-top:32px;">Tell me to ship</h3>
+<p>Pick one to lock:</p>
+<ul>
+  <li><strong>B6.1 Pure Frames</strong> — recommended</li>
+  <li><strong>B6.2 Framed Wings</strong> — if you want photo-cutout detail at larger sizes (icon size still falls back to B6.1)</li>
+  <li><strong>B6.3 Shutter Fan</strong> — if you want more "designed", less literal</li>
+  <li><strong>B6.4 Folded Wings</strong> — if you want geometric / origami feel</li>
+</ul>
+<p>Confirm and I'll generate production SVG files (light/dark/mono), replace <code>assets/icon.png</code>, <code>android-icon-foreground.png</code>, <code>favicon.png</code>, <code>splash-icon.png</code>, and update <code>app.json</code> brand tint.</p>
+
+<div class="footer">
+  AutoToon · Logo B6 Refinement · <code>docs/logo-b6-refine.html</code>
+</div>
+
+</div>
+
+</body>
+</html>

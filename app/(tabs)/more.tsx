@@ -18,15 +18,15 @@ import { GlassCard } from '@/components/glass'
 function ModelsIcon() {
   return (
     <Svg width={28} height={28} viewBox="0 0 24 24" fill="none">
-      <Circle cx="12" cy="7" r="3.5" stroke={theme.palette.violet} strokeWidth={1.8} fill="none" />
+      <Circle cx="12" cy="7" r="3.5" stroke={theme.colors.accent2} strokeWidth={1.8} fill="none" />
       <SvgPath
         d="M5.5 20c0-3.59 2.91-6.5 6.5-6.5s6.5 2.91 6.5 6.5"
-        stroke={theme.palette.violet}
+        stroke={theme.colors.accent2}
         strokeWidth={1.8}
         strokeLinecap="round"
         fill="none"
       />
-      <Rect x="16" y="2" width="6" height="8" rx="1" stroke={theme.palette.violet} strokeWidth={1.5} fill="none" />
+      <Rect x="16" y="2" width="6" height="8" rx="1" stroke={theme.colors.accent2} strokeWidth={1.5} fill="none" />
     </Svg>
   )
 }
@@ -36,14 +36,14 @@ function RestoreIcon() {
     <Svg width={28} height={28} viewBox="0 0 24 24" fill="none">
       <SvgPath
         d="M3.5 12a8.5 8.5 0 1 1 1.7 5.1"
-        stroke={theme.palette.cyan}
+        stroke={theme.colors.info}
         strokeWidth={1.8}
         strokeLinecap="round"
         fill="none"
       />
       <SvgPath
         d="M3.5 17.5V12H9"
-        stroke={theme.palette.cyan}
+        stroke={theme.colors.info}
         strokeWidth={1.8}
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -56,10 +56,10 @@ function RestoreIcon() {
 function RelightIcon() {
   return (
     <Svg width={28} height={28} viewBox="0 0 24 24" fill="none">
-      <Circle cx="12" cy="12" r="4" stroke={theme.palette.emerald} strokeWidth={1.8} fill="none" />
+      <Circle cx="12" cy="12" r="4" stroke={theme.colors.success} strokeWidth={1.8} fill="none" />
       <SvgPath
         d="M12 2v3M12 19v3M2 12h3M19 12h3M4.93 4.93l2.12 2.12M16.95 16.95l2.12 2.12M4.93 19.07l2.12-2.12M16.95 7.05l2.12-2.12"
-        stroke={theme.palette.emerald}
+        stroke={theme.colors.success}
         strokeWidth={1.8}
         strokeLinecap="round"
         fill="none"
@@ -85,7 +85,7 @@ const FEATURES: Feature[] = [
     title: 'Model Factory',
     description: 'Create & manage AI fashion models',
     icon: ModelsIcon,
-    iconTintColor: 'rgba(124,58,237,0.15)',
+    iconTintColor: 'rgba(167,139,250,0.16)',
     route: '/models',
   },
   {
@@ -93,7 +93,7 @@ const FEATURES: Feature[] = [
     title: 'Image Restore',
     description: 'Upscale & restore images to 2K/4K',
     icon: RestoreIcon,
-    iconTintColor: 'rgba(6,182,212,0.15)',
+    iconTintColor: 'rgba(34,211,238,0.16)',
     route: '/restore',
   },
   {
@@ -101,7 +101,7 @@ const FEATURES: Feature[] = [
     title: 'AI Relight',
     description: 'Transform lighting with cinematic presets',
     icon: RelightIcon,
-    iconTintColor: 'rgba(16,185,129,0.15)',
+    iconTintColor: 'rgba(52,211,153,0.16)',
     route: '/relight',
   },
 ]

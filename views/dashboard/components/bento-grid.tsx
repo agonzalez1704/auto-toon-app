@@ -108,7 +108,7 @@ const styles = StyleSheet.create({
   },
   cardOuter: {
     width: CARD_WIDTH,
-    height: 152,
+    height: 176,
     borderRadius: theme.radius.lg,
     backgroundColor: theme.colors.bgRaised,
     // shadow lives here — no overflow clip so glow renders
@@ -133,10 +133,11 @@ const styles = StyleSheet.create({
     gap: theme.spacing.sm,
   },
   label: {
-    fontSize: 14,
-    fontWeight: '700',
+    fontSize: 15,
+    fontWeight: '800',
     color: theme.colors.text,
     flexShrink: 1,
+    letterSpacing: -0.2,
   },
   proBadge: {
     paddingHorizontal: theme.spacing.sm,
@@ -152,6 +153,7 @@ const styles = StyleSheet.create({
   },
   desc: {
     fontSize: 12,
+    fontWeight: '500',
     color: 'rgba(255,255,255,0.85)',
     marginTop: 4,
   },

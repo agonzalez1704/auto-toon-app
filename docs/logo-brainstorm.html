@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AutoToon · Logo Brainstorm</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0B0F14;
+    --bg-raised: #131820;
+    --bg-elevated: #1B222D;
+    --border: rgba(255,255,255,0.08);
+    --border-strong: rgba(255,255,255,0.18);
+    --text: #F8FAFC;
+    --text-muted: rgba(248,250,252,0.72);
+    --text-dim: rgba(248,250,252,0.48);
+    --amber: #FBBF24;
+    --amber-soft: rgba(251,191,36,0.14);
+    --violet: #A78BFA;
+    --cyan: #22D3EE;
+    --rose: #FB7185;
+    --emerald: #34D399;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    margin: 0;
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.55;
+  }
+  header { padding: 56px 32px 24px; background: linear-gradient(180deg, #1A1330 0%, var(--bg) 100%); border-bottom: 1px solid var(--border); }
+  header .inner, .container { max-width: 1280px; margin: 0 auto; }
+  .container { padding: 32px; }
+  .eyebrow { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--amber); letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 14px; }
+  h1 { font-size: 44px; font-weight: 800; letter-spacing: -1px; margin: 0 0 12px; }
+  h2 { font-size: 26px; font-weight: 700; letter-spacing: -0.4px; margin: 56px 0 12px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+  h3 { font-size: 18px; font-weight: 700; margin: 28px 0 6px; }
+  .lead { font-size: 17px; color: var(--text-muted); max-width: 760px; }
+  p, li { color: var(--text-muted); font-size: 15px; }
+  ul { padding-left: 20px; }
+  code { font-family: 'JetBrains Mono', monospace; font-size: 12px; background: var(--bg-raised); padding: 2px 6px; border-radius: 4px; color: var(--amber); }
+
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+
+  .concept {
+    background: var(--bg-raised);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 22px;
+    transition: border-color 0.15s, transform 0.15s;
+  }
+  .concept:hover { border-color: var(--border-strong); transform: translateY(-2px); }
+  .concept .stage {
+    aspect-ratio: 1;
+    background: linear-gradient(135deg, #0A0D12 0%, #16202B 100%);
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 16px;
+    position: relative; overflow: hidden;
+  }
+  .concept .name { font-size: 16px; font-weight: 700; margin: 0 0 4px; }
+  .concept .alias { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text-dim); letter-spacing: 0.08em; text-transform: uppercase; }
+  .concept .desc { font-size: 13px; color: var(--text-muted); margin: 10px 0 12px; line-height: 1.55; }
+  .concept .meta { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+  .tag { font-size: 10px; padding: 3px 8px; border-radius: 999px; font-weight: 600; letter-spacing: 0.04em; }
+  .tag-pro { background: rgba(52,211,153,0.12); color: var(--emerald); }
+  .tag-con { background: rgba(251,113,133,0.12); color: var(--rose); }
+  .tag-cat { background: var(--amber-soft); color: var(--amber); }
+  .tag-cat.violet { background: rgba(167,139,250,0.12); color: var(--violet); }
+  .tag-cat.cyan { background: rgba(34,211,238,0.12); color: var(--cyan); }
+  .tag-effort { background: rgba(255,255,255,0.05); color: var(--text-dim); }
+
+  /* SVG mini-mocks default */
+  .concept .stage svg { width: 56%; height: 56%; }
+  .concept .stage.small svg { width: 40%; height: 40%; }
+
+  .principle { display: grid; grid-template-columns: 36px 1fr; gap: 14px; align-items: flex-start; padding: 14px 0; border-bottom: 1px solid var(--border); }
+  .principle:last-child { border-bottom: 0; }
+  .principle .ix { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--amber); padding-top: 2px; }
+  .principle h4 { margin: 0 0 4px; font-size: 14px; }
+  .principle p { margin: 0; font-size: 13px; }
+
+  .wordmark-row { display: flex; flex-wrap: wrap; gap: 24px; padding: 24px; background: var(--bg-raised); border: 1px solid var(--border); border-radius: 18px; align-items: center; }
+  .wm { display: flex; flex-direction: column; gap: 8px; align-items: center; min-width: 200px; }
+  .wm .lbl { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text-dim); letter-spacing: 0.1em; text-transform: uppercase; }
+  .wm-text { font-size: 28px; color: var(--text); display: flex; align-items: center; gap: 10px; }
+  .wm-text svg { height: 28px; width: 28px; }
+
+  /* App icon contexts */
+  .icon-context { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; align-items: end; }
+  .icon-context .ctx { text-align: center; }
+  .icon-context .ctx .label { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text-dim); margin-top: 8px; letter-spacing: 0.1em; }
+  .ios-tile { width: 110px; height: 110px; border-radius: 24px; background: linear-gradient(135deg, var(--amber) 0%, #F59E0B 100%); margin: 0 auto; display: flex; align-items: center; justify-content: center; box-shadow: 0 12px 26px rgba(0,0,0,0.5); }
+  .ios-tile.dark { background: linear-gradient(135deg, #1B222D 0%, #0B0F14 100%); }
+  .ios-tile.violet { background: linear-gradient(135deg, var(--violet) 0%, #7C3AED 100%); }
+  .ios-tile.mono { background: #0B0F14; border: 1px solid var(--border-strong); }
+  .ios-tile svg { width: 56%; height: 56%; }
+  .ios-mini { width: 56px; height: 56px; border-radius: 14px; }
+  .ios-mini svg { width: 60%; height: 60%; }
+
+  .footer { margin-top: 64px; padding: 28px 0; border-top: 1px solid var(--border); color: var(--text-dim); font-size: 12px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="inner">
+    <div class="eyebrow">AutoToon · Logo Brainstorm · 2026</div>
+    <h1>Shape-shift. Emerge. Belong on a phone screen.</h1>
+    <p class="lead">
+      We want a mark that says "your photo becomes something better" — without literally drawing a camera. Two metaphors keep coming up: <strong>chameleon</strong> (adapts, changes color to context) and <strong>butterfly</strong> (cocoon → emergence, beautiful transformation). This doc pressure-tests both, plus a few lateral options, against the constraints a real iOS / Android app icon has to survive.
+    </p>
+  </div>
+</header>
+
+<div class="container">
+
+<!-- CONSTRAINTS -->
+<h2>1. Constraints — what the mark has to do</h2>
+<div class="principle"><div class="ix">C1</div><div><h4>Readable at 40 × 40</h4><p>Home-screen icon, tab-bar icon, share-sheet icon — all sub-100px. Detail dies fast. Silhouette must work first.</p></div></div>
+<div class="principle"><div class="ix">C2</div><div><h4>Single-color stencil legibility</h4><p>Must hold up in monochrome (favicon, watermark, embroidery). If it only reads with color, it's chrome — not a mark.</p></div></div>
+<div class="principle"><div class="ix">C3</div><div><h4>Pairs with amber CTA</h4><p>App primary is amber <code>#FBBF24</code>. Logo color stack must not fight it. Violet brand secondary <code>#A78BFA</code> stays for the mark, amber for product.</p></div></div>
+<div class="principle"><div class="ix">C4</div><div><h4>Owns one idea, not three</h4><p>"Camera + butterfly + AI sparkle" = nothing. Pick one metaphor, execute it 10× cleaner than the field.</p></div></div>
+<div class="principle"><div class="ix">C5</div><div><h4>Distinct from Adobe / Canva / Figma</h4><p>Avoid generic morphing-shapes-with-gradient. Specific motif beats safe abstraction.</p></div></div>
+
+<!-- BUTTERFLY -->
+<h2>2. Butterfly direction · transformation, emergence</h2>
+<p>Strongest narrative tie: <em>cocoon</em> (boring product photo) → <em>butterfly</em> (polished campaign image). Risk: butterfly is over-used in beauty / wellness. Differentiator = aperture / lens / photo-frame integration.</p>
+
+<div class="grid-3">
+
+  <!-- Butterfly 1 -->
+  <div class="concept">
+    <div class="stage">
+      <svg viewBox="0 0 100 100" fill="none">
+        <defs>
+          <linearGradient id="b1g" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#FBBF24" />
+            <stop offset="1" stop-color="#A78BFA" />
+          </linearGradient>
+        </defs>
+        <!-- Left wing as aperture petal -->
+        <path d="M50 50 Q22 22 30 60 Q40 70 50 50 Z" fill="url(#b1g)" />
+        <!-- Right wing -->
+        <path d="M50 50 Q78 22 70 60 Q60 70 50 50 Z" fill="url(#b1g)" opacity="0.85" />
+        <!-- Bottom wings -->
+        <path d="M50 50 Q38 80 50 88 Q62 80 50 50 Z" fill="url(#b1g)" opacity="0.7" />
+        <!-- Body / lens -->
+        <circle cx="50" cy="50" r="6" fill="#0B0F14" stroke="#FBBF24" stroke-width="2" />
+        <circle cx="50" cy="50" r="2" fill="#FBBF24" />
+      </svg>
+    </div>
+    <div class="alias">CONCEPT B1</div>
+    <h3 class="name">Aperture Wings</h3>
+    <p class="desc">Butterfly where wings are aperture petals. Body is a tiny camera iris. Reads as butterfly AND lens — same shape doing two jobs.</p>
+    <div class="meta">
+      <span class="tag tag-cat">butterfly</span>
+      <span class="tag tag-pro">distinctive</span>
+      <span class="tag tag-pro">scales</span>
+      <span class="tag tag-effort">moderate</span>
+    </div>
+  </div>
+
+  <!-- Butterfly 2 -->
+  <div class="concept">
+    <div class="stage">
+      <svg viewBox="0 0 100 100" fill="none">
+        <!-- Cocoon (left half) -->
+        <path d="M20 30 Q15 50 20 70 Q28 78 35 70 L40 50 L35 30 Q28 22 20 30 Z" fill="#252D3B" stroke="rgba(255,255,255,0.3)" stroke-width="1.5" />
+        <!-- Arrow gap -->
+        <!-- Butterfly (right half) -->
+        <path d="M60 50 Q50 30 70 30 Q80 35 65 50 Z" fill="#FBBF24" />
+        <path d="M60 50 Q50 70 70 70 Q80 65 65 50 Z" fill="#FBBF24" opacity="0.85" />
+        <path d="M60 50 Q70 30 90 30 Q88 45 78 52 Z" fill="#A78BFA" opacity="0.9" />
+        <path d="M60 50 Q70 70 90 70 Q88 55 78 48 Z" fill="#A78BFA" opacity="0.75" />
+        <line x1="60" y1="42" x2="60" y2="58" stroke="#0B0F14" stroke-width="2" stroke-linecap="round" />
+      </svg>
+    </div>
+    <div class="alias">CONCEPT B2</div>
+    <h3 class="name">Cocoon → Butterfly</h3>
+    <p class="desc">Literal before/after pair. Storytelling-heavy. Strong on landing pages, weaker at icon size — cocoon detail disappears below ~64px.</p>
+    <div class="meta">
+      <span class="tag tag-cat">butterfly</span>
+      <span class="tag tag-pro">narrative</span>
+      <span class="tag tag-con">poor at 40px</span>
+      <span class="tag tag-effort">moderate</span>
+    </div>
+  </div>
+
+  <!-- Butterfly 3 -->
+  <div class="concept">
+    <div class="stage">
+      <svg viewBox="0 0 100 100" fill="none">
+        <!-- Pixel/glitch butterfly: built from rectangles -->
+        <rect x="20" y="30" width="14" height="14" fill="#A78BFA" />
+        <rect x="34" y="38" width="10" height="10" fill="#A78BFA" opacity="0.7" />
+        <rect x="20" y="56" width="14" height="14" fill="#A78BFA" opacity="0.85" />
+        <rect x="34" y="52" width="10" height="10" fill="#A78BFA" opacity="0.6" />
+
+        <rect x="66" y="30" width="14" height="14" fill="#FBBF24" />
+        <rect x="56" y="38" width="10" height="10" fill="#FBBF24" opacity="0.8" />
+        <rect x="66" y="56" width="14" height="14" fill="#FBBF24" opacity="0.9" />
+        <rect x="56" y="52" width="10" height="10" fill="#FBBF24" opacity="0.7" />
+
+        <!-- Body -->
+        <rect x="46" y="36" width="8" height="32" fill="#F8FAFC" rx="3" />
+      </svg>
+    </div>
+    <div class="alias">CONCEPT B3</div>
+    <h3 class="name">Pixel Wing</h3>
+    <p class="desc">Butterfly assembled from photo pixels — speaks "made of photos." Maps directly to the product (image transformation). Geometric, scales aggressively well.</p>
+    <div class="meta">
+      <span class="tag tag-cat">butterfly</span>
+      <span class="tag tag-pro">on-message</span>
+      <span class="tag tag-pro">monochrome works</span>
+      <span class="tag tag-effort">low</span>
+    </div>
+  </div>
+
+  <!-- Butterfly 4 -->
+  <div class="concept">
+    <div class="stage">
+      <svg viewBox="0 0 100 100" fill="none">
+        <!-- Liquid butterfly - asymmetric, organic -->
+        <path d="M50 28 C 30 18, 18 38, 28 52 C 35 60, 48 55, 50 50 Z" fill="#FBBF24" opacity="0.95" />
+        <path d="M50 50 C 48 65, 30 78, 28 60 C 26 50, 40 50, 50 50 Z" fill="#FBBF24" opacity="0.75" />
+        <path d="M50 28 C 70 18, 82 38, 72 52 C 65 60, 52 55, 50 50 Z" fill="#A78BFA" opacity="0.95" />
+        <path d="M50 50 C 52 65, 70 78, 72 60 C 74 50, 60 50, 50 50 Z" fill="#A78BFA" opacity="0.75" />
+        <!-- Sparkle dot -->
+        <circle cx="50" cy="48" r="2.5" fill="#F8FAFC" />
+      </svg>
+    </div>
+    <div class="alias">CONCEPT B4</div>
+    <h3 class="name">Liquid Butterfly</h3>
+    <p class="desc">Organic, fluid wings — half amber, half violet, meeting at a bright pixel. Soft, premium, mobile-native (matches iOS/visionOS liquid shapes).</p>
+    <div class="meta">
+      <span class="tag tag-cat">butterfly</span>
+      <span class="tag tag-pro">premium feel</span>
+      <span class="tag tag-pro">brand color split</span>
+      <span class="tag tag-effort">moderate</span>
+    </div>
+  </div>
+
+  <!-- Butterfly 5 -->
+  <div class="concept">
+    <div class="stage">
+      <svg viewBox="0 0 100 100" fill="none">
+        <!-- A monogram from butterfly wings -->
+        <path d="M50 20 L25 78 L40 78 L50 55 L60 78 L75 78 Z" fill="#FBBF24" />
+        <!-- Crossbar -->
+        <rect x="40" y="60" width="20" height="3" fill="#0B0F14" />
+        <!-- Tiny antenna dots -->
+        <circle cx="42" cy="14" r="2" fill="#A78BFA" />
+        <circle cx="58" cy="14" r="2" fill="#A78BFA" />
+      </svg>
+    </div>
+    <div class="alias">CONCEPT B5</div>
+    <h3 class="name">A-Wing Monogram</h3>
+    <p class="desc">Two wings collapse into the letter A (for "AutoToon"). Antenna dots hint at butterfly. Sneaks the wordmark into the icon — appears on share previews, watermarks naturally.</p>
+    <div class="meta">
+      <span class="tag tag-cat">butterfly</span>
+      <span class="tag tag-pro">monogram bonus</span>
+      <span class="tag tag-pro">scales tiny</span>
+      <span class="tag tag-effort">low</span>
+    </div>
+  </div>
+
+  <!-- Butterfly 6 -->
+  <div class="concept">
+    <div class="stage">
+      <svg viewBox="0 0 100 100" fill="none">
+        <!-- Two photo frames as wings -->
+        <rect x="18" y="28" width="28" height="38" rx="4" fill="#A78BFA" transform="rotate(-12 32 47)" />
+        <rect x="20" y="30" width="24" height="34" rx="2" fill="#0B0F14" transform="rotate(-12 32 47)" />
+
+        <rect x="54" y="28" width="28" height="38" rx="4" fill="#FBBF24" transform="rotate(12 68 47)" />
+        <rect x="56" y="30" width="24" height="34" rx="2" fill="#0B0F14" transform="rotate(12 68 47)" />
+
+        <!-- Body -->
+        <rect x="48" y="34" width="4" height="34" rx="2" fill="#F8FAFC" />
+      </svg>
+    </div>
+    <div class="alias">CONCEPT B6</div>
+    <h3 class="name">Photo-Frame Wings</h3>
+    <p class="desc">Wings = two polaroid frames tilted into a butterfly silhouette. Story: every shot becomes both a moment AND a beautiful object.</p>
+    <div class="meta">
+      <span class="tag tag-cat">butterfly</span>
+      <span class="tag tag-pro">on-message</span>
+      <span class="tag tag-con">busy at icon size</span>
+      <span class="tag tag-effort">moderate</span>
+    </div>
+  </div>
+
+</div>
+
+<!-- CHAMELEON -->
+<h2>3. Chameleon direction · adaptability, color-shift</h2>
+<p>Chameleon's story: <em>same model, different scene</em>. Maps perfectly to fashion-editorial swap (same model wears 8 outfits in 8 settings). Risk: chameleons are detailed animals — silhouettes can look clinical or like a generic lizard. Best path = stylized geometry, not realism.</p>
+
+<div class="grid-3">
+
+  <!-- Chameleon 1 -->
+  <div class="concept">
+    <div class="stage">
+      <svg viewBox="0 0 100 100" fill="none">
+        <defs>
+          <linearGradient id="c1g" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stop-color="#FBBF24" />
+            <stop offset="0.5" stop-color="#22D3EE" />
+            <stop offset="1" stop-color="#A78BFA" />
+          </linearGradient>
+        </defs>
+        <!-- Body -->
+        <path d="M22 56 Q35 38 55 40 Q70 42 75 52 Q72 60 60 60 Q55 62 50 60 Q40 58 30 64 Q22 64 22 56 Z" fill="url(#c1g)" />
+        <!-- Tail curl -->
+        <path d="M22 60 Q12 70 22 78 Q30 78 28 72 Q26 68 24 70" fill="none" stroke="url(#c1g)" stroke-width="4" stroke-linecap="round" />
+        <!-- Eye -->
+        <circle cx="68" cy="48" r="4" fill="#0B0F14" />
+        <circle cx="68" cy="48" r="1.6" fill="#FBBF24" />
+        <!-- Crest -->
+        <path d="M58 32 Q63 28 68 36" stroke="#FBBF24" stroke-width="2" fill="none" stroke-linecap="round" />
+      </svg>
+    </div>
+    <div class="alias">CONCEPT C1</div>
+    <h3 class="name">Color-Shift Chameleon</h3>
+    <p class="desc">Stylized chameleon body running a full color-shift gradient (amber → cyan → violet). Tail-curl is the loudest gesture. Speaks adaptability instantly.</p>
+    <div class="meta">
+      <span class="tag tag-cat violet">chameleon</span>
+      <span class="tag tag-pro">narrative match</span>
+      <span class="tag tag-con">complex silhouette</span>
+      <span class="tag tag-effort">moderate</span>
+    </div>
+  </div>
+
+  <!-- Chameleon 2 -->
+  <div class="concept">
+    <div class="stage">
+      <svg viewBox="0 0 100 100" fill="none">
+        <!-- Tail curl as primary glyph -->
+        <path d="M30 75 Q15 75 18 55 Q21 35 45 35 Q70 35 70 55 Q70 75 55 75 Q42 75 42 65 Q42 55 52 55 Q60 55 58 62" stroke="#FBBF24" stroke-width="8" fill="none" stroke-linecap="round" />
+        <!-- Tiny eye -->
+        <circle cx="60" cy="40" r="3" fill="#0B0F14" />
+        <circle cx="60" cy="40" r="1.2" fill="#FBBF24" />
+      </svg>
+    </div>
+    <div class="alias">CONCEPT C2</div>
+    <h3 class="name">Tail-Curl Glyph</h3>
+    <p class="desc">Most iconic part of a chameleon — the spiral tail — as a single stroke. One color, monochrome-perfect. Reads as "loop / transform / return." Could double as a question mark.</p>
+    <div class="meta">
+      <span class="tag tag-cat violet">chameleon</span>
+      <span class="tag tag-pro">single-stroke</span>
+      <span class="tag tag-pro">tiny-size hero</span>
+      <span class="tag tag-effort">low</span>
+    </div>
+  </div>
+
+  <!-- Chameleon 3 -->
+  <div class="concept">
+    <div class="stage">
+      <svg viewBox="0 0 100 100" fill="none">
+        <!-- Just the eye -->
+        <circle cx="50" cy="50" r="32" fill="none" stroke="#FBBF24" stroke-width="3" />
+        <!-- Spiral iris -->
+        <path d="M50 50 m0 -22 a22 22 0 1 1 -0.1 0" stroke="#A78BFA" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-dasharray="4 4" />
+        <circle cx="50" cy="50" r="10" fill="#0B0F14" />
+        <circle cx="50" cy="50" r="6" fill="#FBBF24" />
+        <!-- 360 rotation tick marks -->
+        <circle cx="50" cy="18" r="1.6" fill="#A78BFA" />
+        <circle cx="78" cy="34" r="1.6" fill="#A78BFA" opacity="0.7" />
+        <circle cx="82" cy="50" r="1.6" fill="#A78BFA" opacity="0.5" />
+      </svg>
+    </div>
+    <div class="alias">CONCEPT C3</div>
+    <h3 class="name">Independent Eye</h3>
+    <p class="desc">Chameleon's other iconic feature — the eye that rotates 360°. Reads as eye AND camera lens AND vision. Strong dual-meaning.</p>
+    <div class="meta">
+      <span class="tag tag-cat violet">chameleon</span>
+      <span class="tag tag-pro">dual-meaning</span>
+      <span class="tag tag-con">feels editorial-magazine-y</span>
+      <span class="tag tag-effort">low</span>
+    </div>
+  </div>
+
+  <!-- Chameleon 4 -->
+  <div class="concept">
+    <div class="stage">
+      <svg viewBox="0 0 100 100" fill="none">
+        <!-- Geometric polygon chameleon (Picasso style) -->
+        <polygon points="20,60 35,38 55,40 75,55 80,55 75,62 55,62 40,68 25,68" fill="#FBBF24" />
+        <polygon points="55,40 70,28 78,40 75,55 55,55" fill="#A78BFA" />
+        <polygon points="20,60 28,52 35,55 33,68 25,68" fill="#22D3EE" opacity="0.7" />
+        <polygon points="40,68 55,62 55,72 45,75 35,72" fill="#FBBF24" opacity="0.8" />
+        <!-- Eye -->
+        <circle cx="70" cy="42" r="3" fill="#0B0F14" />
+      </svg>
+    </div>
+    <div class="alias">CONCEPT C4</div>
+    <h3 class="name">Polygon Chameleon</h3>
+    <p class="desc">Body broken into facets, each a different color — "every angle, a different look." Reads chameleon clearly while looking modern/geometric.</p>
+    <div class="meta">
+      <span class="tag tag-cat violet">chameleon</span>
+      <span class="tag tag-pro">modern look</span>
+      <span class="tag tag-pro">on-message</span>
+      <span class="tag tag-effort">moderate</span>
+    </div>
+  </div>
+
+  <!-- Chameleon 5 -->
+  <div class="concept">
+    <div class="stage">
+      <svg viewBox="0 0 100 100" fill="none">
+        <!-- Chameleon as letter A: head left, tail forms a -->
+        <path d="M28 78 L48 24 L52 24 L72 78 L62 78 L57 64 L43 64 L38 78 Z" fill="#FBBF24" />
+        <!-- Tail curl coming off bottom-right -->
+        <path d="M72 78 Q88 78 88 68 Q88 60 80 60 Q74 60 76 66" stroke="#A78BFA" stroke-width="5" fill="none" stroke-linecap="round" />
+        <!-- Eye dot -->
+        <circle cx="50" cy="32" r="2.5" fill="#0B0F14" />
+      </svg>
+    </div>
+    <div class="alias">CONCEPT C5</div>
+    <h3 class="name">A-Cham Monogram</h3>
+    <p class="desc">Letter A whose right serif extends into a chameleon tail-curl. Combines wordmark + animal in one glyph. Reads at every size, owns "A".</p>
+    <div class="meta">
+      <span class="tag tag-cat violet">chameleon</span>
+      <span class="tag tag-pro">monogram bonus</span>
+      <span class="tag tag-pro">single color</span>
+      <span class="tag tag-effort">low</span>
+    </div>
+  </div>
+
+  <!-- Chameleon 6 -->
+  <div class="concept">
+    <div class="stage">
+      <svg viewBox="0 0 100 100" fill="none">
+        <!-- Chameleon as photo grid: silhouette built from 16 cells -->
+        <g>
+          <rect x="20" y="40" width="10" height="10" fill="#FBBF24" />
+          <rect x="30" y="38" width="10" height="10" fill="#FBBF24" opacity="0.85" />
+          <rect x="40" y="36" width="10" height="10" fill="#A78BFA" />
+          <rect x="50" y="34" width="10" height="10" fill="#A78BFA" opacity="0.85" />
+          <rect x="60" y="36" width="10" height="10" fill="#22D3EE" />
+          <rect x="70" y="42" width="6" height="8" fill="#22D3EE" opacity="0.7" />
+          <rect x="20" y="50" width="10" height="10" fill="#FBBF24" opacity="0.7" />
+          <rect x="30" y="48" width="10" height="10" fill="#FBBF24" opacity="0.6" />
+          <rect x="40" y="46" width="10" height="10" fill="#A78BFA" opacity="0.7" />
+          <rect x="50" y="44" width="10" height="10" fill="#A78BFA" opacity="0.6" />
+          <rect x="60" y="46" width="10" height="10" fill="#22D3EE" opacity="0.7" />
+        </g>
+        <!-- Tail curl as continuation -->
+        <path d="M22 60 Q12 70 22 78" stroke="#FBBF24" stroke-width="3" fill="none" stroke-linecap="round" />
+        <!-- Eye -->
+        <circle cx="70" cy="40" r="2" fill="#0B0F14" />
+      </svg>
+    </div>
+    <div class="alias">CONCEPT C6</div>
+    <h3 class="name">Pixel Chameleon</h3>
+    <p class="desc">Same "made of pixels" treatment, applied to chameleon. Color-shift built in (the pixels grade across his body).</p>
+    <div class="meta">
+      <span class="tag tag-cat violet">chameleon</span>
+      <span class="tag tag-pro">on-message</span>
+      <span class="tag tag-con">busy at small sizes</span>
+      <span class="tag tag-effort">moderate</span>
+    </div>
+  </div>
+
+</div>
+
+<!-- LATERAL -->
+<h2>4. Lateral options · same metaphor, fresher animal</h2>
+<p>If butterfly + chameleon both feel done-to-death after sketching, two adjacent metaphors carry the same "transformation" payload:</p>
+
+<div class="grid-3">
+
+  <div class="concept">
+    <div class="stage">
+      <svg viewBox="0 0 100 100" fill="none">
+        <!-- Origami crane -->
+        <polygon points="50,15 30,55 50,45 70,55" fill="#FBBF24" />
+        <polygon points="50,45 35,70 50,60 65,70" fill="#A78BFA" />
+        <polygon points="50,60 42,85 50,75 58,85" fill="#FBBF24" opacity="0.7" />
+        <line x1="50" y1="15" x2="50" y2="75" stroke="#0B0F14" stroke-width="1" opacity="0.4" />
+      </svg>
+    </div>
+    <div class="alias">CONCEPT L1</div>
+    <h3 class="name">Origami Crane</h3>
+    <p class="desc">Flat paper folded into something beautiful — exact metaphor for AI image generation. Owns "transformation through folding." Geometric, low detail, scales infinitely.</p>
+    <div class="meta">
+      <span class="tag tag-cat cyan">lateral</span>
+      <span class="tag tag-pro">tech-craft tone</span>
+      <span class="tag tag-pro">distinct</span>
+      <span class="tag tag-effort">low</span>
+    </div>
+  </div>
+
+  <div class="concept">
+    <div class="stage">
+      <svg viewBox="0 0 100 100" fill="none">
+        <!-- Phoenix abstracted -->
+        <path d="M50 25 Q35 35 30 55 Q40 50 50 55 Q60 50 70 55 Q65 35 50 25 Z" fill="#FBBF24" />
+        <path d="M50 55 Q40 65 35 78 Q50 70 65 78 Q60 65 50 55 Z" fill="#FBBF24" opacity="0.7" />
+        <path d="M22 45 Q15 55 20 68 Q30 60 32 52" fill="#A78BFA" opacity="0.85" />
+        <path d="M78 45 Q85 55 80 68 Q70 60 68 52" fill="#A78BFA" opacity="0.85" />
+        <circle cx="50" cy="40" r="3" fill="#0B0F14" />
+      </svg>
+    </div>
+    <div class="alias">CONCEPT L2</div>
+    <h3 class="name">Phoenix Spark</h3>
+    <p class="desc">Rebirth metaphor — boring photo "burned" and emerges polished. Stronger emotional pull than butterfly but feels heavier / mythic; may overshoot premium aspirational.</p>
+    <div class="meta">
+      <span class="tag tag-cat cyan">lateral</span>
+      <span class="tag tag-pro">emotional</span>
+      <span class="tag tag-con">overwrought</span>
+      <span class="tag tag-effort">moderate</span>
+    </div>
+  </div>
+
+  <div class="concept">
+    <div class="stage">
+      <svg viewBox="0 0 100 100" fill="none">
+        <!-- Shutter blooming into petals -->
+        <g>
+          <path d="M50 50 L50 22 L60 30 Z" fill="#FBBF24" />
+          <path d="M50 50 L78 50 L70 60 Z" fill="#A78BFA" />
+          <path d="M50 50 L50 78 L40 70 Z" fill="#FBBF24" opacity="0.85" />
+          <path d="M50 50 L22 50 L30 40 Z" fill="#A78BFA" opacity="0.85" />
+          <path d="M50 50 L72 30 L72 42 Z" fill="#FBBF24" opacity="0.7" />
+          <path d="M50 50 L72 72 L60 72 Z" fill="#A78BFA" opacity="0.7" />
+          <path d="M50 50 L28 72 L28 60 Z" fill="#FBBF24" opacity="0.6" />
+          <path d="M50 50 L28 28 L40 28 Z" fill="#A78BFA" opacity="0.6" />
+        </g>
+        <circle cx="50" cy="50" r="6" fill="#0B0F14" stroke="#FBBF24" stroke-width="2" />
+      </svg>
+    </div>
+    <div class="alias">CONCEPT L3</div>
+    <h3 class="name">Shutter Bloom</h3>
+    <p class="desc">Camera aperture petals blooming open into a flower — pure photography metaphor without literal camera. Very strong as static icon, less so as a verb.</p>
+    <div class="meta">
+      <span class="tag tag-cat cyan">lateral</span>
+      <span class="tag tag-pro">on-craft</span>
+      <span class="tag tag-con">no transformation narrative</span>
+      <span class="tag tag-effort">low</span>
+    </div>
+  </div>
+
+</div>
+
+<!-- APP ICON TESTS -->
+<h2>5. Top picks at real app-icon sizes</h2>
+<p>Surviving sub-100px is the only test that matters. Top three concepts shown across iOS contexts. Tap-test on a phone before locking.</p>
+
+<div class="icon-context">
+  <div class="ctx">
+    <div class="ios-tile">
+      <svg viewBox="0 0 100 100" fill="none">
+        <path d="M50 28 C 30 18, 18 38, 28 52 C 35 60, 48 55, 50 50 Z" fill="#0B0F14" opacity="0.95" />
+        <path d="M50 50 C 48 65, 30 78, 28 60 C 26 50, 40 50, 50 50 Z" fill="#0B0F14" opacity="0.75" />
+        <path d="M50 28 C 70 18, 82 38, 72 52 C 65 60, 52 55, 50 50 Z" fill="#1A1330" />
+        <path d="M50 50 C 52 65, 70 78, 72 60 C 74 50, 60 50, 50 50 Z" fill="#1A1330" opacity="0.75" />
+        <circle cx="50" cy="48" r="3" fill="#F8FAFC" />
+      </svg>
+    </div>
+    <div class="label">B4 Liquid · 110px</div>
+  </div>
+  <div class="ctx">
+    <div class="ios-tile dark">
+      <svg viewBox="0 0 100 100" fill="none">
+        <path d="M30 75 Q15 75 18 55 Q21 35 45 35 Q70 35 70 55 Q70 75 55 75 Q42 75 42 65 Q42 55 52 55 Q60 55 58 62" stroke="#FBBF24" stroke-width="9" fill="none" stroke-linecap="round" />
+        <circle cx="60" cy="40" r="3" fill="#FBBF24" />
+      </svg>
+    </div>
+    <div class="label">C2 Tail-Curl · 110px</div>
+  </div>
+  <div class="ctx">
+    <div class="ios-tile violet">
+      <svg viewBox="0 0 100 100" fill="none">
+        <path d="M50 20 L25 78 L40 78 L50 55 L60 78 L75 78 Z" fill="#FBBF24" />
+        <rect x="40" y="60" width="20" height="3" fill="#1A1330" />
+        <circle cx="42" cy="14" r="2.5" fill="#FBBF24" />
+        <circle cx="58" cy="14" r="2.5" fill="#FBBF24" />
+      </svg>
+    </div>
+    <div class="label">B5 A-Wing · 110px</div>
+  </div>
+  <div class="ctx">
+    <div class="ios-tile mono">
+      <svg viewBox="0 0 100 100" fill="none">
+        <path d="M28 78 L48 24 L52 24 L72 78 L62 78 L57 64 L43 64 L38 78 Z" fill="#FBBF24" />
+        <path d="M72 78 Q88 78 88 68 Q88 60 80 60 Q74 60 76 66" stroke="#A78BFA" stroke-width="5" fill="none" stroke-linecap="round" />
+        <circle cx="50" cy="32" r="2.5" fill="#0B0F14" />
+      </svg>
+    </div>
+    <div class="label">C5 A-Cham · 110px</div>
+  </div>
+</div>
+
+<h3 style="margin-top:32px;">Same four · tab-bar size (56px)</h3>
+<div class="icon-context">
+  <div class="ctx">
+    <div class="ios-tile ios-mini">
+      <svg viewBox="0 0 100 100" fill="none">
+        <path d="M50 28 C 30 18, 18 38, 28 52 C 35 60, 48 55, 50 50 Z" fill="#1A1330" />
+        <path d="M50 50 C 48 65, 30 78, 28 60 C 26 50, 40 50, 50 50 Z" fill="#1A1330" opacity="0.75" />
+        <path d="M50 28 C 70 18, 82 38, 72 52 C 65 60, 52 55, 50 50 Z" fill="#0B0F14" opacity="0.95" />
+        <path d="M50 50 C 52 65, 70 78, 72 60 C 74 50, 60 50, 50 50 Z" fill="#0B0F14" opacity="0.75" />
+        <circle cx="50" cy="48" r="4" fill="#F8FAFC" />
+      </svg>
+    </div>
+    <div class="label">B4 · 56px</div>
+  </div>
+  <div class="ctx">
+    <div class="ios-tile ios-mini dark">
+      <svg viewBox="0 0 100 100" fill="none">
+        <path d="M30 75 Q15 75 18 55 Q21 35 45 35 Q70 35 70 55 Q70 75 55 75 Q42 75 42 65 Q42 55 52 55 Q60 55 58 62" stroke="#FBBF24" stroke-width="11" fill="none" stroke-linecap="round" />
+      </svg>
+    </div>
+    <div class="label">C2 · 56px</div>
+  </div>
+  <div class="ctx">
+    <div class="ios-tile ios-mini violet">
+      <svg viewBox="0 0 100 100" fill="none">
+        <path d="M50 20 L25 78 L40 78 L50 55 L60 78 L75 78 Z" fill="#FBBF24" />
+        <rect x="40" y="60" width="20" height="3" fill="#1A1330" />
+      </svg>
+    </div>
+    <div class="label">B5 · 56px</div>
+  </div>
+  <div class="ctx">
+    <div class="ios-tile ios-mini mono">
+      <svg viewBox="0 0 100 100" fill="none">
+        <path d="M28 78 L48 24 L52 24 L72 78 L62 78 L57 64 L43 64 L38 78 Z" fill="#FBBF24" />
+        <path d="M72 78 Q88 78 88 68 Q88 60 80 60 Q74 60 76 66" stroke="#A78BFA" stroke-width="6" fill="none" stroke-linecap="round" />
+      </svg>
+    </div>
+    <div class="label">C5 · 56px</div>
+  </div>
+</div>
+
+<!-- WORDMARK -->
+<h2>6. Wordmark pairings</h2>
+<p>Logo lives next to text 90% of the time. Test against three type voices before committing:</p>
+<div class="wordmark-row">
+  <div class="wm">
+    <div class="lbl">Geometric · Space Grotesk</div>
+    <div class="wm-text" style="font-family:'Space Grotesk';font-weight:700;">
+      <svg viewBox="0 0 100 100" fill="none">
+        <path d="M28 78 L48 24 L52 24 L72 78 L62 78 L57 64 L43 64 L38 78 Z" fill="#FBBF24" />
+        <path d="M72 78 Q88 78 88 68 Q88 60 80 60 Q74 60 76 66" stroke="#A78BFA" stroke-width="5" fill="none" stroke-linecap="round" />
+      </svg>
+      AutoToon
+    </div>
+  </div>
+  <div class="wm">
+    <div class="lbl">Editorial · Inter</div>
+    <div class="wm-text" style="font-family:'Inter';font-weight:800;letter-spacing:-0.04em;">
+      <svg viewBox="0 0 100 100" fill="none">
+        <path d="M50 28 C 30 18, 18 38, 28 52 C 35 60, 48 55, 50 50 Z" fill="#FBBF24" />
+        <path d="M50 50 C 48 65, 30 78, 28 60 C 26 50, 40 50, 50 50 Z" fill="#FBBF24" opacity="0.75" />
+        <path d="M50 28 C 70 18, 82 38, 72 52 C 65 60, 52 55, 50 50 Z" fill="#A78BFA" />
+        <path d="M50 50 C 52 65, 70 78, 72 60 C 74 50, 60 50, 50 50 Z" fill="#A78BFA" opacity="0.75" />
+      </svg>
+      AutoToon
+    </div>
+  </div>
+  <div class="wm">
+    <div class="lbl">Mono · JetBrains</div>
+    <div class="wm-text" style="font-family:'JetBrains Mono';font-weight:500;font-size:22px;">
+      <svg viewBox="0 0 100 100" fill="none">
+        <path d="M30 75 Q15 75 18 55 Q21 35 45 35 Q70 35 70 55 Q70 75 55 75 Q42 75 42 65 Q42 55 52 55 Q60 55 58 62" stroke="#FBBF24" stroke-width="9" fill="none" stroke-linecap="round" />
+      </svg>
+      auto·toon
+    </div>
+  </div>
+</div>
+
+<!-- RECOMMENDATION -->
+<h2>7. Recommendation</h2>
+<div style="padding:24px;background:linear-gradient(135deg,rgba(251,191,36,0.06),rgba(167,139,250,0.06));border:1px solid var(--border);border-radius:18px;">
+  <p style="color:var(--text);font-size:15px;margin:0 0 12px;">
+    <strong>Pursue two for prototyping. Kill the other ten.</strong>
+  </p>
+  <ul style="margin:0 0 12px;">
+    <li><strong>B4 Liquid Butterfly</strong> — premium feel, mobile-native, brand color split built-in. Strong cocoon→butterfly narrative without literal cocoon.</li>
+    <li><strong>C2 Tail-Curl Glyph</strong> — single-stroke, monochrome-perfect, ownable. Reads as "loop / transform / return." Lives at 16px no problem.</li>
+  </ul>
+  <p style="margin:0;font-size:14px;color:var(--text-muted);">
+    They sit on opposite poles of the brief: B4 = ornate / emotional / illustration. C2 = minimal / system / glyph. Prototype both as actual app icons, install on phone, live with them for a week. The one that fades into the home screen the LEAST after 7 days wins.
+  </p>
+</div>
+
+<h2>8. What I need to move forward</h2>
+<ul>
+  <li><strong>Vote</strong> 1-2 concepts to develop. Decimate the field.</li>
+  <li><strong>Tone preference</strong> — illustration (B-series) or geometric glyph (C-series, L-series)?</li>
+  <li><strong>Animal vs symbol</strong> — comfortable with a literal animal, or prefer abstract metaphor?</li>
+  <li><strong>Wordmark direction</strong> — sit with one of the three type pairings.</li>
+</ul>
+
+<div class="footer">
+  AutoToon · Logo Brainstorm v1 · <code>docs/logo-brainstorm.html</code>
+</div>
+
+</div>
+
+</body>
+</html>

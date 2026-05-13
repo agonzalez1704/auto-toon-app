@@ -23,7 +23,7 @@ export interface BentoCardConfig {
 export const BENTO_CARDS: BentoCardConfig[] = [
   {
     label: 'Enhance Product',
-    description: 'Studio-quality AI photos',
+    description: 'Studio-quality AI photos in 8s',
     route: '/(tabs)/create',
     preview: require('@/assets/images/previews/pro-photo.png'),
     backgroundImage: require('@/assets/images/previews/pro-photo.png'),
@@ -32,7 +32,7 @@ export const BENTO_CARDS: BentoCardConfig[] = [
   },
   {
     label: 'Fashion Editorial',
-    description: 'AI fashion sessions with models',
+    description: 'AI sessions with models',
     route: '/fashion-editorial',
     preview: require('@/assets/images/previews/fashion-editorial-1.png'),
     backgroundImage: require('@/assets/images/previews/style-editorial.jpg'),
@@ -41,7 +41,17 @@ export const BENTO_CARDS: BentoCardConfig[] = [
     pro: true,
   },
   {
-    label: 'Relight',
+    label: 'Model Factory',
+    description: 'Create & save AI models',
+    route: '/models',
+    preview: require('@/assets/images/previews/professional_photo.png'),
+    backgroundImage: require('@/assets/images/previews/pose-editorial.png'),
+    gradient: gradients.fashion,
+    accent: 'rgba(167,139,250,0.55)', // violet
+    pro: true,
+  },
+  {
+    label: 'AI Relight',
     description: 'Cinematic lighting presets',
     route: '/relight',
     preview: require('@/assets/images/previews/backlight_halo_2k.png'),
@@ -50,11 +60,11 @@ export const BENTO_CARDS: BentoCardConfig[] = [
     accent: 'rgba(34,211,238,0.55)', // cyan — info
   },
   {
-    label: 'Restore',
+    label: 'Image Restore',
     description: 'Upscale to 2K / 4K',
     route: '/restore',
-    preview: require('@/assets/images/previews/generation.png'),
-    backgroundImage: require('@/assets/images/previews/generation.png'),
+    preview: require('@/assets/images/previews/upscale.jpg'),
+    backgroundImage: require('@/assets/images/previews/upscale.jpg'),
     gradient: gradients.restore,
     accent: 'rgba(52,211,153,0.55)', // emerald — secondary
   },

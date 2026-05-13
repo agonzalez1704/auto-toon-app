@@ -4,7 +4,7 @@
  * Dependency Inversion: child components don't import router/stores.
  */
 import { useCallback, useEffect, useRef } from 'react'
-import { Animated, StatusBar, StyleSheet, View } from 'react-native'
+import { Animated, StatusBar, StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useUser } from '@clerk/clerk-expo'
 import { useQuery } from '@tanstack/react-query'
@@ -99,6 +99,12 @@ export default function DashboardScreen() {
             onPlanPress={() => router.push('/account/pricing')}
           />
 
+          <View style={styles.toolsHeader}>
+            <Text style={styles.toolsEyebrow}>STUDIO</Text>
+            <Text style={styles.toolsTitle}>Your power tools</Text>
+            <Text style={styles.toolsSub}>Five AI engines. Tap one to start.</Text>
+          </View>
+
           <BentoGrid cards={BENTO_CARDS} onCardPress={(route) => router.push(route as any)} />
 
           <UtilityRow links={UTILITY_LINKS} onPress={(route) => router.push(route as any)} />
@@ -148,5 +154,27 @@ const styles = StyleSheet.create({
   content: {
     padding: theme.spacing.lg,
     paddingBottom: theme.spacing['4xl'],
+  },
+  toolsHeader: {
+    marginTop: theme.spacing.sm,
+    marginBottom: theme.spacing.lg,
+  },
+  toolsEyebrow: {
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 1.6,
+    color: theme.colors.accent,
+    marginBottom: theme.spacing.xs,
+  },
+  toolsTitle: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: theme.colors.text,
+    letterSpacing: -0.4,
+    marginBottom: 2,
+  },
+  toolsSub: {
+    fontSize: 13,
+    color: theme.colors.textMuted,
   },
 })
