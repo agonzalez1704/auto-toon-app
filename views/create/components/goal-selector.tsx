@@ -30,7 +30,7 @@ export function GoalSelector({
       <View style={styles.section}>
         <Text style={styles.label}>Goal</Text>
         <TouchableOpacity
-          style={styles.button}
+          style={[styles.button, selectedGoalId && styles.buttonActive]}
           onPress={onPress}
           activeOpacity={0.75}
           accessibilityLabel={`Goal: ${label}. Tap to change.`}
@@ -78,8 +78,12 @@ const styles = StyleSheet.create({
     minHeight: 52,
     borderRadius: theme.radius.lg,
     borderWidth: 1,
-    backgroundColor: theme.glass.tintLow,
-    borderColor: theme.glass.border,
+    backgroundColor: theme.colors.bgRaised,
+    borderColor: theme.colors.border,
+  },
+  buttonActive: {
+    borderColor: theme.colors.accentBorder,
+    backgroundColor: theme.colors.bgElevated,
   },
   buttonLabel: {
     flex: 1,
@@ -99,6 +103,6 @@ const styles = StyleSheet.create({
   customizeText: {
     fontSize: 13,
     fontWeight: '600',
-    color: theme.palette.violet,
+    color: theme.colors.accent,
   },
 })

@@ -28,7 +28,7 @@ export const BENTO_CARDS: BentoCardConfig[] = [
     preview: require('@/assets/images/previews/pro-photo.png'),
     backgroundImage: require('@/assets/images/previews/pro-photo.png'),
     gradient: gradients.enhance,
-    accent: palette.violet,
+    accent: 'rgba(251,191,36,0.55)', // amber — primary
   },
   {
     label: 'Fashion Editorial',
@@ -37,7 +37,7 @@ export const BENTO_CARDS: BentoCardConfig[] = [
     preview: require('@/assets/images/previews/fashion-editorial-1.png'),
     backgroundImage: require('@/assets/images/previews/style-editorial.jpg'),
     gradient: gradients.fashion,
-    accent: palette.fuchsia,
+    accent: 'rgba(167,139,250,0.55)', // violet — brand
     pro: true,
   },
   {
@@ -47,7 +47,7 @@ export const BENTO_CARDS: BentoCardConfig[] = [
     preview: require('@/assets/images/previews/backlight_halo_2k.png'),
     backgroundImage: require('@/assets/images/previews/molten_side_light_2k.png'),
     gradient: gradients.relight,
-    accent: palette.indigo,
+    accent: 'rgba(34,211,238,0.55)', // cyan — info
   },
   {
     label: 'Restore',
@@ -56,7 +56,7 @@ export const BENTO_CARDS: BentoCardConfig[] = [
     preview: require('@/assets/images/previews/generation.png'),
     backgroundImage: require('@/assets/images/previews/generation.png'),
     gradient: gradients.restore,
-    accent: palette.cyan,
+    accent: 'rgba(52,211,153,0.55)', // emerald — secondary
   },
 ]
 

@@ -22,7 +22,7 @@ import { queryKeys } from '@/lib/query'
 import { theme } from '@/constants/theme'
 import { GlassPill } from '@/components/glass'
 
-const AURORA_NAVY = '#193153'
+const AURORA_NAVY = '#0B0F14' // theme.colors.bg — flat warm-slate
 // Brand-aligned accent (violet, mirrors web brand book)
 const AURORA_MAGENTA = '#7C3AED'
 
@@ -385,7 +385,7 @@ export default function AssetsScreen() {
           </ScrollView>
           {/* Right-edge fade — signals there's more to scroll */}
           <LinearGradient
-            colors={['rgba(25,49,83,0)', AURORA_NAVY]}
+            colors={['rgba(11,15,20,0)', AURORA_NAVY]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={styles.filterRailFade}

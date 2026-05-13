@@ -23,14 +23,10 @@ function BentoCard({
   // bg image owns the full bleed. Gradient becomes a bottom scrim
   // (transparent top → tinted bottom) so image reads cleanly.
   const bgSource = backgroundImage ?? preview
+  // Subtle drop shadow only — accent glow removed (visual restraint)
   const accentGlow = Platform.select({
-    ios: {
-      shadowColor: accent,
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.45,
-      shadowRadius: 12,
-    },
-    android: { elevation: 6 },
+    ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.35, shadowRadius: 10 },
+    android: { elevation: 4 },
     default: {},
   })
   // Outer = shadow host (no clip). Inner = clipping surface (border + image).
@@ -44,7 +40,7 @@ function BentoCard({
       accessibilityHint={description}
       accessibilityRole="button"
     >
-      <View style={[styles.cardInner, { borderColor: accent }]}>
+      <View style={[styles.cardInner, { borderColor: theme.colors.border }]}>
         {/* Layer 1: full-bleed image */}
         <RNImage
           source={bgSource}
@@ -146,13 +142,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.spacing.sm,
     paddingVertical: 2,
     borderRadius: theme.radius.sm,
-    backgroundColor: theme.palette.fuchsia,
+    backgroundColor: theme.colors.accent, // amber — primary
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: 'rgba(255,255,255,0.30)',
   },
   proBadgeText: {
     ...theme.typography.badge,
-    color: theme.colors.text,
+    color: '#1A1330',
   },
   desc: {
     fontSize: 12,

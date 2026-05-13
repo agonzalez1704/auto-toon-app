@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AutoToon Mobile — UI Revamp Plan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0B0F14;
+    --bg-raised: #131820;
+    --bg-elevated: #1B222D;
+    --border: rgba(255,255,255,0.07);
+    --border-strong: rgba(255,255,255,0.14);
+    --text: #F8FAFC;
+    --text-muted: rgba(248,250,252,0.72);
+    --text-dim: rgba(248,250,252,0.48);
+    --accent: #FBBF24;
+    --accent-soft: rgba(251,191,36,0.14);
+    --violet: #A78BFA;
+    --cyan: #22D3EE;
+    --rose: #FB7185;
+    --emerald: #34D399;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    margin: 0;
+    padding: 0;
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.5;
+  }
+  .container { max-width: 1280px; margin: 0 auto; padding: 48px 32px; }
+  header { border-bottom: 1px solid var(--border); padding: 48px 32px 24px; background: linear-gradient(180deg, #1A1330 0%, var(--bg) 100%); }
+  header .inner { max-width: 1280px; margin: 0 auto; }
+  .eyebrow { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--accent); letter-spacing: 0.18em; text-transform: uppercase; margin-bottom: 12px; }
+  h1 { font-size: 42px; font-weight: 800; letter-spacing: -1px; margin: 0 0 12px; }
+  h2 { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; margin: 56px 0 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+  h3 { font-size: 18px; font-weight: 700; margin: 28px 0 8px; }
+  h4 { font-size: 14px; font-weight: 600; margin: 16px 0 6px; color: var(--text-muted); letter-spacing: 0.02em; }
+  p, li { color: var(--text-muted); font-size: 15px; line-height: 1.65; }
+  .lead { font-size: 17px; color: var(--text); max-width: 760px; }
+  code { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; background: var(--bg-raised); padding: 2px 6px; border-radius: 4px; color: var(--accent); }
+  ul { padding-left: 20px; }
+  ul li { margin: 4px 0; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .card { background: var(--bg-raised); border: 1px solid var(--border); border-radius: 14px; padding: 18px; }
+  .card .label { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text-dim); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 8px; }
+  .card h4 { margin: 0 0 6px; color: var(--text); }
+  .swatch { display: flex; flex-direction: column; gap: 4px; }
+  .swatch-chip { height: 64px; border-radius: 10px; border: 1px solid var(--border); }
+  .swatch-meta { display: flex; justify-content: space-between; align-items: center; }
+  .swatch-meta .name { font-size: 12px; font-weight: 600; }
+  .swatch-meta .hex { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-dim); }
+
+  .phase {
+    background: linear-gradient(180deg, rgba(251,191,36,0.04) 0%, transparent 100%);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 28px;
+    margin: 16px 0;
+  }
+  .phase .num { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--accent); background: var(--accent-soft); padding: 4px 10px; border-radius: 999px; letter-spacing: 0.1em; }
+  .phase h3 { margin: 12px 0 4px; font-size: 22px; }
+  .phase .tag { font-size: 12px; color: var(--text-dim); }
+  .phase .body { margin-top: 16px; display: grid; grid-template-columns: 2fr 1fr; gap: 28px; }
+  .phase .body .files code { display: block; margin: 4px 0; }
+
+  .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 24px 0; }
+  .compare > div { padding: 18px; border-radius: 14px; border: 1px solid var(--border); }
+  .compare .before { background: linear-gradient(135deg, rgba(124,58,237,0.18) 0%, rgba(91,33,182,0.12) 100%); }
+  .compare .after { background: linear-gradient(135deg, rgba(11,15,20,0.6), rgba(27,34,45,0.6)); border-color: var(--border-strong); }
+  .compare .tag { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; }
+  .compare .before .tag { color: var(--rose); }
+  .compare .after .tag { color: var(--emerald); }
+
+  .pill { display: inline-block; font-size: 11px; padding: 3px 8px; border-radius: 999px; font-weight: 600; letter-spacing: 0.02em; }
+  .pill-critical { background: rgba(251,113,133,0.12); color: var(--rose); }
+  .pill-high { background: var(--accent-soft); color: var(--accent); }
+  .pill-medium { background: rgba(34,211,238,0.12); color: var(--cyan); }
+  .pill-low { background: rgba(167,139,250,0.12); color: var(--violet); }
+
+  .mockup {
+    width: 260px;
+    aspect-ratio: 9 / 19.5;
+    background: var(--bg-raised);
+    border-radius: 28px;
+    border: 6px solid #1B222D;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+    overflow: hidden;
+    position: relative;
+    margin: 0 auto;
+  }
+  .mockup .status-bar { height: 24px; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: space-between; padding: 0 18px; font-size: 9px; color: rgba(255,255,255,0.6); font-weight: 600; }
+  .mockup-section { padding: 12px; }
+  .mockup h5 { font-size: 14px; font-weight: 700; margin: 8px 0 4px; color: var(--text); }
+  .mockup .greet-sub { font-size: 10px; color: var(--text-dim); margin: 0 0 12px; }
+  .mockup-pill { font-size: 9px; padding: 4px 10px; border-radius: 999px; }
+  .stat-row { display: flex; gap: 8px; margin: 8px 0 14px; }
+  .stat-card { flex: 1; padding: 10px 8px; border-radius: 10px; background: rgba(255,255,255,0.04); border: 1px solid var(--border); }
+  .stat-card .num { font-size: 16px; font-weight: 800; }
+  .stat-card .lbl { font-size: 9px; color: var(--text-dim); margin-top: 2px; }
+  .cta-card { background: linear-gradient(135deg, var(--accent), #F59E0B); border-radius: 14px; padding: 14px; color: #1A1330; margin: 0 0 12px; }
+  .cta-card .t { font-size: 14px; font-weight: 800; }
+  .cta-card .s { font-size: 10px; opacity: 0.7; margin: 2px 0 8px; }
+  .cta-btn { background: #1A1330; color: var(--accent); font-size: 10px; font-weight: 700; padding: 7px 12px; border-radius: 8px; display: inline-block; }
+  .gallery { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .gallery .g {
+    aspect-ratio: 3/4; border-radius: 8px;
+    background: linear-gradient(135deg, #1f2937 0%, #374151 50%, #1f2937 100%);
+  }
+  .gallery .g.tall { grid-row: span 2; }
+  .tab-bar { position: absolute; bottom: 0; left: 0; right: 0; height: 56px; background: rgba(11,15,20,0.96); border-top: 1px solid var(--border); display: flex; justify-content: space-around; align-items: center; }
+  .tab { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .tab .dot { width: 18px; height: 18px; border-radius: 5px; background: rgba(255,255,255,0.2); }
+  .tab.active .dot { background: var(--accent); }
+  .tab .t { font-size: 8px; color: var(--text-dim); }
+  .tab.active .t { color: var(--accent); }
+
+  .principle-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin-top: 16px; }
+  .principle { padding: 18px; border: 1px solid var(--border); border-radius: 14px; background: var(--bg-raised); }
+  .principle .ix { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--accent); }
+  .principle h4 { margin: 6px 0 4px; color: var(--text); }
+  .principle p { margin: 0; font-size: 13px; }
+
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border); }
+  th { color: var(--text-dim); font-weight: 600; font-size: 12px; letter-spacing: 0.04em; text-transform: uppercase; }
+  td code { font-size: 12px; }
+
+  .footer { margin-top: 64px; padding: 24px 0; border-top: 1px solid var(--border); color: var(--text-dim); font-size: 12px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="inner">
+    <div class="eyebrow">Mobile UI · Revamp Plan · 2026-Q2</div>
+    <h1>From “Purple-Glow Soup” to Quiet Editorial</h1>
+    <p class="lead">
+      Login + onboarding screens read as premium and inviting. The moment users enter the app, everything turns into a single saturated violet wash with glow halos — content disappears, readability collapses, hierarchy is gone. This plan brings the in-app experience to the same standard as the marketing-side: editorial restraint, content-first contrast, accents used sparingly.
+    </p>
+  </div>
+</header>
+
+<div class="container">
+
+<!-- ─────────── PROBLEM ─────────── -->
+<h2>1. What's wrong today</h2>
+<div class="grid-2">
+  <div class="card">
+    <div class="label">SYMPTOM</div>
+    <h4>Monochromatic violet wash</h4>
+    <p>Every screen background uses <code>#1E1740 → #16102A → #0E0820</code>. Layered with violet glow orbs and a violet/fuchsia accent system. The eye has nowhere to rest. Images on the dashboard fight the background for attention.</p>
+  </div>
+  <div class="card">
+    <div class="label">SYMPTOM</div>
+    <h4>Low text contrast</h4>
+    <p>Body text at <code>rgba(255,255,255,0.55)</code> against <code>#16102A</code> measures ~4.1:1 — at the AA threshold but feels muddy because the bg already has a purple cast. Small labels (10–11pt) drop below readable.</p>
+  </div>
+  <div class="card">
+    <div class="label">SYMPTOM</div>
+    <h4>Glow overload</h4>
+    <p>Multiple <code>shadowColor</code> orbs + soft-light blends on every screen. Adds noise without information, kills perceived sharpness of the user's generated images.</p>
+  </div>
+  <div class="card">
+    <div class="label">SYMPTOM</div>
+    <h4>No content hierarchy</h4>
+    <p>Bento cards, stat bar, gallery, utility row all use the same violet gradient family. Nothing draws the eye first. The dashboard becomes a wall.</p>
+  </div>
+</div>
+
+<!-- ─────────── PRINCIPLES ─────────── -->
+<h2>2. Design principles for the new look</h2>
+<div class="principle-grid">
+  <div class="principle">
+    <div class="ix">P1</div>
+    <h4>Content is the hero — not chrome</h4>
+    <p>Backgrounds become near-neutral (warm-black slate). The user's generated photos provide the color. Chrome recedes.</p>
+  </div>
+  <div class="principle">
+    <div class="ix">P2</div>
+    <h4>Violet → accent, not foundation</h4>
+    <p>Violet stays for the brand mark and one or two CTAs. Default tone is desaturated. Amber/gold becomes the conversion accent (matches the pay-per-use card from login).</p>
+  </div>
+  <div class="principle">
+    <div class="ix">P3</div>
+    <h4>Readability over vibe</h4>
+    <p>Body copy ≥ 14pt at <code>rgba(255,255,255,0.72)</code>. Labels at <code>0.55</code>. AAA on key actions.</p>
+  </div>
+  <div class="principle">
+    <div class="ix">P4</div>
+    <h4>One source of light per screen</h4>
+    <p>Kill multi-orb glow stacks. At most one gradient halo, low opacity, behind a single hero element.</p>
+  </div>
+  <div class="principle">
+    <div class="ix">P5</div>
+    <h4>Editorial spacing</h4>
+    <p>16/24/40 vertical rhythm. Sections breathe. Cards aren't crammed shoulder-to-shoulder.</p>
+  </div>
+  <div class="principle">
+    <div class="ix">P6</div>
+    <h4>Consistent with login</h4>
+    <p>Login screen already uses amber pay-per-use accent + editorial hero. App should feel like the same product — not a violet pivot after sign-in.</p>
+  </div>
+</div>
+
+<!-- ─────────── COLOR ─────────── -->
+<h2>3. New color system</h2>
+<p>Foundation goes warm-slate (almost black). Violet keeps brand identity but only as accent. Amber is the conversion / primary CTA color.</p>
+
+<h3>Background scale</h3>
+<div class="grid-4">
+  <div class="swatch">
+    <div class="swatch-chip" style="background:#0B0F14"></div>
+    <div class="swatch-meta"><span class="name">bg</span><span class="hex">#0B0F14</span></div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-chip" style="background:#131820"></div>
+    <div class="swatch-meta"><span class="name">bgRaised</span><span class="hex">#131820</span></div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-chip" style="background:#1B222D"></div>
+    <div class="swatch-meta"><span class="name">bgElevated</span><span class="hex">#1B222D</span></div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-chip" style="background:#252D3B"></div>
+    <div class="swatch-meta"><span class="name">bgOverlay</span><span class="hex">#252D3B</span></div>
+  </div>
+</div>
+
+<h3>Accents (sparingly)</h3>
+<div class="grid-4">
+  <div class="swatch">
+    <div class="swatch-chip" style="background:#FBBF24"></div>
+    <div class="swatch-meta"><span class="name">amber · primary</span><span class="hex">#FBBF24</span></div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-chip" style="background:#A78BFA"></div>
+    <div class="swatch-meta"><span class="name">violet · brand</span><span class="hex">#A78BFA</span></div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-chip" style="background:#22D3EE"></div>
+    <div class="swatch-meta"><span class="name">cyan · info</span><span class="hex">#22D3EE</span></div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-chip" style="background:#34D399"></div>
+    <div class="swatch-meta"><span class="name">emerald · success</span><span class="hex">#34D399</span></div>
+  </div>
+</div>
+
+<h3>Text scale</h3>
+<table>
+  <tr><th>Token</th><th>Color</th><th>Usage</th><th>Min size</th></tr>
+  <tr><td><code>text</code></td><td>#F8FAFC</td><td>Headlines, primary content</td><td>14pt</td></tr>
+  <tr><td><code>textMuted</code></td><td>rgba(248,250,252,0.72)</td><td>Body copy, paragraphs</td><td>14pt</td></tr>
+  <tr><td><code>textDim</code></td><td>rgba(248,250,252,0.48)</td><td>Labels, metadata</td><td>11pt</td></tr>
+  <tr><td><code>textDisabled</code></td><td>rgba(248,250,252,0.28)</td><td>Disabled state only</td><td>—</td></tr>
+</table>
+
+<!-- ─────────── BEFORE / AFTER ─────────── -->
+<h2>4. Before / After — dashboard at a glance</h2>
+<div class="compare">
+  <div class="before">
+    <div class="tag">BEFORE</div>
+    <h4 style="margin:6px 0 8px;">Violet wash w/ glow orbs</h4>
+    <ul>
+      <li>Background <code>#1E1740 → #16102A → #0E0820</code></li>
+      <li>Glow orb + accent orb on every screen</li>
+      <li>Bento cards in 4 violet-only gradient variants</li>
+      <li>Stat bar reads as part of the wallpaper</li>
+      <li>Body copy 14pt @ 55% white on violet</li>
+    </ul>
+  </div>
+  <div class="after">
+    <div class="tag">AFTER</div>
+    <h4 style="margin:6px 0 8px;">Editorial slate + content-first</h4>
+    <ul>
+      <li>Background flat <code>#0B0F14</code>, no orbs</li>
+      <li>One hero card with subtle amber edge glow</li>
+      <li>Bento cards switch to image-led tiles (use real samples)</li>
+      <li>Stat bar in raised <code>#131820</code> card, clearly separate</li>
+      <li>Body copy 14pt @ 72% white on near-black</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ─────────── MOCKUP ─────────── -->
+<h2>5. Mockups — three flagship screens</h2>
+<div class="grid-3">
+
+  <!-- Dashboard -->
+  <div>
+    <h4 style="text-align:center;">Dashboard</h4>
+    <div class="mockup">
+      <div class="status-bar"><span>9:41</span><span>● ● ●</span></div>
+      <div class="mockup-section">
+        <h5>Hey, Antonio</h5>
+        <p class="greet-sub">3 generations this week</p>
+
+        <div class="stat-row">
+          <div class="stat-card">
+            <div class="num" style="color:var(--accent);">47</div>
+            <div class="lbl">credits</div>
+          </div>
+          <div class="stat-card">
+            <div class="num">Pay-per-use</div>
+            <div class="lbl">$2.40 this month</div>
+          </div>
+        </div>
+
+        <div class="cta-card">
+          <div class="t">New Fashion Shoot</div>
+          <div class="s">Studio-quality in seconds</div>
+          <div class="cta-btn">Start →</div>
+        </div>
+
+        <div style="font-size:10px;color:var(--text-dim);margin:14px 0 6px;font-weight:600;">Recent</div>
+        <div class="gallery">
+          <div class="g tall"></div>
+          <div class="g"></div>
+          <div class="g"></div>
+        </div>
+      </div>
+      <div class="tab-bar">
+        <div class="tab active"><div class="dot"></div><div class="t">Home</div></div>
+        <div class="tab"><div class="dot"></div><div class="t">Create</div></div>
+        <div class="tab"><div class="dot"></div><div class="t">Assets</div></div>
+        <div class="tab"><div class="dot"></div><div class="t">Account</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create -->
+  <div>
+    <h4 style="text-align:center;">Create</h4>
+    <div class="mockup">
+      <div class="status-bar"><span>9:41</span><span>● ● ●</span></div>
+      <div class="mockup-section">
+        <h5>Start a project</h5>
+        <p class="greet-sub">Pick your workflow</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div style="aspect-ratio:1;border-radius:12px;background:linear-gradient(135deg,#1f2937,#374151);position:relative;padding:8px;">
+            <span class="mockup-pill" style="background:var(--accent-soft);color:var(--accent);">Hot</span>
+            <div style="position:absolute;bottom:8px;left:8px;right:8px;">
+              <div style="font-size:11px;font-weight:700;">Fashion Editorial</div>
+              <div style="font-size:8px;color:var(--text-dim);">3 cr · 8s</div>
+            </div>
+          </div>
+          <div style="aspect-ratio:1;border-radius:12px;background:linear-gradient(135deg,#1f2937,#374151);position:relative;padding:8px;">
+            <div style="position:absolute;bottom:8px;left:8px;right:8px;">
+              <div style="font-size:11px;font-weight:700;">Relight</div>
+              <div style="font-size:8px;color:var(--text-dim);">2 cr · 5s</div>
+            </div>
+          </div>
+          <div style="aspect-ratio:1;border-radius:12px;background:linear-gradient(135deg,#1f2937,#374151);position:relative;padding:8px;">
+            <div style="position:absolute;bottom:8px;left:8px;right:8px;">
+              <div style="font-size:11px;font-weight:700;">Multi-angle</div>
+              <div style="font-size:8px;color:var(--text-dim);">5 cr · 12s</div>
+            </div>
+          </div>
+          <div style="aspect-ratio:1;border-radius:12px;background:linear-gradient(135deg,#1f2937,#374151);position:relative;padding:8px;">
+            <div style="position:absolute;bottom:8px;left:8px;right:8px;">
+              <div style="font-size:11px;font-weight:700;">Upscale 4K</div>
+              <div style="font-size:8px;color:var(--text-dim);">1 cr · 4s</div>
+            </div>
+          </div>
+        </div>
+        <div style="margin-top:12px;font-size:10px;color:var(--text-dim);font-weight:600;">Recent inputs</div>
+        <div style="display:flex;gap:6px;margin-top:6px;overflow:hidden;">
+          <div style="width:48px;height:48px;border-radius:8px;background:#1f2937;"></div>
+          <div style="width:48px;height:48px;border-radius:8px;background:#1f2937;"></div>
+          <div style="width:48px;height:48px;border-radius:8px;background:#1f2937;"></div>
+          <div style="width:48px;height:48px;border-radius:8px;background:#1f2937;"></div>
+        </div>
+      </div>
+      <div class="tab-bar">
+        <div class="tab"><div class="dot"></div><div class="t">Home</div></div>
+        <div class="tab active"><div class="dot"></div><div class="t">Create</div></div>
+        <div class="tab"><div class="dot"></div><div class="t">Assets</div></div>
+        <div class="tab"><div class="dot"></div><div class="t">Account</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Assets -->
+  <div>
+    <h4 style="text-align:center;">Assets</h4>
+    <div class="mockup">
+      <div class="status-bar"><span>9:41</span><span>● ● ●</span></div>
+      <div class="mockup-section">
+        <h5>Your library</h5>
+        <p class="greet-sub">128 images · 4 videos</p>
+        <div style="display:flex;gap:6px;margin:6px 0 10px;">
+          <span class="mockup-pill" style="background:var(--accent-soft);color:var(--accent);">All</span>
+          <span class="mockup-pill" style="background:rgba(255,255,255,0.06);color:var(--text-dim);">Fashion</span>
+          <span class="mockup-pill" style="background:rgba(255,255,255,0.06);color:var(--text-dim);">Relight</span>
+          <span class="mockup-pill" style="background:rgba(255,255,255,0.06);color:var(--text-dim);">Upscaled</span>
+        </div>
+        <div class="gallery">
+          <div class="g"></div>
+          <div class="g tall"></div>
+          <div class="g"></div>
+          <div class="g"></div>
+          <div class="g"></div>
+        </div>
+      </div>
+      <div class="tab-bar">
+        <div class="tab"><div class="dot"></div><div class="t">Home</div></div>
+        <div class="tab"><div class="dot"></div><div class="t">Create</div></div>
+        <div class="tab active"><div class="dot"></div><div class="t">Assets</div></div>
+        <div class="tab"><div class="dot"></div><div class="t">Account</div></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ─────────── PHASES ─────────── -->
+<h2>6. Implementation phases</h2>
+
+<div class="phase">
+  <span class="num">PHASE 1</span> <span class="pill pill-critical">critical · 1d</span>
+  <h3>Re-tone the theme</h3>
+  <div class="tag">Single source-of-truth update. Every screen inherits.</div>
+  <div class="body">
+    <div>
+      <h4>Changes</h4>
+      <ul>
+        <li>Rewrite <code>constants/theme.ts</code>: <code>bg #0B0F14</code>, <code>bgRaised #131820</code>, <code>bgElevated #1B222D</code></li>
+        <li>Demote violet from <code>colors.bg</code> tinting — bg becomes neutral warm-slate</li>
+        <li>Promote amber (<code>#FBBF24</code>) to <code>colors.accent</code>; violet (<code>#A78BFA</code>) → <code>colors.accent2</code> (brand mark / secondary)</li>
+        <li>Replace <code>gradients.pageVignette</code> with flat color — no gradient page bg</li>
+        <li>Update <code>colors.textMuted</code> from <code>0.55</code> → <code>0.72</code> for body, add <code>textDim 0.48</code> for labels</li>
+      </ul>
+    </div>
+    <div class="files">
+      <h4>Files</h4>
+      <code>constants/theme.ts</code>
+      <code>app/_layout.tsx</code> (status bar tint)
+    </div>
+  </div>
+</div>
+
+<div class="phase">
+  <span class="num">PHASE 2</span> <span class="pill pill-high">high · 1d</span>
+  <h3>Strip glow orbs &amp; gradient page backdrops</h3>
+  <div class="body">
+    <div>
+      <h4>Changes</h4>
+      <ul>
+        <li>Delete <code>PageBackdrop</code> components OR replace gradient w/ single flat color</li>
+        <li>Remove <code>shadowColor</code> orb halos from screen roots</li>
+        <li>Keep ONE optional gradient halo behind hero-CTA card only (PayPerUse style)</li>
+        <li>Status bar style: <code>light-content</code> on flat <code>#0B0F14</code></li>
+      </ul>
+    </div>
+    <div class="files">
+      <h4>Files</h4>
+      <code>views/dashboard/dashboard-screen.tsx</code>
+      <code>app/(tabs)/create.tsx</code>
+      <code>app/(tabs)/assets.tsx</code>
+      <code>app/(tabs)/more.tsx</code>
+    </div>
+  </div>
+</div>
+
+<div class="phase">
+  <span class="num">PHASE 3</span> <span class="pill pill-high">high · 2d</span>
+  <h3>Dashboard — content-first redesign</h3>
+  <div class="body">
+    <div>
+      <h4>Changes</h4>
+      <ul>
+        <li>Header: greeting + avatar in single row, no oversized hero block</li>
+        <li>StatBar → compact pair of stat cards (Credits, This-month spend) in <code>bgRaised</code>; tap-targets clearly bordered</li>
+        <li>Replace 4 violet bento gradients with image-led tiles using bundled <code>fashion-editorial-*.png</code> samples + dark-to-clear scrim + label overlay</li>
+        <li>One amber CTA card "Start new shoot" with subtle gradient — the only saturated thing on screen</li>
+        <li>Recent gallery: 2-col masonry, real thumbnails (not gradient placeholders)</li>
+      </ul>
+    </div>
+    <div class="files">
+      <h4>Files</h4>
+      <code>views/dashboard/components/bento-grid.tsx</code>
+      <code>views/dashboard/components/stat-bar.tsx</code>
+      <code>views/dashboard/components/header.tsx</code>
+      <code>views/dashboard/dashboard-screen.tsx</code>
+    </div>
+  </div>
+</div>
+
+<div class="phase">
+  <span class="num">PHASE 4</span> <span class="pill pill-medium">medium · 1d</span>
+  <h3>Tab bar &amp; navigation chrome</h3>
+  <div class="body">
+    <div>
+      <h4>Changes</h4>
+      <ul>
+        <li>Tab bar: solid <code>#0B0F14</code> w/ 1px top border, 4 tabs evenly spaced</li>
+        <li>Active state: amber icon + amber label, no background pill</li>
+        <li>Inactive: <code>textDim</code> icon + label — high enough contrast at 11pt</li>
+        <li>Stack header bars: transparent on screens with hero, opaque elevated on lists</li>
+      </ul>
+    </div>
+    <div class="files">
+      <h4>Files</h4>
+      <code>app/(tabs)/_layout.tsx</code>
+    </div>
+  </div>
+</div>
+
+<div class="phase">
+  <span class="num">PHASE 5</span> <span class="pill pill-medium">medium · 1d</span>
+  <h3>Cards, lists, empty states</h3>
+  <div class="body">
+    <div>
+      <h4>Changes</h4>
+      <ul>
+        <li>Unify card styling: <code>bgRaised</code> + 1px border (no gradient by default)</li>
+        <li>Press / hover: bump to <code>bgElevated</code> + amber border tint</li>
+        <li>Empty states: centered illustration (use one editorial sample, low opacity) + 1-line copy + amber CTA</li>
+        <li>Loading skeletons: <code>bgRaised</code> shimmer, not violet</li>
+      </ul>
+    </div>
+    <div class="files">
+      <h4>Files</h4>
+      <code>views/dashboard/components/empty-gallery.tsx</code>
+      <code>views/dashboard/components/masonry-grid.tsx</code>
+      <code>views/dashboard/components/utility-row.tsx</code>
+      <code>views/dashboard/components/skeleton.tsx</code>
+    </div>
+  </div>
+</div>
+
+<div class="phase">
+  <span class="num">PHASE 6</span> <span class="pill pill-low">low · 0.5d</span>
+  <h3>Polish</h3>
+  <div class="body">
+    <div>
+      <h4>Changes</h4>
+      <ul>
+        <li>Audit all text colors for contrast w/ new bg (use 4.5:1 minimum for body, 3:1 for large)</li>
+        <li>Tighten spacing — apply 16/24/40 vertical rhythm; no <code>marginBottom: 6</code> ad-hoc values</li>
+        <li>Replace ad-hoc <code>color: '#xxx'</code> with theme tokens across screens</li>
+        <li>Capture before/after screenshots, attach to PR</li>
+      </ul>
+    </div>
+    <div class="files">
+      <h4>Files</h4>
+      <code>app/**/*.tsx</code> (sweep)
+    </div>
+  </div>
+</div>
+
+<!-- ─────────── RISKS ─────────── -->
+<h2>7. Risks &amp; non-goals</h2>
+<div class="grid-2">
+  <div class="card">
+    <div class="label">RISK</div>
+    <h4>Brand-team push-back on "less violet"</h4>
+    <p>Violet stays — it owns the logo, login screens, and one signature gradient. We're not removing it from the brand, we're moving it from <em>everywhere</em> to <em>somewhere</em>.</p>
+  </div>
+  <div class="card">
+    <div class="label">RISK</div>
+    <h4>Onboarding feels disconnected</h4>
+    <p>Mitigation: Phase 3 hero CTA reuses the same amber-pay-per-use card style from login. Continuity preserved.</p>
+  </div>
+  <div class="card">
+    <div class="label">NON-GOAL</div>
+    <h4>Light mode</h4>
+    <p>Single dark theme only. iOS/Android dark-mode opt-in is out of scope.</p>
+  </div>
+  <div class="card">
+    <div class="label">NON-GOAL</div>
+    <h4>Full design-token JSON pipeline</h4>
+    <p>Theme stays a TS module. No Style Dictionary / Figma sync this pass.</p>
+  </div>
+</div>
+
+<!-- ─────────── ROLLOUT ─────────── -->
+<h2>8. Rollout</h2>
+<ol>
+  <li><strong>Branch:</strong> <code>ui-revamp/phase-1-theme</code> → ship Phase 1+2 first; rest of app inherits 80% of the visual improvement immediately.</li>
+  <li><strong>Internal review:</strong> screenshots of every screen before merging Phase 2. No surprise regressions.</li>
+  <li><strong>Phase 3–5 in sequence,</strong> one PR each — small, reviewable diffs.</li>
+  <li><strong>Phase 6 sweep</strong> after others land.</li>
+  <li><strong>No feature freeze.</strong> Footwear-pack work continues in parallel on a separate branch.</li>
+</ol>
+
+<p style="margin-top:32px;"><strong>Total est.:</strong> 6.5 working days · solo engineer.</p>
+
+<div class="footer">
+  AutoToon Mobile · UI Revamp Plan · <code>docs/ui-revamp-plan.html</code>
+</div>
+
+</div>
+</body>
+</html>

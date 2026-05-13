@@ -174,7 +174,17 @@ export default function CreateScreen() {
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
           >
-            <Text style={styles.title}>Enhance Product</Text>
+            <View style={styles.heroHeader}>
+              <Text style={styles.heroEyebrow}>ENHANCE</Text>
+              <Text style={styles.heroTitle}>
+                {store.localImageUri ? 'Looking good.' : 'Snap your product.'}
+              </Text>
+              <Text style={styles.heroSub}>
+                {store.localImageUri
+                  ? 'Name it, pick a goal — studio shot in 8 seconds.'
+                  : 'One photo. Studio-grade result in under 10 seconds.'}
+              </Text>
+            </View>
 
             <UploadSection
               localImageUri={store.localImageUri}
@@ -264,6 +274,29 @@ const styles = StyleSheet.create({
     ...theme.typography.pageTitle,
     color: theme.colors.text,
     marginBottom: theme.spacing['2xl'],
+  },
+  heroHeader: {
+    marginBottom: theme.spacing['2xl'],
+  },
+  heroEyebrow: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: theme.colors.accent,
+    letterSpacing: 1.6,
+    marginBottom: theme.spacing.sm,
+  },
+  heroTitle: {
+    fontSize: 30,
+    fontWeight: '800',
+    color: theme.colors.text,
+    letterSpacing: -0.8,
+    lineHeight: 34,
+    marginBottom: theme.spacing.sm,
+  },
+  heroSub: {
+    fontSize: 14,
+    color: theme.colors.textMuted,
+    lineHeight: 20,
   },
   bottom: { marginTop: theme.spacing.xs },
   errorBox: {

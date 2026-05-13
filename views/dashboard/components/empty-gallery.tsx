@@ -28,13 +28,13 @@ export function EmptyGallery({ onAction }: EmptyGalleryProps) {
         accessibilityRole="button"
       >
         <LinearGradient
-          colors={[...gradients.brand]}
+          colors={[...gradients.amberCta]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
           style={StyleSheet.absoluteFillObject}
         />
-        <SparklesIcon size={16} color={theme.colors.text} />
-        <Text style={styles.ctaText}>Create your first image</Text>
+        <SparklesIcon size={16} color="#1A1330" />
+        <Text style={[styles.ctaText, { color: '#1A1330' }]}>Create your first image</Text>
       </TouchableOpacity>
     </View>
   )

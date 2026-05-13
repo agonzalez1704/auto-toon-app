@@ -48,13 +48,13 @@ export function Header({ firstName, avatarUrl, onAvatarPress, onNewPress }: Head
         accessibilityRole="button"
       >
         <LinearGradient
-          colors={[...gradients.brand]}
+          colors={[...gradients.amberCta]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
           style={StyleSheet.absoluteFillObject}
         />
-        <PlusIcon color={theme.colors.text} />
-        <Text style={styles.newBtnText}>New</Text>
+        <PlusIcon color="#1A1330" />
+        <Text style={[styles.newBtnText, { color: '#1A1330' }]}>New</Text>
       </TouchableOpacity>
     </View>
   )

@@ -18,8 +18,8 @@ const Tabs = withLayoutContext<
   NativeBottomTabNavigationEventMap
 >(Navigator)
 
-const ACCENT = theme.palette.violet
-const TAB_BG = '#16102A' // matches theme.colors.bg
+const ACCENT = theme.colors.accent // amber — primary CTA tint
+const TAB_BG = theme.colors.bg     // flat warm-slate (#0B0F14)
 
 export default function TabLayout() {
   return (
@@ -29,10 +29,12 @@ export default function TabLayout() {
           tabBarActiveTintColor: ACCENT,
           ...(Platform.OS === 'android' && {
             tabBarInactiveTintColor: theme.colors.textDim,
-            tabBarActiveIndicatorColor: 'rgba(124,58,237,0.18)',
+            tabBarActiveIndicatorColor: theme.colors.accentSoft,
           }),
           tabBarStyle: {
             backgroundColor: TAB_BG,
+            borderTopColor: theme.colors.border,
+            borderTopWidth: 1,
           },
           headerShown: false,
         }}

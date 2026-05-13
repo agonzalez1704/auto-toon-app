@@ -24,7 +24,7 @@ export function GenerateButton({ canGenerate, isGenerating, costLabel, onPress }
     >
       {showGradient && (
         <LinearGradient
-          colors={[...gradients.brand]}
+          colors={[...gradients.amberCta]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
           style={StyleSheet.absoluteFillObject}
@@ -32,13 +32,13 @@ export function GenerateButton({ canGenerate, isGenerating, costLabel, onPress }
       )}
       {isGenerating ? (
         <View style={styles.row}>
-          <ActivityIndicator color={theme.colors.text} size="small" />
-          <Text style={styles.text}>Generating...</Text>
+          <ActivityIndicator color="#1A1330" size="small" />
+          <Text style={[styles.text, { color: '#1A1330' }]}>Generating...</Text>
         </View>
       ) : (
         <View style={styles.row}>
-          <SparklesIcon size={20} color={theme.colors.text} />
-          <Text style={styles.text}>Generate ({costLabel})</Text>
+          <SparklesIcon size={20} color="#1A1330" />
+          <Text style={[styles.text, { color: '#1A1330' }]}>Generate ({costLabel})</Text>
         </View>
       )}
     </TouchableOpacity>

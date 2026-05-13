@@ -6,7 +6,6 @@
 import { useCallback, useEffect, useRef } from 'react'
 import { Animated, StatusBar, StyleSheet, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { LinearGradient } from 'expo-linear-gradient'
 import { useUser } from '@clerk/clerk-expo'
 import { useQuery } from '@tanstack/react-query'
 import { useRouter } from 'expo-router'
@@ -133,24 +132,11 @@ export default function DashboardScreen() {
 }
 
 /**
- * Ambient page backdrop — subtle violet radial vignette over deep slate.
- * Sells the liquid-glass depth (BlurView surfaces have something to blur).
+ * Page backdrop — flat warm-slate. Content (user images) provides color.
+ * Previous violet vignette + glow orbs removed per UI revamp Phase 2.
  */
 function PageBackdrop() {
-  return (
-    <>
-      <View style={StyleSheet.absoluteFillObject} />
-      <LinearGradient
-        colors={['#1E1740', '#16102A', '#0E0820']}
-        locations={[0, 0.5, 1]}
-        style={StyleSheet.absoluteFillObject}
-      />
-      {/* Top-left violet glow orb */}
-      <View style={[styles.orb, styles.orbTop]} />
-      {/* Bottom-right indigo glow orb */}
-      <View style={[styles.orb, styles.orbBottom]} />
-    </>
-  )
+  return <View style={StyleSheet.absoluteFillObject} />
 }
 
 const styles = StyleSheet.create({
@@ -162,22 +148,5 @@ const styles = StyleSheet.create({
   content: {
     padding: theme.spacing.lg,
     paddingBottom: theme.spacing['4xl'],
-  },
-  orb: {
-    position: 'absolute',
-    width: 320,
-    height: 320,
-    borderRadius: 160,
-    opacity: 0.18,
-  },
-  orbTop: {
-    top: -80,
-    left: -80,
-    backgroundColor: theme.palette.violet,
-  },
-  orbBottom: {
-    bottom: -80,
-    right: -80,
-    backgroundColor: theme.palette.fuchsia,
   },
 })
