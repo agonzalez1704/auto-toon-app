@@ -6,16 +6,25 @@
   "build": {
     "development": {
       "developmentClient": true,
-      "distribution": "internal"
+      "distribution": "internal",
+      "node": "22.13.0"
     },
     "preview": {
-      "distribution": "internal"
+      "distribution": "internal",
+      "node": "22.13.0"
     },
     "production": {
-      "autoIncrement": true
+      "autoIncrement": true,
+      "node": "22.13.0"
     }
   },
   "submit": {
-    "production": {}
+    "production": {
+      "ios": {
+        "appleId": "agonzalez.nrn02@gmail.com",
+        "ascAppId": "6761248903",
+        "appleTeamId": "88L8ZGW5PY"
+      }
+    }
   }
 }

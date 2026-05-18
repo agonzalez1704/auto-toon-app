@@ -18,6 +18,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.autotoon.app",
+      "usesAppleSignIn": true,
       "entitlements": {
         "aps-environment": "production"
       },

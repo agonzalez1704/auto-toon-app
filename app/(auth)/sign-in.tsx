@@ -198,13 +198,14 @@ const heroStyles = StyleSheet.create({
 
 function PayPerUsePitch() {
   return (
-    <View style={pitchStyles.borderWrap}>
-      <LinearGradient
-        colors={[ACCENT, '#F59E0B', AURORA_MAGENTA]}
-        start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-        style={StyleSheet.absoluteFillObject}
-      />
-      <View style={pitchStyles.inner}>
+    <View style={pitchStyles.shadowWrap}>
+      <View style={pitchStyles.borderWrap}>
+        <LinearGradient
+          colors={[ACCENT, '#F59E0B', AURORA_MAGENTA]}
+          start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+          style={StyleSheet.absoluteFillObject}
+        />
+        <View style={pitchStyles.inner}>
         <View style={pitchStyles.badgeRow}>
           <View style={pitchStyles.badge}>
             <BoltIcon />
@@ -236,20 +237,25 @@ function PayPerUsePitch() {
             <Text style={pitchStyles.bulletText}>Cancel anytime, zero commitment</Text>
           </View>
         </View>
+        </View>
       </View>
     </View>
   )
 }
 
 const pitchStyles = StyleSheet.create({
-  borderWrap: {
-    borderRadius: 22,
-    padding: 1.5,
+  shadowWrap: {
+    borderRadius: 22.5,
     marginBottom: 20,
     ...Platform.select({
       ios: { shadowColor: ACCENT, shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.25, shadowRadius: 22 },
       android: { elevation: 12 },
     }),
+  },
+  borderWrap: {
+    borderRadius: 22.5,
+    padding: 1.5,
+    overflow: 'hidden',
   },
   inner: {
     borderRadius: 20.5,
@@ -333,11 +339,18 @@ export default function SignInScreen() {
   }, [startSSOFlow])
 
   const handleAppleSSO = useCallback(async () => {
+    setError('')
     try {
       const { createdSessionId, setActive: setActiveSSO } = await startSSOFlow({ strategy: 'oauth_apple' })
-      if (createdSessionId && setActiveSSO) await setActiveSSO({ session: createdSessionId })
-    } catch (err) {
+      if (createdSessionId && setActiveSSO) {
+        await setActiveSSO({ session: createdSessionId })
+      } else {
+        setError('Apple sign-in did not complete. Try again.')
+      }
+    } catch (err: any) {
       console.error('Apple SSO error:', err)
+      const msg = err?.errors?.[0]?.longMessage || err?.errors?.[0]?.message || err?.message || 'Apple sign-in failed'
+      setError(msg)
     }
   }, [startSSOFlow])
 
@@ -563,7 +576,7 @@ export default function SignInScreen() {
 
               <TouchableOpacity onPress={() => router.push('/(auth)/sign-up')} style={styles.linkWrap}>
                 <Text style={styles.linkText}>
-                  Have an account? <Text style={styles.linkAccent}>Sign in</Text>
+                  Don&apos;t have an account? <Text style={styles.linkAccent}>Sign up</Text>
                 </Text>
               </TouchableOpacity>
             </ScrollView>
