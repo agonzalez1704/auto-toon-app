@@ -77,7 +77,16 @@ export default function AccountScreen() {
     Animated.timing(fadeAnim, { toValue: 1, duration: 500, useNativeDriver: true }).start()
   }, [])
 
-  const planLabel = plan === 'FREE' ? 'Free' : plan.charAt(0) + plan.slice(1).toLowerCase()
+  const PLAN_LABELS: Record<string, string> = {
+    FREE: 'Free',
+    WEEKLY: 'Weekly',
+    BASIC: 'Basic',
+    STARTER: 'Starter',
+    PRO: 'Pro',
+    BUSINESS: 'Business',
+    PAYPERUSE: 'Pay-per-use',
+  }
+  const planLabel = PLAN_LABELS[plan] ?? (plan.charAt(0) + plan.slice(1).toLowerCase())
   const firstName = user?.firstName || user?.fullName || 'User'
 
   return (
