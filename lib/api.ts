@@ -550,6 +550,145 @@ export async function getUserVideos() {
   return data.videos ?? []
 }
 
+// ─── Product Commercial ────────────────────────────────────────────
+// Style-driven commercial video: a product still becomes a storyboard
+// keyframe image (GPT Image 2), then a video (Seedance 2.0 / Kling).
+
+export interface CommercialGenerateRequest {
+  sourceImageUrl: string
+  /** 'fashion-editorial' | 'surreal-product-hero' | 'ugc' | 'custom' */
+  stylePersona: string
+  shotId: string
+  productName?: string
+  productType?: string
+  customDirection?: string
+  /** 'seedance-2-pro' | 'kling-v3' */
+  aiModel: string
+  duration: 5 | 10
+  aspectRatio: '16:9' | '9:16' | '1:1'
+}
+
+export interface CommercialStoryboardEvent {
+  type: 'storyboard'
+  storyboardImageUrl: string
+}
+
+/**
+ * Start commercial generation via SSE stream.
+ * Mirrors generateVideoSSE; adds an `onStoryboard` callback fired when the
+ * intermediate storyboard keyframe image is ready.
+ */
+export function generateCommercialSSE(
+  params: CommercialGenerateRequest,
+  callbacks: {
+    onProgress: (event: VideoProgressEvent) => void
+    onStoryboard: (storyboardImageUrl: string) => void
+    onSuccess: (event: VideoSuccessEvent) => void
+    onError: (message: string) => void
+    onComplete?: () => void
+  }
+): { abort: () => void } {
+  const xhr = new XMLHttpRequest()
+  let buffer = ''
+
+  const parseSSEBuffer = () => {
+    const lines = buffer.split('\n')
+    buffer = lines.pop() || ''
+
+    for (const line of lines) {
+      const trimmed = line.trim()
+      if (!trimmed.startsWith('data: ')) continue
+
+      try {
+        const data = JSON.parse(trimmed.slice(6))
+        if (data.type === 'progress') {
+          callbacks.onProgress(data as VideoProgressEvent)
+        } else if (data.type === 'storyboard') {
+          callbacks.onStoryboard((data as CommercialStoryboardEvent).storyboardImageUrl)
+        } else if (data.type === 'success') {
+          callbacks.onSuccess(data as VideoSuccessEvent)
+        } else if (data.type === 'error') {
+          callbacks.onError((data as VideoErrorEvent).message)
+        } else if (data.type === 'complete') {
+          callbacks.onComplete?.()
+        }
+      } catch {
+        // Ignore malformed JSON lines
+      }
+    }
+  }
+
+  const startRequest = async () => {
+    let authToken: string | null = null
+    if (tokenGetter) {
+      authToken = await tokenGetter()
+    }
+
+    xhr.open('POST', `${CONFIG.API_BASE_URL}/api/fashion-editorial/commercial/generate`)
+    xhr.setRequestHeader('Content-Type', 'application/json')
+    if (authToken) {
+      xhr.setRequestHeader('Authorization', `Bearer ${authToken}`)
+    }
+
+    let lastIndex = 0
+    let errorHandled = false
+
+    xhr.onreadystatechange = () => {
+      if (xhr.readyState === 4 && !errorHandled) {
+        if (xhr.status !== 200) {
+          errorHandled = true
+          let message = 'Commercial generation failed'
+          try {
+            const body = JSON.parse(xhr.responseText)
+            message = body.error || message
+          } catch {
+            if (xhr.statusText) message = xhr.statusText
+          }
+          callbacks.onError(`${message} (${xhr.status})`)
+          return
+        }
+      }
+
+      if (xhr.readyState >= 3 && xhr.responseText) {
+        const newText = xhr.responseText.substring(lastIndex)
+        lastIndex = xhr.responseText.length
+        if (newText) {
+          buffer += newText
+          parseSSEBuffer()
+        }
+      }
+    }
+
+    xhr.onerror = () => {
+      if (!errorHandled) {
+        errorHandled = true
+        callbacks.onError('Network error during commercial generation')
+      }
+    }
+
+    xhr.ontimeout = () => {
+      if (!errorHandled) {
+        errorHandled = true
+        callbacks.onError('Commercial generation request timed out')
+      }
+    }
+
+    xhr.timeout = 600_000 // 10 min
+
+    xhr.send(JSON.stringify(params))
+  }
+
+  startRequest().catch((err) => {
+    callbacks.onError(err?.message || 'Failed to start commercial generation')
+  })
+
+  return {
+    abort: () => {
+      try { xhr.abort() } catch { /* ignore */ }
+    },
+  }
+}
+
 // ─── Fashion Editorial ─────────────────────────────────────────────
 
 export interface FashionImageAnalysis {

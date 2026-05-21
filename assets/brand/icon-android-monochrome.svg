@@ -1,5 +1,17 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" fill="none">
-  <!-- Android themed-icon — single white, OS tints. B6.1 fallback (no cutout). -->
-  <rect x="200" y="276" width="310" height="472" rx="42" fill="#FFFFFF" transform="rotate(-15 355 512)" />
-  <rect x="514" y="276" width="310" height="472" rx="42" fill="#FFFFFF" opacity="0.72" transform="rotate(15 669 512)" />
+  <!-- Android themed-icon — single white Pixel Wing, OS tints. -->
+  <!-- Left wing -->
+  <rect x="260" y="340" width="140" height="140" fill="#FFFFFF" />
+  <rect x="400" y="410" width="100" height="100" fill="#FFFFFF" opacity="0.7" />
+  <rect x="260" y="540" width="140" height="140" fill="#FFFFFF" opacity="0.85" />
+  <rect x="400" y="520" width="100" height="100" fill="#FFFFFF" opacity="0.6" />
+
+  <!-- Right wing -->
+  <rect x="624" y="340" width="140" height="140" fill="#FFFFFF" opacity="0.95" />
+  <rect x="524" y="410" width="100" height="100" fill="#FFFFFF" opacity="0.8" />
+  <rect x="624" y="540" width="140" height="140" fill="#FFFFFF" opacity="0.9" />
+  <rect x="524" y="520" width="100" height="100" fill="#FFFFFF" opacity="0.7" />
+
+  <!-- Body -->
+  <rect x="494" y="390" width="36" height="260" rx="16" fill="#FFFFFF" />
 </svg>

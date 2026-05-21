@@ -22,6 +22,7 @@ import * as MediaLibrary from 'expo-media-library'
 import Svg, { Path as SvgPath, Rect, Circle } from 'react-native-svg'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useVideoStore } from '@/stores/use-video-store'
+import { useCommercialStore } from '@/stores/use-commercial-store'
 import { useFashionEditorialStore } from '@/stores/use-fashion-editorial-store'
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window')
@@ -47,6 +48,15 @@ function VideoIcon() {
     <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
       <Rect x="2" y="4" width="15" height="16" rx="2" stroke="#FFFFFF" strokeWidth={2} fill="none" />
       <SvgPath d="M17 9l5-3v12l-5-3V9z" stroke="#FFFFFF" strokeWidth={2} fill="none" strokeLinejoin="round" />
+    </Svg>
+  )
+}
+
+function ClapperIcon() {
+  return (
+    <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
+      <Rect x="2" y="7" width="20" height="14" rx="2" stroke="#FFFFFF" strokeWidth={2} fill="none" />
+      <SvgPath d="M2 7l4-4 3 4M9 3l4 4M15 3l4 4" stroke="#FFFFFF" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
     </Svg>
   )
 }
@@ -351,6 +361,20 @@ export default function ImageViewerScreen() {
               <LinearGradient colors={['#FBBF24', '#F59E0B', '#B45309']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFillObject} />
               <VideoIcon />
               <Text style={styles.actionText}>Video</Text>
+            </TouchableOpacity>
+
+            {/* Create Commercial — style-driven product video */}
+            <TouchableOpacity
+              style={styles.actionPill}
+              onPress={() => {
+                useCommercialStore.getState().setSourceImage(urls[currentIndex], title)
+                router.push('/product-commercial')
+              }}
+              activeOpacity={0.8}
+            >
+              <LinearGradient colors={['#FBBF24', '#F59E0B', '#B45309']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFillObject} />
+              <ClapperIcon />
+              <Text style={styles.actionText}>Commercial</Text>
             </TouchableOpacity>
 
             {/* Fashion-specific: Campaign Variations */}

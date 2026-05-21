@@ -1,13 +1,19 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" fill="none">
+  <!-- Splash — Pixel Wing on dark navy. Slightly smaller for breathing room. -->
   <rect width="1024" height="1024" fill="#0B0F14" />
-  <g transform="rotate(-15 380 512)">
-    <rect x="260" y="320" width="240" height="384" rx="34" fill="#FBBF24" />
-    <rect x="284" y="348" width="192" height="270" rx="14" fill="#0B0F14" />
-    <circle cx="380" cy="484" r="28" fill="#FBBF24" />
-  </g>
-  <g transform="rotate(15 644 512)">
-    <rect x="524" y="320" width="240" height="384" rx="34" fill="#A78BFA" />
-    <rect x="548" y="348" width="192" height="270" rx="14" fill="#0B0F14" />
-    <circle cx="644" cy="484" r="28" fill="#A78BFA" />
-  </g>
+
+  <!-- Left wing (violet) -->
+  <rect x="300" y="380" width="120" height="120" fill="#A78BFA" />
+  <rect x="420" y="440" width="86" height="86" fill="#A78BFA" opacity="0.7" />
+  <rect x="300" y="560" width="120" height="120" fill="#A78BFA" opacity="0.85" />
+  <rect x="420" y="540" width="86" height="86" fill="#A78BFA" opacity="0.6" />
+
+  <!-- Right wing (amber) -->
+  <rect x="604" y="380" width="120" height="120" fill="#FBBF24" />
+  <rect x="518" y="440" width="86" height="86" fill="#FBBF24" opacity="0.8" />
+  <rect x="604" y="560" width="120" height="120" fill="#FBBF24" opacity="0.9" />
+  <rect x="518" y="540" width="86" height="86" fill="#FBBF24" opacity="0.7" />
+
+  <!-- Body -->
+  <rect x="500" y="420" width="24" height="220" rx="12" fill="#F8FAFC" />
 </svg>
