@@ -187,6 +187,10 @@ export default function RootLayout() {
                   options={{ headerShown: false, presentation: 'modal', animation: 'fade' }}
                 />
                 <Stack.Screen
+                  name="sheet-result"
+                  options={{ headerShown: false, presentation: 'modal', animation: 'slide_from_bottom', gestureEnabled: false }}
+                />
+                <Stack.Screen
                   name="video-generator"
                   options={{ headerShown: false, presentation: 'modal', animation: 'slide_from_bottom' }}
                 />

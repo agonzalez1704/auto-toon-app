@@ -211,10 +211,17 @@ export default function ModelResultScreen() {
       useCreditsStore.getState().setCredits(result.creditsRemaining)
       fetchCredits()
 
-      Alert.alert(
-        'Model Saved',
-        `"${name}" has been saved with a character reference sheet for consistent generations.`
-      )
+      // Route to the sheet-result modal so the user can preview, save, or share.
+      // Cast: expo-router typed routes regenerate at dev-server start; new
+      // route isn't in the union yet on first typecheck.
+      router.replace({
+        pathname: '/sheet-result' as any,
+        params: {
+          sheetUrl: result.model.characterSheetUrl,
+          modelName: name,
+          modelId: result.model.id,
+        },
+      })
     } catch (error: any) {
       // Model is saved locally — character sheet just failed
       Alert.alert(
