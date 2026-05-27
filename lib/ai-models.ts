@@ -279,6 +279,17 @@ export const AI_MODELS = {
     },
     payPerUseRate: 0.176, // $0.098 × 1.8 per second
   },
+  SEEDANCE_2_PRO: {
+    id: 'seedance-2-pro',
+    name: 'Seedance 2.0 Pro',
+    provider: 'evolink' as AiProvider,
+    type: 'video',
+    credits: 8, // Per 5s clip
+    cost: {
+      perSecond: 0.10 // EvoLink Seedance pricing estimate
+    },
+    payPerUseRate: 0.18, // $0.10 × 1.8 per second
+  },
 } as const;
 
 // Derive a union type of all image model keys (e.g. 'GEMINI_3_IMAGE' | 'SEEDREAM_4_5' | ...)
@@ -354,6 +365,79 @@ export const VIDEO_DURATION_MULTIPLIER: Record<number, number> = { 5: 1, 10: 2 }
 // Get total credit cost for a video model + duration combo
 export function getVideoCredits(modelId: string, durationSeconds: number): number {
   return getModelCredits(modelId) * (VIDEO_DURATION_MULTIPLIER[durationSeconds] ?? 1)
+}
+
+// --- Commercial video quality-tiered pricing ---
+// Source: EvoLink public pricing (verified May 2026).
+// Seedance 2.0 (standard tier): 480p $0.092/s, 720p $0.199/s, 1080p $0.496/s.
+// Kling V3 'pro' mode: 720p $0.168/s, 1080p $0.224/s.
+// Pay-per-use rate is provider cost × 1.8 markup. Credits priced for 5s baseline.
+export type CommercialQuality = '480p' | '720p' | '1080p'
+
+export interface CommercialQualityTier {
+  costPerSecondUsd: number
+  payPerUseRatePerSecondUsd: number
+  creditsPerFiveSeconds: number
+}
+
+export const COMMERCIAL_VIDEO_PRICING: Record<string, Partial<Record<CommercialQuality, CommercialQualityTier>>> = {
+  'seedance-2-pro': {
+    '480p':  { costPerSecondUsd: 0.092, payPerUseRatePerSecondUsd: 0.166, creditsPerFiveSeconds: 4 },
+    '720p':  { costPerSecondUsd: 0.199, payPerUseRatePerSecondUsd: 0.358, creditsPerFiveSeconds: 9 },
+    '1080p': { costPerSecondUsd: 0.496, payPerUseRatePerSecondUsd: 0.893, creditsPerFiveSeconds: 22 },
+  },
+  'kling-v3': {
+    '720p':  { costPerSecondUsd: 0.168, payPerUseRatePerSecondUsd: 0.302, creditsPerFiveSeconds: 8 },
+    '1080p': { costPerSecondUsd: 0.224, payPerUseRatePerSecondUsd: 0.403, creditsPerFiveSeconds: 10 },
+  },
+}
+
+export function getCommercialQualityTier(
+  modelId: string,
+  quality: CommercialQuality,
+): CommercialQualityTier | undefined {
+  return COMMERCIAL_VIDEO_PRICING[modelId]?.[quality]
+}
+
+export function getCommercialCreditCost(
+  modelId: string,
+  quality: CommercialQuality,
+  durationSeconds: number,
+): number {
+  const tier = getCommercialQualityTier(modelId, quality)
+  if (!tier) return getVideoCredits(modelId, durationSeconds)
+  return Math.ceil(tier.creditsPerFiveSeconds * (durationSeconds / 5))
+}
+
+export function getCommercialPayPerUseUsd(
+  modelId: string,
+  quality: CommercialQuality,
+  durationSeconds: number,
+): number | undefined {
+  const tier = getCommercialQualityTier(modelId, quality)
+  if (!tier) return undefined
+  return tier.payPerUseRatePerSecondUsd * durationSeconds
+}
+
+export function getCommercialCostLabel(
+  modelId: string,
+  quality: CommercialQuality,
+  durationSeconds: number,
+  isPayPerUse: boolean,
+): string {
+  if (isPayPerUse) {
+    const usd = getCommercialPayPerUseUsd(modelId, quality, durationSeconds)
+    if (usd === undefined) return 'metered'
+    return `$${usd.toFixed(2)}`
+  }
+  const credits = getCommercialCreditCost(modelId, quality, durationSeconds)
+  return `${credits} credit${credits !== 1 ? 's' : ''}`
+}
+
+export function getSupportedCommercialQualities(modelId: string): CommercialQuality[] {
+  const entry = COMMERCIAL_VIDEO_PRICING[modelId]
+  if (!entry) return []
+  return (['480p', '720p', '1080p'] as CommercialQuality[]).filter(q => entry[q])
 }
 
 // Derive video model IDs

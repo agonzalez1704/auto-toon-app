@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Character Sheet — Mobile Parity Plan</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #161922; --border: #262b36;
+    --text: #e6e8ee; --muted: #9aa3b2;
+    --accent: #f59e0b; --ok: #10b981; --warn: #f97316; --bad: #ef4444; --info: #38bdf8;
+    --mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  html, body { background: var(--bg); color: var(--text); font: 14px/1.55 system-ui, -apple-system, sans-serif; margin: 0; }
+  main { max-width: 960px; margin: 0 auto; padding: 32px 24px 80px; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  h2 { font-size: 16px; margin: 28px 0 8px; color: var(--accent); letter-spacing: .02em; text-transform: uppercase; }
+  h3 { font-size: 14px; margin: 14px 0 6px; }
+  p, li { color: var(--text); }
+  .sub { color: var(--muted); margin: 0 0 8px; }
+  .pill { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; vertical-align: middle; }
+  .pill.ok { background: rgba(16,185,129,.15); color: var(--ok); }
+  .pill.warn { background: rgba(249,115,22,.15); color: var(--warn); }
+  .pill.new { background: rgba(245,158,11,.15); color: var(--accent); }
+  .pill.bad { background: rgba(239,68,68,.15); color: var(--bad); }
+  .pill.info { background: rgba(56,189,248,.15); color: var(--info); }
+  code, pre { font-family: var(--mono); }
+  code { background: var(--panel); padding: 1px 6px; border-radius: 4px; font-size: 12.5px; }
+  pre { background: var(--panel); border: 1px solid var(--border); padding: 12px 14px; border-radius: 8px; overflow-x: auto; font-size: 12.5px; }
+  table { width: 100%; border-collapse: collapse; margin-top: 6px; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; margin: 10px 0; }
+  ul { padding-left: 18px; margin: 6px 0; }
+  .small { font-size: 12px; color: var(--muted); }
+</style>
+</head>
+<body>
+<main>
+
+  <h1>Character Sheet — Mobile Parity Plan</h1>
+  <p class="sub">
+    Port the recent <code>toon-converter</code> character-sheet work to <code>auto-toon-app</code>.
+    Scope decided per server-side state (what landed vs what's still plan-only on web).
+  </p>
+
+  <!-- ============================================================ -->
+  <h2>0. What mobile gets for free</h2>
+  <div class="card">
+    <p>Server-side changes shipped on <code>develop</code> are transparent to mobile:</p>
+    <ul>
+      <li>Character sheet now merges <strong>ref photo + generated panels</strong> into one image via sharp. Mobile receives the merged URL unchanged — no client change.</li>
+      <li>Dual billing (face <code>SEEDREAM_4_5</code> + sheet <code>GPT_IMAGE_2</code>) already happens via two separate API calls mobile already makes (<code>generateFashionModel</code> then <code>generateCharacterSheet</code>). ✅</li>
+      <li>Server-side gates for outdated models (<em>not yet implemented on web</em>) will apply here too when shipped.</li>
+    </ul>
+  </div>
+
+  <!-- ============================================================ -->
+  <h2>1. Post-creation sheet display + download</h2>
+
+  <div class="card">
+    <h3>Current mobile state</h3>
+    <p><code>app/model-result.tsx</code> already:</p>
+    <ul>
+      <li>Calls <code>generateCharacterSheet({ referenceImageUrl, modelName, prompt })</code> after user confirms save.</li>
+      <li>Stores <code>characterSheetUrl</code> in <code>useModelFactoryStore.savedModels</code>.</li>
+      <li>Shows a <code>SheetTimer</code> while generating.</li>
+      <li>On success: fires an <code>Alert</code> — <em>"Model Saved"</em> — and that's it. Sheet is never shown to the user post-creation.</li>
+    </ul>
+    <p>List screen <code>app/models.tsx</code> renders the sheet thumbnail (line 187), but the user has to navigate back and tap a model to see it.</p>
+  </div>
+
+  <div class="card">
+    <h3>Proposed flow</h3>
+    <ol>
+      <li>After <code>generateCharacterSheet</code> resolves, drop the alert.</li>
+      <li>Push a new full-screen result modal — <code>app/sheet-result.tsx</code> <span class="pill new">new</span> — with the merged sheet large, plus action pills:
+        <ul>
+          <li><strong>Save to Photos</strong> — <code>MediaLibrary.saveToLibraryAsync</code> (already used elsewhere in <code>model-result.tsx</code>).</li>
+          <li><strong>Share</strong> — <code>Share.share({ url })</code>.</li>
+          <li><strong>Done</strong> — <code>router.replace('/models')</code>.</li>
+        </ul>
+      </li>
+      <li>On failure: keep the partial-success alert behavior, but offer a <strong>Retry</strong> CTA in the same modal.</li>
+    </ol>
+    <p>Reuse the icons + styling from <code>image-viewer.tsx</code> (Save/Share already implemented there — copy the helpers).</p>
+  </div>
+
+  <div class="card">
+    <h3>Files touched</h3>
+    <pre>+ app/sheet-result.tsx                  <span class="pill new">new</span>  preview + Save / Share / Done
+~ app/model-result.tsx                  drop alert → router.replace('/sheet-result', { sheetUrl, modelName, modelId })
+~ app/_layout.tsx                       register sheet-result Stack.Screen (modal, fade)</pre>
+  </div>
+
+  <!-- ============================================================ -->
+  <h2>2. Outdated models (mobile side)</h2>
+
+  <div class="card">
+    <p>Tracks the <strong>web follow-up plan</strong> (<code>character-sheet-followup-plan.html</code>). Server contract:</p>
+    <ul>
+      <li><code>GET /api/fashion-models</code> returns <code>sheetVersion</code> and <code>isOutdated</code>.</li>
+      <li><code>POST /api/fashion-model/[id]/regenerate-sheet</code> re-runs the sheet for an existing model. Bills <code>GPT_IMAGE_2</code>.</li>
+      <li><code>POST /api/fashion-editorial/generate</code> returns <code>409 MODEL_OUTDATED { modelId }</code> if any model is outdated.</li>
+    </ul>
+    <p class="small">Mobile parity work ships <em>after</em> the server contract lands.</p>
+  </div>
+
+  <div class="card">
+    <h3>Mobile changes</h3>
+    <table>
+      <tr><th>File</th><th>Change</th></tr>
+      <tr>
+        <td><code>lib/api.ts</code></td>
+        <td>Extend <code>FashionModelListItem</code> with <code>sheetVersion: number | null</code> + <code>isOutdated: boolean</code>. Add <code>regenerateCharacterSheet(modelId)</code> client. Add typed 409 handler in <code>generateFashionEditorial</code>.</td>
+      </tr>
+      <tr>
+        <td><code>lib/model-factory.ts</code></td>
+        <td>Type addition: <code>isOutdated?: boolean</code> on the saved-model shape.</td>
+      </tr>
+      <tr>
+        <td><code>stores/use-model-factory-store.ts</code></td>
+        <td>Persist <code>isOutdated</code> + <code>sheetVersion</code> on saved-model entries when syncing from server.</td>
+      </tr>
+      <tr>
+        <td><code>app/models.tsx</code></td>
+        <td>Amber "Outdated" badge on each row when <code>isOutdated</code>. Tap → confirmation sheet → <code>regenerateCharacterSheet</code>. On success refetch + clear badge. Show spinner during regen.</td>
+      </tr>
+      <tr>
+        <td>Model picker in <code>app/fashion-editorial/*</code></td>
+        <td>Disable selection of outdated models; show inline "Update" CTA per row.</td>
+      </tr>
+      <tr>
+        <td><code>app/fashion-editorial/generate.tsx</code></td>
+        <td>Catch <code>409 MODEL_OUTDATED</code> from <code>generateFashionEditorial</code>; show modal: "Model is outdated. Update now?" → calls regen, then retries generate.</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- ============================================================ -->
+  <h2>3. Dependency / order</h2>
+  <ol>
+    <li><strong>Now</strong>: §1 post-creation sheet display + download (no server contract dependency).</li>
+    <li><strong>Web ships §3 of the followup plan</strong>: <code>sheetVersion</code> column + regen route + 409 gate.</li>
+    <li><strong>Then</strong>: §2 mobile outdated UI + 409 handling.</li>
+  </ol>
+
+  <h2>4. Risks / notes</h2>
+  <ul>
+    <li>iOS only-tier behaviors: <code>MediaLibrary.requestPermissionsAsync</code> already wired elsewhere — copy the pattern, don't reinvent.</li>
+    <li>Save-to-Photos with a PNG produced from a 1500+ px wide merged sheet may be large — keep PNG, mobile handles.</li>
+    <li>Avoid auto-regen of outdated models. Always explicit user tap. Show cost on the CTA ("Update · 3 credits").</li>
+    <li>If user has many outdated models, batch <strong>not</strong> supported in v1 — one at a time.</li>
+  </ul>
+
+  <h2>5. Files summary (mobile)</h2>
+  <pre><span class="pill new">new</span>  app/sheet-result.tsx                             post-create preview + Save/Share
+~  app/model-result.tsx                             drop alert → router.replace('/sheet-result', ...)
+~  app/_layout.tsx                                  register sheet-result Stack.Screen
+~  lib/api.ts                                       sheetVersion / isOutdated types + regen client + 409 type
+~  lib/model-factory.ts                             SavedModel.isOutdated
+~  stores/use-model-factory-store.ts                persist isOutdated + sheetVersion
+~  app/models.tsx                                   Outdated badge + Update CTA
+~  app/fashion-editorial/generate.tsx               catch 409 MODEL_OUTDATED → regen-and-retry flow
+~  app/fashion-editorial/&lt;model-picker&gt;          disable outdated rows</pre>
+
+  <h2>Status</h2>
+  <div class="card">
+    <p><span class="pill info">plan only</span> Nothing written yet. Approve §1 + §2, or split.</p>
+    <p>Reply:</p>
+    <ul>
+      <li><strong>go §1</strong> — implement post-create preview only.</li>
+      <li><strong>go all</strong> — implement both (will be partially stubbed until server contract lands).</li>
+      <li><strong>tweak X</strong> — adjust before implementing.</li>
+    </ul>
+  </div>
+
+</main>
+</body>
+</html>

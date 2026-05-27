@@ -16,7 +16,7 @@
       "backgroundColor": "#0B0F14"
     },
     "ios": {
-      "supportsTablet": true,
+      "supportsTablet": false,
       "bundleIdentifier": "com.autotoon.app",
       "usesAppleSignIn": true,
       "entitlements": {

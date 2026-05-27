@@ -35,6 +35,17 @@ api.interceptors.response.use(
       error.response?.data?.message ||
       error.message ||
       'Something went wrong'
+    const url = error.config?.url
+    const method = error.config?.method?.toUpperCase()
+    if (error.response?.status) {
+      const clerkStatus = error.response.headers?.['x-clerk-auth-status']
+      const clerkReason = error.response.headers?.['x-clerk-auth-reason']
+      console.warn(
+        `[API ${error.response.status}] ${method} ${url} — ${message}` +
+          (clerkStatus ? ` clerk=${clerkStatus}` : '') +
+          (clerkReason ? ` reason=${clerkReason}` : '')
+      )
+    }
     return Promise.reject(new ApiError(message, error.response?.status))
   }
 )
@@ -566,6 +577,8 @@ export interface CommercialGenerateRequest {
   aiModel: string
   duration: 5 | 10
   aspectRatio: '16:9' | '9:16' | '1:1'
+  /** '480p' | '720p' | '1080p' — provider-supported tiers vary by model */
+  quality: '480p' | '720p' | '1080p'
 }
 
 export interface CommercialStoryboardEvent {

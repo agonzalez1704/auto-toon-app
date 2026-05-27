@@ -35,12 +35,14 @@ function AuthGate({ children }: { children: React.ReactNode }) {
   const notificationListener = useRef<Notifications.Subscription>()
   const responseListener = useRef<Notifications.Subscription>()
 
-  // Wire Clerk's getToken to the API client
+  // Wire Clerk's getToken to the API client as soon as Clerk is loaded.
+  // getToken() returns null when unsigned, so attaching early is safe and
+  // avoids a race where API calls fire before the interceptor has auth.
   useEffect(() => {
-    if (isLoaded && isSignedIn) {
+    if (isLoaded) {
       setTokenGetter(getToken)
     }
-  }, [isLoaded, isSignedIn, getToken])
+  }, [isLoaded, getToken])
 
   // Register for push notifications after sign-in
   // Must run after the token getter is wired so API calls are authenticated

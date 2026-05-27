@@ -1,8 +1,15 @@
 import { ParticleSphere } from '@/components/particle-sphere'
+import {
+  getCommercialCostLabel,
+  getCommercialCreditCost,
+  getSupportedCommercialQualities,
+  type CommercialQuality,
+} from '@/lib/ai-models'
 import { generateCommercialSSE } from '@/lib/api'
 import { getCommercialShots, PERSONA_OPTIONS, type CommercialPersona } from '@/lib/commercial-shots'
 import { useCommercialStore, type CommercialModel } from '@/stores/use-commercial-store'
 import { useCreditsStore } from '@/stores/use-credits-store'
+import { useSubscriptionStore } from '@/stores/use-subscription-store'
 import { useTermsConsentStore } from '@/stores/use-terms-consent-store'
 import { Image } from 'expo-image'
 import { LinearGradient } from 'expo-linear-gradient'
@@ -26,9 +33,9 @@ const { width: SCREEN_W } = Dimensions.get('window')
 const AURORA_NAVY = '#193153'
 const AURORA_MAGENTA = '#FBBF24'
 
-const MODEL_OPTIONS: { id: CommercialModel; label: string; baseCredits: number }[] = [
-  { id: 'seedance-2-pro', label: 'Seedance 2.0', baseCredits: 8 },
-  { id: 'kling-v3', label: 'Kling 3.0', baseCredits: 10 },
+const MODEL_OPTIONS: { id: CommercialModel; label: string }[] = [
+  { id: 'seedance-2-pro', label: 'Seedance 2.0' },
+  { id: 'kling-v3', label: 'Kling 3.0' },
 ]
 
 const ASPECT_OPTIONS: { id: '9:16' | '16:9' | '1:1'; label: string }[] = [
@@ -36,11 +43,6 @@ const ASPECT_OPTIONS: { id: '9:16' | '16:9' | '1:1'; label: string }[] = [
   { id: '16:9', label: '16:9' },
   { id: '1:1', label: '1:1' },
 ]
-
-function commercialCreditCost(model: CommercialModel, duration: 5 | 10): number {
-  const base = MODEL_OPTIONS.find((m) => m.id === model)?.baseCredits ?? 10
-  return base * (duration === 10 ? 2 : 1)
-}
 
 function CloseIcon() {
   return (
@@ -76,11 +78,23 @@ export default function ProductCommercialScreen() {
   const store = useCommercialStore()
   const { balance, fetchCredits, setShowExhaustionModal } = useCreditsStore()
   const { requireConsent } = useTermsConsentStore()
+  const isPayPerUse = useSubscriptionStore((s) => s.plan) === 'PAYPERUSE'
   const abortRef = useRef<{ abort: () => void } | null>(null)
 
   const shots = getCommercialShots(store.stylePersona)
   const isCustom = store.stylePersona === 'custom'
-  const creditCost = commercialCreditCost(store.aiModel, store.duration)
+  const supportedQualities = getSupportedCommercialQualities(store.aiModel)
+  const activeQuality: CommercialQuality = supportedQualities.includes(store.quality)
+    ? store.quality
+    : (supportedQualities[0] ?? '720p')
+  const creditCost = getCommercialCreditCost(store.aiModel, activeQuality, store.duration)
+  const costLabel = getCommercialCostLabel(store.aiModel, activeQuality, store.duration, isPayPerUse)
+
+  useEffect(() => {
+    if (!supportedQualities.includes(store.quality) && supportedQualities[0]) {
+      store.setQuality(supportedQualities[0])
+    }
+  }, [store.aiModel, supportedQualities, store])
 
   const selectPersona = useCallback(
     (persona: CommercialPersona) => {
@@ -97,7 +111,7 @@ export default function ProductCommercialScreen() {
     const consented = requireConsent(() => handleGenerate())
     if (!consented) return
 
-    if (balance !== null && balance < creditCost) {
+    if (!isPayPerUse && balance !== null && balance < creditCost) {
       setShowExhaustionModal(true)
       return
     }
@@ -114,6 +128,7 @@ export default function ProductCommercialScreen() {
         aiModel: store.aiModel,
         duration: store.duration,
         aspectRatio: store.aspectRatio,
+        quality: activeQuality,
       },
       {
         onProgress: (event) => store.setGenerationProgress(event.percent, event.message),
@@ -132,7 +147,7 @@ export default function ProductCommercialScreen() {
         },
       }
     )
-  }, [store, balance, creditCost, isCustom, requireConsent, fetchCredits, setShowExhaustionModal, router])
+  }, [store, balance, creditCost, activeQuality, isPayPerUse, isCustom, requireConsent, fetchCredits, setShowExhaustionModal, router])
 
   useEffect(() => {
     return () => abortRef.current?.abort()
@@ -308,6 +323,28 @@ export default function ProductCommercialScreen() {
             })}
           </View>
 
+          {/* Quality */}
+          {supportedQualities.length > 1 && (
+            <>
+              <Text style={styles.sectionLabel}>Quality</Text>
+              <View style={styles.chipWrap}>
+                {supportedQualities.map((q) => {
+                  const selected = activeQuality === q
+                  return (
+                    <TouchableOpacity
+                      key={q}
+                      style={[styles.chip, selected && styles.chipSelected]}
+                      onPress={() => store.setQuality(q)}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={[styles.chipLabel, selected && styles.chipLabelSelected]}>{q}</Text>
+                    </TouchableOpacity>
+                  )
+                })}
+              </View>
+            </>
+          )}
+
           {/* Generation error */}
           {store.generationPhase === 'error' && store.error && (
             <View style={styles.errorBox}>
@@ -328,11 +365,13 @@ export default function ProductCommercialScreen() {
             />
             <View style={styles.genButtonContent}>
               <ClapperIcon size={20} />
-              <Text style={styles.generateButtonText}>Generate Commercial ({creditCost} credits)</Text>
+              <Text style={styles.generateButtonText}>Generate Commercial ({costLabel})</Text>
             </View>
           </TouchableOpacity>
 
-          {balance !== null && <Text style={styles.balanceHint}>Balance: {balance} credits</Text>}
+          {!isPayPerUse && balance !== null && (
+            <Text style={styles.balanceHint}>Balance: {balance} credits</Text>
+          )}
         </ScrollView>
       </SafeAreaView>
     </View>

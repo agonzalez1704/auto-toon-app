@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import type { CommercialPersona } from '@/lib/commercial-shots'
+import type { CommercialQuality } from '@/lib/ai-models'
 
 export type CommercialModel = 'seedance-2-pro' | 'kling-v3'
 
@@ -17,6 +18,7 @@ export interface CommercialState {
   aiModel: CommercialModel
   duration: 5 | 10
   aspectRatio: '16:9' | '9:16' | '1:1'
+  quality: CommercialQuality
 
   // Generation
   generationPhase: 'idle' | 'generating' | 'complete' | 'error'
@@ -35,6 +37,7 @@ export interface CommercialState {
   setAiModel: (model: CommercialModel) => void
   setDuration: (duration: 5 | 10) => void
   setAspectRatio: (ratio: '16:9' | '9:16' | '1:1') => void
+  setQuality: (quality: CommercialQuality) => void
   startGenerating: () => void
   setGenerationProgress: (percent: number, message: string) => void
   setStoryboard: (url: string) => void
@@ -50,6 +53,7 @@ const DEFAULTS = {
   aiModel: 'seedance-2-pro' as CommercialModel,
   duration: 5 as const,
   aspectRatio: '9:16' as const,
+  quality: '720p' as CommercialQuality,
 }
 
 export const useCommercialStore = create<CommercialState>()(
@@ -86,6 +90,7 @@ export const useCommercialStore = create<CommercialState>()(
       setAiModel: (aiModel) => set({ aiModel }),
       setDuration: (duration) => set({ duration }),
       setAspectRatio: (aspectRatio) => set({ aspectRatio }),
+      setQuality: (quality) => set({ quality }),
 
       startGenerating: () =>
         set({
@@ -132,7 +137,7 @@ export const useCommercialStore = create<CommercialState>()(
     {
       name: 'commercial-generation-storage',
       storage: createJSONStorage(() => AsyncStorage),
-      version: 1,
+      version: 2,
     }
   )
 )
