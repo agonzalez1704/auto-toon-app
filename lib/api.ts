@@ -26,15 +26,16 @@ api.interceptors.request.use(async (config: InternalAxiosRequestConfig) => {
   return config
 })
 
-// Response interceptor: normalize errors
+// Response interceptor: normalize errors + handle consent gates
 api.interceptors.response.use(
   (response) => response,
-  (error: AxiosError<{ error?: string; message?: string }>) => {
+  (error: AxiosError<{ error?: string; message?: string; code?: string }>) => {
     const message =
       error.response?.data?.error ||
       error.response?.data?.message ||
       error.message ||
       'Something went wrong'
+    const code = error.response?.data?.code
     const url = error.config?.url
     const method = error.config?.method?.toUpperCase()
     if (error.response?.status) {
@@ -46,17 +47,66 @@ api.interceptors.response.use(
           (clerkReason ? ` reason=${clerkReason}` : '')
       )
     }
-    return Promise.reject(new ApiError(message, error.response?.status))
+
+    // Server-side consent gates (Apple guideline 5.1.1(i) / 5.1.2(i)).
+    // Sync the local store and pop the appropriate modal so the user can
+    // recover without the screen showing a generic error.
+    if (error.response?.status === 403 && code === 'AI_CONSENT_REQUIRED') {
+      import('@/stores/use-ai-consent-store').then(({ useAIConsentStore }) => {
+        useAIConsentStore.setState({ accepted: false, showConsentModal: true })
+      })
+    } else if (error.response?.status === 403 && code === 'TERMS_NOT_ACCEPTED') {
+      import('@/stores/use-terms-consent-store').then(({ useTermsConsentStore }) => {
+        useTermsConsentStore.setState({ showConsentModal: true })
+      })
+    }
+
+    return Promise.reject(new ApiError(message, error.response?.status, code))
   }
 )
 
 export class ApiError extends Error {
   status?: number
-  constructor(message: string, status?: number) {
+  code?: string
+  constructor(message: string, status?: number, code?: string) {
     super(message)
     this.name = 'ApiError'
     this.status = status
+    this.code = code
   }
+}
+
+/**
+ * Shared SSE / XHR consent-gate handler.
+ *
+ * Generation SSE endpoints return non-200 JSON on auth/consent gating before
+ * any SSE data flows. This helper parses the response body, opens the right
+ * consent modal when applicable, and returns the code so call sites can
+ * suppress the generic error toast (the modal is the user-visible recovery).
+ */
+export function handleSSEStatusGate(xhr: XMLHttpRequest): {
+  code?: string
+  message: string
+} {
+  let message = ''
+  let code: string | undefined
+  try {
+    const body = JSON.parse(xhr.responseText)
+    message = body.error || ''
+    code = body.code
+  } catch {
+    message = xhr.statusText || ''
+  }
+  if (xhr.status === 403 && code === 'AI_CONSENT_REQUIRED') {
+    import('@/stores/use-ai-consent-store').then(({ useAIConsentStore }) => {
+      useAIConsentStore.setState({ accepted: false, showConsentModal: true })
+    })
+  } else if (xhr.status === 403 && code === 'TERMS_NOT_ACCEPTED') {
+    import('@/stores/use-terms-consent-store').then(({ useTermsConsentStore }) => {
+      useTermsConsentStore.setState({ showConsentModal: true })
+    })
+  }
+  return { code, message }
 }
 
 export default api
@@ -517,15 +567,10 @@ export function generateVideoSSE(
       if (xhr.readyState === 4 && !errorHandled) {
         if (xhr.status !== 200) {
           errorHandled = true
-          let message = 'Video generation failed'
-          try {
-            const body = JSON.parse(xhr.responseText)
-            message = body.error || message
-          } catch {
-            // Not JSON — use status text
-            if (xhr.statusText) message = xhr.statusText
+          const gate = handleSSEStatusGate(xhr)
+          if (gate.code !== 'AI_CONSENT_REQUIRED' && gate.code !== 'TERMS_NOT_ACCEPTED') {
+            callbacks.onError(`${gate.message || 'Video generation failed'} (${xhr.status})`)
           }
-          callbacks.onError(`${message} (${xhr.status})`)
           return
         }
       }
@@ -666,14 +711,10 @@ export function generateCommercialSSE(
       if (xhr.readyState === 4 && !errorHandled) {
         if (xhr.status !== 200) {
           errorHandled = true
-          let message = 'Commercial generation failed'
-          try {
-            const body = JSON.parse(xhr.responseText)
-            message = body.error || message
-          } catch {
-            if (xhr.statusText) message = xhr.statusText
+          const gate = handleSSEStatusGate(xhr)
+          if (gate.code !== 'AI_CONSENT_REQUIRED' && gate.code !== 'TERMS_NOT_ACCEPTED') {
+            callbacks.onError(`${gate.message || 'Commercial generation failed'} (${xhr.status})`)
           }
-          callbacks.onError(`${message} (${xhr.status})`)
           return
         }
       }
@@ -875,14 +916,10 @@ export function editImageStream(
       if (xhr.readyState === 4 && !errorHandled) {
         if (xhr.status !== 200) {
           errorHandled = true
-          let message = 'Edit failed'
-          try {
-            const body = JSON.parse(xhr.responseText)
-            message = body.error || message
-          } catch {
-            if (xhr.statusText) message = xhr.statusText
+          const gate = handleSSEStatusGate(xhr)
+          if (gate.code !== 'AI_CONSENT_REQUIRED' && gate.code !== 'TERMS_NOT_ACCEPTED') {
+            callbacks.onError(`${gate.message || 'Edit failed'} (${xhr.status})`)
           }
-          callbacks.onError(`${message} (${xhr.status})`)
           callbacks.onComplete?.()
           return
         }
@@ -982,14 +1019,10 @@ export function generateFashionEditorialStream(
       if (xhr.readyState === 4 && !errorHandled) {
         if (xhr.status !== 200) {
           errorHandled = true
-          let message = 'Generation failed'
-          try {
-            const body = JSON.parse(xhr.responseText)
-            message = body.error || message
-          } catch {
-            if (xhr.statusText) message = xhr.statusText
+          const gate = handleSSEStatusGate(xhr)
+          if (gate.code !== 'AI_CONSENT_REQUIRED' && gate.code !== 'TERMS_NOT_ACCEPTED') {
+            callbacks.onError(`${gate.message || 'Generation failed'} (${xhr.status})`)
           }
-          callbacks.onError(`${message} (${xhr.status})`)
           callbacks.onComplete?.()
           return
         }
