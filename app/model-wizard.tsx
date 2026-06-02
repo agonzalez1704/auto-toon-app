@@ -19,7 +19,7 @@ import { useRouter } from 'expo-router'
 import Svg, { Path as SvgPath, Circle } from 'react-native-svg'
 import { useModelFactoryStore } from '@/stores/use-model-factory-store'
 import { useCreditsStore } from '@/stores/use-credits-store'
-import { useTermsConsentStore } from '@/stores/use-terms-consent-store'
+import { requireAllConsents } from '@/stores/use-consent-guards'
 import { uploadImage } from '@/lib/upload'
 import {
   generateFashionModel,
@@ -209,7 +209,6 @@ export default function ModelWizardScreen() {
   const router = useRouter()
   const store = useModelFactoryStore()
   const { balance, fetchCredits, setShowExhaustionModal } = useCreditsStore()
-  const { requireConsent } = useTermsConsentStore()
   const isPayPerUse = useSubscriptionStore((s) => s.plan) === 'PAYPERUSE'
 
   const faceModelCostLabel = getCostLabel(AI_MODELS.GEMINI_3_IMAGE.id, isPayPerUse)
@@ -329,7 +328,7 @@ export default function ModelWizardScreen() {
     if (!canGenerate || !store.faceUploadedUrl || isSubmittingRef.current) return
     isSubmittingRef.current = true
 
-    const consented = requireConsent(() => {
+    const consented = requireAllConsents(() => {
       isSubmittingRef.current = false
       handleGenerate()
     })
@@ -439,7 +438,6 @@ export default function ModelWizardScreen() {
     canGenerate,
     store,
     balance,
-    requireConsent,
     fetchCredits,
     setShowExhaustionModal,
     router,

@@ -10,7 +10,7 @@ import { getCommercialShots, PERSONA_OPTIONS, type CommercialPersona } from '@/l
 import { useCommercialStore, type CommercialModel } from '@/stores/use-commercial-store'
 import { useCreditsStore } from '@/stores/use-credits-store'
 import { useSubscriptionStore } from '@/stores/use-subscription-store'
-import { useTermsConsentStore } from '@/stores/use-terms-consent-store'
+import { requireAllConsents } from '@/stores/use-consent-guards'
 import { Image } from 'expo-image'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useRouter } from 'expo-router'
@@ -77,7 +77,6 @@ export default function ProductCommercialScreen() {
   const router = useRouter()
   const store = useCommercialStore()
   const { balance, fetchCredits, setShowExhaustionModal } = useCreditsStore()
-  const { requireConsent } = useTermsConsentStore()
   const isPayPerUse = useSubscriptionStore((s) => s.plan) === 'PAYPERUSE'
   const abortRef = useRef<{ abort: () => void } | null>(null)
 
@@ -108,7 +107,7 @@ export default function ProductCommercialScreen() {
   const handleGenerate = useCallback(() => {
     if (!store.sourceImageUrl) return
 
-    const consented = requireConsent(() => handleGenerate())
+    const consented = requireAllConsents(() => handleGenerate())
     if (!consented) return
 
     if (!isPayPerUse && balance !== null && balance < creditCost) {
@@ -147,7 +146,7 @@ export default function ProductCommercialScreen() {
         },
       }
     )
-  }, [store, balance, creditCost, activeQuality, isPayPerUse, isCustom, requireConsent, fetchCredits, setShowExhaustionModal, router])
+  }, [store, balance, creditCost, activeQuality, isPayPerUse, isCustom, fetchCredits, setShowExhaustionModal, router])
 
   useEffect(() => {
     return () => abortRef.current?.abort()

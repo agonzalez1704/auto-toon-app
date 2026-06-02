@@ -20,6 +20,7 @@ import Svg, {
 } from 'react-native-svg'
 import { useSubscriptionStore } from '@/stores/use-subscription-store'
 import { useCreditsStore } from '@/stores/use-credits-store'
+import { useAIConsentStore } from '@/stores/use-ai-consent-store'
 
 const BRAND = '#8B5CF6'
 const BRAND_CYAN = '#06B6D4'
@@ -150,6 +151,10 @@ export default function AccountScreen() {
               </View>
               <ChevronRight />
             </TouchableOpacity>
+
+            <View style={styles.menuDivider} />
+
+            <PrivacyRow_Inline />
           </View>
 
           {/* Sign Out */}
@@ -164,6 +169,70 @@ export default function AccountScreen() {
         </Animated.ScrollView>
       </SafeAreaView>
     </View>
+  )
+}
+
+// ─── AI Privacy row (Apple guideline 5.1.1(i) / 5.1.2(i) revoke surface) ──
+
+function ShieldIcon() {
+  return (
+    <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
+      <SvgPath
+        d="M12 2l7 4v5c0 5.25-3.5 9.74-7 11-3.5-1.26-7-5.75-7-11V6l7-4z"
+        stroke="#FBBF24"
+        strokeWidth={1.8}
+        strokeLinejoin="round"
+        fill="none"
+      />
+      <SvgPath
+        d="M9 12l2 2 4-4"
+        stroke="#FBBF24"
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  )
+}
+
+function PrivacyRow_Inline() {
+  const { accepted, acceptConsent, revoke, setShowConsentModal } = useAIConsentStore()
+  const handlePress = () => {
+    if (accepted) {
+      // Confirm revoke
+      import('react-native').then(({ Alert }) => {
+        Alert.alert(
+          'Revoke AI consent?',
+          'Generation features will be disabled until you grant consent again.',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            {
+              text: 'Revoke',
+              style: 'destructive',
+              onPress: () => { revoke().catch(() => {}) },
+            },
+          ],
+        )
+      })
+    } else {
+      setShowConsentModal(true)
+    }
+  }
+  // Touch a stable hook call to satisfy linter — acceptConsent reserved for future use.
+  void acceptConsent
+  return (
+    <TouchableOpacity style={styles.menuItem} onPress={handlePress} activeOpacity={0.7}>
+      <View style={[styles.menuIconWrap, { backgroundColor: 'rgba(251,191,36,0.12)' }]}>
+        <ShieldIcon />
+      </View>
+      <View style={styles.menuTextWrap}>
+        <Text style={styles.menuLabel}>AI Processing</Text>
+        <Text style={styles.menuValue}>
+          {accepted === true ? 'Allowed — tap to revoke' : 'Not allowed — tap to enable'}
+        </Text>
+      </View>
+      <ChevronRight />
+    </TouchableOpacity>
   )
 }
 

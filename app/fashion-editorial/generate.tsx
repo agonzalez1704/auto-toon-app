@@ -21,7 +21,7 @@ import { useFashionEditorialStore } from '@/stores/use-fashion-editorial-store'
 import { useModelFactoryStore } from '@/stores/use-model-factory-store'
 import { useCreditsStore } from '@/stores/use-credits-store'
 import { useSubscriptionStore } from '@/stores/use-subscription-store'
-import { useTermsConsentStore } from '@/stores/use-terms-consent-store'
+import { requireAllConsents } from '@/stores/use-consent-guards'
 import { generateFashionEditorial, generateFashionEditorialStream, editImageStream } from '@/lib/api'
 import { getCostLabel, AI_MODELS } from '@/lib/ai-models'
 import { MidjourneyParamsPanel, DEFAULT_MJ_PARAMS, buildMjFlags, type MjParams } from '@/components/midjourney-params'
@@ -191,7 +191,6 @@ export default function GenerateScreen() {
   const savedModels = useModelFactoryStore((s) => s.savedModels)
   const { balance, fetchCredits, setShowExhaustionModal } = useCreditsStore()
   const isPayPerUse = useSubscriptionStore((s) => s.plan) === 'PAYPERUSE'
-  const { requireConsent } = useTermsConsentStore()
 
   const [showSettings, setShowSettings] = useState(false)
   const [selectedAiModel, setSelectedAiModel] = useState(MODEL_OPTIONS[0])
@@ -230,7 +229,7 @@ export default function GenerateScreen() {
 
   const handleGenerate = useCallback(async () => {
     if (!store.canGenerateHero()) return
-    if (!requireConsent(() => handleGenerate())) return
+    if (!requireAllConsents(() => handleGenerate())) return
 
     const creditCost = selectedAiModel.credits
     if (!isPayPerUse && balance !== null && balance < creditCost) {
@@ -332,7 +331,7 @@ export default function GenerateScreen() {
     } catch (err: any) {
       store.setHeroError(err?.message || 'Generation failed')
     }
-  }, [store, balance, isPayPerUse, requireConsent, fetchCredits, setShowExhaustionModal, savedModels, selectedAiModel])
+  }, [store, balance, isPayPerUse, fetchCredits, setShowExhaustionModal, savedModels, selectedAiModel])
 
   const handleEditImage = useCallback(() => {
     if (!editPrompt.trim() || editing || !store.heroImageUrl) return

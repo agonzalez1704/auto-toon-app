@@ -52,6 +52,11 @@ function AuthGate({ children }: { children: React.ReactNode }) {
     // Ensure auth interceptor is set before making API calls
     setTokenGetter(getToken)
 
+    // Hydrate AI-consent state from server so requireConsent() can short-circuit.
+    import('@/stores/use-ai-consent-store').then(({ useAIConsentStore }) => {
+      useAIConsentStore.getState().hydrateFromServer()
+    })
+
     registerForPushNotifications().then((token) => {
       setHasPrompted()
       if (token) {

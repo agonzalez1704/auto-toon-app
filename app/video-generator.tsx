@@ -3,7 +3,7 @@ import { AI_MODELS, getCostLabel } from '@/lib/ai-models'
 import { analyzeProductForVideo, generateVideoSSE } from '@/lib/api'
 import { useCreditsStore } from '@/stores/use-credits-store'
 import { useSubscriptionStore } from '@/stores/use-subscription-store'
-import { useTermsConsentStore } from '@/stores/use-terms-consent-store'
+import { requireAllConsents } from '@/stores/use-consent-guards'
 import { useVideoStore } from '@/stores/use-video-store'
 import { Image } from 'expo-image'
 import { LinearGradient } from 'expo-linear-gradient'
@@ -245,7 +245,6 @@ export default function VideoGeneratorScreen() {
   const router = useRouter()
   const store = useVideoStore()
   const { balance, fetchCredits, setShowExhaustionModal } = useCreditsStore()
-  const { requireConsent } = useTermsConsentStore()
   const isPayPerUse = useSubscriptionStore((s) => s.plan) === 'PAYPERUSE'
   const abortRef = useRef<{ abort: () => void } | null>(null)
   const [showEndFramePicker, setShowEndFramePicker] = useState(false)
@@ -281,7 +280,7 @@ export default function VideoGeneratorScreen() {
   const handleGenerate = useCallback(() => {
     if (!store.sourceImageUrl || !plan) return
 
-    const consented = requireConsent(() => handleGenerate())
+    const consented = requireAllConsents(() => handleGenerate())
     if (!consented) return
 
     if (balance !== null && balance < creditCost) {
@@ -324,7 +323,7 @@ export default function VideoGeneratorScreen() {
     )
 
     abortRef.current = controller
-  }, [store, plan, balance, creditCost, requireConsent, fetchCredits, setShowExhaustionModal, router])
+  }, [store, plan, balance, creditCost, fetchCredits, setShowExhaustionModal, router])
 
   // Cleanup on unmount
   useEffect(() => {

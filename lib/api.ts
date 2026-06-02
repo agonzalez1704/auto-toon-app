@@ -91,6 +91,22 @@ export async function checkTerms() {
   return data
 }
 
+// AI processing consent — Apple guideline 5.1.1(i) / 5.1.2(i).
+export async function acceptAIConsent() {
+  const { data } = await api.post<{ accepted: true }>('/api/ai-consent')
+  return data
+}
+
+export async function checkAIConsent() {
+  const { data } = await api.get<{ accepted: boolean }>('/api/ai-consent')
+  return data
+}
+
+export async function revokeAIConsent() {
+  const { data } = await api.delete<{ accepted: false }>('/api/ai-consent')
+  return data
+}
+
 // Upload
 export interface UploadUrlRequest {
   filename: string

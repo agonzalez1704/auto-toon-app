@@ -5,7 +5,7 @@ import { queryKeys } from '@/lib/query'
 import { useCreditsStore } from '@/stores/use-credits-store'
 import { useFashionEditorialStore } from '@/stores/use-fashion-editorial-store'
 import { useSubscriptionStore } from '@/stores/use-subscription-store'
-import { useTermsConsentStore } from '@/stores/use-terms-consent-store'
+import { requireAllConsents } from '@/stores/use-consent-guards'
 import { useQueryClient } from '@tanstack/react-query'
 import * as FileSystem from 'expo-file-system/legacy'
 import { Image } from 'expo-image'
@@ -160,7 +160,6 @@ export default function MultiAngleScreen() {
   const queryClient = useQueryClient()
   const { balance, fetchCredits, setShowExhaustionModal } = useCreditsStore()
   const isPayPerUse = useSubscriptionStore((s) => s.plan) === 'PAYPERUSE'
-  const { requireConsent } = useTermsConsentStore()
 
   const [selectedModel, setSelectedModel] = useState<string>(AI_MODELS.GEMINI_3_1_FLASH_IMAGE.id)
   const [aspectRatio, setAspectRatio] = useState('1:1')
@@ -178,7 +177,7 @@ export default function MultiAngleScreen() {
 
   const handleGenerate = useCallback(async () => {
     if (!sourceUrl) return
-    if (!requireConsent(() => handleGenerate())) return
+    if (!requireAllConsents(() => handleGenerate())) return
 
     const creditCost = getModelCredits(selectedModel)
     if (!isPayPerUse && balance !== null && balance < creditCost) {
@@ -200,11 +199,11 @@ export default function MultiAngleScreen() {
     } catch (err: any) {
       store.setMultiAngleError(err?.message || 'Multi-angle generation failed')
     }
-  }, [sourceUrl, selectedModel, aspectRatio, store, balance, isPayPerUse, requireConsent, fetchCredits, setShowExhaustionModal])
+  }, [sourceUrl, selectedModel, aspectRatio, store, balance, isPayPerUse, fetchCredits, setShowExhaustionModal])
 
   const handleUpscale = useCallback(async () => {
     if (selectedForUpscale.length === 0) return
-    if (!requireConsent(() => handleUpscale())) return
+    if (!requireAllConsents(() => handleUpscale())) return
 
     if (!isPayPerUse && balance !== null && balance < upscaleCost) {
       setShowExhaustionModal(true)
@@ -240,7 +239,7 @@ export default function MultiAngleScreen() {
     } catch (err: any) {
       store.setUpscaleError(err?.message || 'Upscale failed')
     }
-  }, [selectedForUpscale, store, aspectRatio, balance, isPayPerUse, upscaleCost, requireConsent, fetchCredits, setShowExhaustionModal, queryClient, router])
+  }, [selectedForUpscale, store, aspectRatio, balance, isPayPerUse, upscaleCost, fetchCredits, setShowExhaustionModal, queryClient, router])
 
   const handleSave = useCallback(async () => {
     const urls = [...store.multiAngleUrls]

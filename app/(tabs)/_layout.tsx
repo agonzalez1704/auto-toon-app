@@ -7,6 +7,7 @@ import type {
 import type { ParamListBase, TabNavigationState } from '@react-navigation/native'
 import { Platform } from 'react-native'
 import { TermsConsentModal } from '@/components/terms-consent-modal'
+import { AIConsentModal } from '@/components/ai-consent-modal'
 import { theme } from '@/constants/theme'
 
 const { Navigator } = createNativeBottomTabNavigator()
@@ -81,6 +82,7 @@ export default function TabLayout() {
         />
       </Tabs>
       <TermsConsentModal />
+      <AIConsentModal />
     </>
   )
 }

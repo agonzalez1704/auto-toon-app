@@ -7,7 +7,7 @@ import { useCreditsStore } from '@/stores/use-credits-store'
 import { useSubscriptionStore } from '@/stores/use-subscription-store'
 import { getCostLabel } from '@/lib/ai-models'
 import { RESTORE_MODELS, useRestoreStore, type Resolution, type RestoreModelId } from '@/stores/use-restore-store'
-import { useTermsConsentStore } from '@/stores/use-terms-consent-store'
+import { requireAllConsents } from '@/stores/use-consent-guards'
 import * as FileSystem from 'expo-file-system/legacy'
 import { Image } from 'expo-image'
 import * as ImagePicker from 'expo-image-picker'
@@ -88,7 +88,6 @@ export default function RestoreScreen() {
   const router = useRouter()
   const store = useRestoreStore()
   const { balance, fetchCredits, setShowExhaustionModal } = useCreditsStore()
-  const { requireConsent } = useTermsConsentStore()
   const isPayPerUse = useSubscriptionStore((s) => s.plan) === 'PAYPERUSE'
 
   const [isPickingImage, setIsPickingImage] = useState(false)
@@ -170,7 +169,7 @@ export default function RestoreScreen() {
     if (!canRestore || !store.uploadedImageUrl || isSubmittingRef.current) return
     isSubmittingRef.current = true
 
-    const consented = requireConsent(() => {
+    const consented = requireAllConsents(() => {
       isSubmittingRef.current = false
       handleRestore()
     })
@@ -214,7 +213,7 @@ export default function RestoreScreen() {
     } finally {
       isSubmittingRef.current = false
     }
-  }, [canRestore, store, balance, creditCost, requireConsent, fetchCredits, setShowExhaustionModal])
+  }, [canRestore, store, balance, creditCost, fetchCredits, setShowExhaustionModal])
 
   // ─── Save image ─────────────────────────────────────────────────────
 

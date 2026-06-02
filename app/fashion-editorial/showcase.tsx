@@ -5,7 +5,7 @@ import { uploadImage } from '@/lib/upload'
 import { useCreditsStore } from '@/stores/use-credits-store'
 import { useFashionEditorialStore } from '@/stores/use-fashion-editorial-store'
 import { useSubscriptionStore } from '@/stores/use-subscription-store'
-import { useTermsConsentStore } from '@/stores/use-terms-consent-store'
+import { requireAllConsents } from '@/stores/use-consent-guards'
 import * as FileSystem from 'expo-file-system/legacy'
 import { Image } from 'expo-image'
 import * as ImagePicker from 'expo-image-picker'
@@ -177,7 +177,6 @@ export default function ShowcaseScreen() {
   const store = useFashionEditorialStore()
   const { balance, fetchCredits, setShowExhaustionModal } = useCreditsStore()
   const isPayPerUse = useSubscriptionStore((s) => s.plan) === 'PAYPERUSE'
-  const { requireConsent } = useTermsConsentStore()
   const pickImage = useImagePicker()
 
   const [environment, setEnvironment] = useState('auto')
@@ -232,7 +231,7 @@ export default function ShowcaseScreen() {
 
   const handleGenerate = useCallback(async () => {
     if (!canGenerate || !product) return
-    if (!requireConsent(() => handleGenerate())) return
+    if (!requireAllConsents(() => handleGenerate())) return
 
     // UGC generates 9 images
     const creditCost = (AI_MODELS.GEMINI_3_IMAGE.credits ?? 3) * 9
@@ -293,7 +292,7 @@ export default function ShowcaseScreen() {
     } catch (err: any) {
       store.setShowcaseError(err?.message || 'Showcase generation failed')
     }
-  }, [canGenerate, product, store, balance, isPayPerUse, requireConsent, fetchCredits, setShowExhaustionModal, environment, lighting, productInteraction])
+  }, [canGenerate, product, store, balance, isPayPerUse, fetchCredits, setShowExhaustionModal, environment, lighting, productInteraction])
 
   const handleSave = useCallback(async () => {
     const urls = [...store.showcaseUrls]

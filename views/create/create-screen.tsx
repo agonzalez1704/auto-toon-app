@@ -27,7 +27,7 @@ import { enhanceProduct } from '@/lib/api'
 import { getCostLabel } from '@/lib/ai-models'
 import { useCreditsStore } from '@/stores/use-credits-store'
 import { useSubscriptionStore } from '@/stores/use-subscription-store'
-import { useTermsConsentStore } from '@/stores/use-terms-consent-store'
+import { requireAllConsents } from '@/stores/use-consent-guards'
 import {
   AI_MODELS,
   GOAL_MAP,
@@ -55,7 +55,6 @@ export default function CreateScreen() {
 
   const store = useProductEnhancerStore()
   const { balance, fetchCredits, setShowExhaustionModal } = useCreditsStore()
-  const { requireConsent } = useTermsConsentStore()
   const isPayPerUse = useSubscriptionStore((s) => s.plan) === 'PAYPERUSE'
   const { isPicking, pickFromGallery, takePhoto } = useImagePipeline()
 
@@ -72,7 +71,7 @@ export default function CreateScreen() {
   const handleGenerate = useCallback(async () => {
     if (!canGenerate || !store.uploadedImageUrl) return
 
-    const consented = requireConsent(() => handleGenerate())
+    const consented = requireAllConsents(() => handleGenerate())
     if (!consented) return
 
     if (balance !== null && balance < creditCost) {
@@ -124,7 +123,7 @@ export default function CreateScreen() {
         store.setError(err?.message || 'Something went wrong')
       }
     }
-  }, [canGenerate, store, balance, creditCost, requireConsent, fetchCredits, setShowExhaustionModal, mjParams])
+  }, [canGenerate, store, balance, creditCost, fetchCredits, setShowExhaustionModal, mjParams])
 
   const resultUrls = [store.heroImageUrl, store.vignetteImageUrl].filter(Boolean) as string[]
 

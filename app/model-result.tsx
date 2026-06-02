@@ -1,5 +1,6 @@
 import { ParticleSphere } from '@/components/particle-sphere'
 import { generateCharacterSheet } from '@/lib/api'
+import { requireAllConsents } from '@/stores/use-consent-guards'
 import { useCreditsStore } from '@/stores/use-credits-store'
 import { useFashionEditorialStore } from '@/stores/use-fashion-editorial-store'
 import { useModelFactoryStore } from '@/stores/use-model-factory-store'
@@ -169,6 +170,8 @@ export default function ModelResultScreen() {
 
   const confirmSaveToGallery = useCallback(async () => {
     if (!imageUrl) return
+    // Apple guideline 5.1.1(i) / 5.1.2(i): gate AI calls behind Terms + AI consent.
+    if (!requireAllConsents(() => confirmSaveToGallery())) return
     const name = modelName.trim() || 'Untitled Model'
 
     // Save a temporary local entry while we generate the character sheet

@@ -8,7 +8,7 @@ import {
   useFashionEditorialStore,
 } from '@/stores/use-fashion-editorial-store'
 import { useSubscriptionStore } from '@/stores/use-subscription-store'
-import { useTermsConsentStore } from '@/stores/use-terms-consent-store'
+import { requireAllConsents } from '@/stores/use-consent-guards'
 import { useQueryClient } from '@tanstack/react-query'
 import * as FileSystem from 'expo-file-system/legacy'
 import { Image } from 'expo-image'
@@ -108,7 +108,6 @@ export default function CampaignScreen() {
   const queryClient = useQueryClient()
   const { balance, fetchCredits, setShowExhaustionModal } = useCreditsStore()
   const isPayPerUse = useSubscriptionStore((s) => s.plan) === 'PAYPERUSE'
-  const { requireConsent } = useTermsConsentStore()
 
   const [selectedForUpscale, setSelectedForUpscale] = useState<number[]>([])
   const [selectedModel, setSelectedModel] = useState<string>(AI_MODELS.GEMINI_3_IMAGE.id)
@@ -125,7 +124,7 @@ export default function CampaignScreen() {
 
   const handleGenerate = useCallback(async () => {
     if (!store.canGenerateVariations()) return
-    if (!requireConsent(() => handleGenerate())) return
+    if (!requireAllConsents(() => handleGenerate())) return
 
     const creditCost = getModelCredits(selectedModel)
     if (!isPayPerUse && balance !== null && balance < creditCost) {
@@ -172,11 +171,11 @@ export default function CampaignScreen() {
     } catch (err: any) {
       store.setVariationsError(err?.message || 'Variations failed')
     }
-  }, [store, selectedModel, balance, isPayPerUse, requireConsent, fetchCredits, setShowExhaustionModal])
+  }, [store, selectedModel, balance, isPayPerUse, fetchCredits, setShowExhaustionModal])
 
   const handleUpscale = useCallback(async () => {
     if (selectedForUpscale.length === 0) return
-    if (!requireConsent(() => handleUpscale())) return
+    if (!requireAllConsents(() => handleUpscale())) return
 
     if (!isPayPerUse && balance !== null && balance < upscaleCost) {
       setShowExhaustionModal(true)
@@ -212,7 +211,7 @@ export default function CampaignScreen() {
     } catch (err: any) {
       store.setUpscaleError(err?.message || 'Upscale failed')
     }
-  }, [selectedForUpscale, store, balance, isPayPerUse, upscaleCost, requireConsent, fetchCredits, setShowExhaustionModal, queryClient, router])
+  }, [selectedForUpscale, store, balance, isPayPerUse, upscaleCost, fetchCredits, setShowExhaustionModal, queryClient, router])
 
   const handleSave = useCallback(async () => {
     const urls = [...store.variationUrls]
