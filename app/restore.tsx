@@ -178,7 +178,7 @@ export default function RestoreScreen() {
       return
     }
 
-    if (balance !== null && balance < creditCost) {
+    if (!isPayPerUse && balance !== null && balance < creditCost) {
       setShowExhaustionModal(true)
       isSubmittingRef.current = false
       return

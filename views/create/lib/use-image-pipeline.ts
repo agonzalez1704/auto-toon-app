@@ -5,7 +5,7 @@
 import * as ImagePicker from 'expo-image-picker'
 import { Alert } from 'react-native'
 import { useCallback, useState } from 'react'
-import { analyzeProduct } from '@/lib/api'
+import { analyzeProduct, ApiError } from '@/lib/api'
 import { uploadImage } from '@/lib/upload'
 import { useProductEnhancerStore } from '@/stores/use-product-enhancer-store'
 
@@ -25,6 +25,14 @@ export function useImagePipeline() {
         store.applyAnalysisSuggestions(analysis)
       } catch (err) {
         console.error('Upload/analysis failed:', err)
+        const isTimeout =
+          err instanceof ApiError && /timeout/i.test(err.message)
+        Alert.alert(
+          isTimeout ? 'Taking longer than expected' : 'Upload failed',
+          isTimeout
+            ? 'The AI analysis is still running. You can try again or proceed with the uploaded image.'
+            : err instanceof Error ? err.message : 'Something went wrong',
+        )
       } finally {
         store.setAnalysisState(false)
       }

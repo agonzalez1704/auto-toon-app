@@ -3,7 +3,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { Image } from 'expo-image'
 import { LinearGradient } from 'expo-linear-gradient'
 import { theme, gradients } from '@/constants/theme'
-import type { GoalId } from '@/stores/use-product-enhancer-store'
+import type { GoalId, SecondImageType } from '@/stores/use-product-enhancer-store'
 import { getResultLabel } from '../data'
 
 interface ResultViewProps {
@@ -11,6 +11,9 @@ interface ResultViewProps {
   heroImageUrl: string | null
   vignetteImageUrl: string | null
   goalId: GoalId | null
+  // What the server actually generated — decides whether the grid picker is offered
+  secondImageType?: SecondImageType | null
+  onUpscaleGrid?: () => void
   onZoom: (initialIndex: 0 | 1) => void
   onAgain: () => void
 }
@@ -20,9 +23,12 @@ export function ResultView({
   heroImageUrl,
   vignetteImageUrl,
   goalId,
+  secondImageType,
+  onUpscaleGrid,
   onZoom,
   onAgain,
 }: ResultViewProps) {
+  const showGridUpscale = secondImageType === '3x3' && !!vignetteImageUrl && !!onUpscaleGrid
   return (
     <View style={styles.root}>
       <StatusBar barStyle="light-content" />
@@ -44,6 +50,19 @@ export function ResultView({
               imageUrl={vignetteImageUrl}
               onPress={() => onZoom(heroImageUrl ? 1 : 0)}
             />
+          )}
+
+          {showGridUpscale && (
+            <TouchableOpacity
+              style={styles.upscale}
+              onPress={onUpscaleGrid}
+              activeOpacity={0.85}
+              accessibilityLabel="Pick images from the grid to upscale"
+              accessibilityRole="button"
+            >
+              <Text style={styles.upscaleText}>Upscale Grid Images</Text>
+              <Text style={styles.upscaleHint}>Pick which photos to enhance · charged per image</Text>
+            </TouchableOpacity>
           )}
 
           <TouchableOpacity
@@ -131,5 +150,25 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: '700',
     color: theme.colors.text,
+  },
+  upscale: {
+    paddingVertical: 14,
+    minHeight: 56,
+    borderRadius: theme.radius.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    marginBottom: theme.spacing.md,
+  },
+  upscaleText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: theme.colors.text,
+  },
+  upscaleHint: {
+    fontSize: 12,
+    color: theme.colors.textDim,
+    marginTop: 2,
   },
 })

@@ -16,10 +16,60 @@ import { useOnboardingStore } from '@/stores/use-onboarding-store'
 import { useSignUpStore } from '@/stores/use-signup-store'
 import { useNotificationsStore } from '@/stores/use-notifications-store'
 import { registerForPushNotifications, syncPushToken } from '@/lib/notifications'
+import { TermsConsentModal } from '@/components/terms-consent-modal'
+import { AIConsentModal } from '@/components/ai-consent-modal'
+import { ExhaustionModal } from '@/components/exhaustion-modal'
+import { InFlightBanner } from '@/components/in-flight-banner'
+import { useGenerationResume } from '@/lib/generation-resume'
+import { useGenerationTracker } from '@/stores/use-generation-tracker'
 
 export { ErrorBoundary } from 'expo-router'
 
 SplashScreen.preventAutoHideAsync()
+
+/**
+ * Shape of the `data` blob attached to every server-sent push. `generationId`
+ * lets the client correlate a notification with an in-flight job tracked
+ * locally — without it we can't clear the banner without polling.
+ */
+type PushPayload = {
+  action?: string
+  generationId?: string
+  imageUrl?: string
+  videoUrl?: string
+  reason?: string
+}
+
+/**
+ * If the push refers to a tracked job, dispatch the terminal status through
+ * the tracker and return true. Returns false when the push has no matching
+ * job (legacy push, unrelated event) so the caller can fall back to its
+ * own routing logic.
+ */
+function dispatchPushToTracker(
+  data: PushPayload | undefined,
+  _router: ReturnType<typeof useRouter>,
+): boolean {
+  if (!data?.generationId || !data.action) return false
+  const tracker = useGenerationTracker.getState()
+  if (!tracker.jobs[data.generationId]) return false
+
+  if (data.action === 'video_ready' || data.action === 'generation_complete') {
+    tracker.completeJob(data.generationId, {
+      status: 'completed',
+      videoUrl: data.videoUrl,
+    })
+    return true
+  }
+  if (data.action === 'generation_failed') {
+    tracker.completeJob(data.generationId, {
+      status: 'failed',
+      errorMessage: data.reason || 'Generation failed',
+    })
+    return true
+  }
+  return false
+}
 
 function AuthGate({ children }: { children: React.ReactNode }) {
   const { isLoaded, isSignedIn, getToken } = useAuth()
@@ -34,6 +84,14 @@ function AuthGate({ children }: { children: React.ReactNode }) {
   const setHasPrompted = useNotificationsStore((s) => s.setHasPrompted)
   const notificationListener = useRef<Notifications.Subscription>()
   const responseListener = useRef<Notifications.Subscription>()
+
+  // Resume in-flight generation jobs whenever the app foregrounds. This
+  // covers the case where a video / commercial generation was started, the
+  // user backgrounded the app, iOS killed the SSE socket, and the backend
+  // finished the work autonomously. On foreground we poll the status
+  // endpoint per tracked job id and dispatch the result to whichever screen
+  // registered the matching origin handler.
+  useGenerationResume()
 
   // Wire Clerk's getToken to the API client as soon as Clerk is loaded.
   // getToken() returns null when unsigned, so attaching early is safe and
@@ -66,24 +124,29 @@ function AuthGate({ children }: { children: React.ReactNode }) {
       }
     })
 
-    // Handle notifications received while the app is in the foreground
+    // Foreground notification: drive the tracker so the in-flight banner
+    // clears the moment the backend reports completion, even if the SSE
+    // socket was killed by backgrounding. The tracker handler (registered
+    // by the source screen) takes care of any UI navigation.
     notificationListener.current = Notifications.addNotificationReceivedListener(
-      (_notification) => {
-        // Foreground notification received — no-op by default since
-        // the handler already shows the alert via setNotificationHandler
+      (notification) => {
+        const data = notification.request.content.data as PushPayload | undefined
+        dispatchPushToTracker(data, router)
       }
     )
 
-    // Handle notification taps (user interacts with a notification)
+    // Notification tap. Dispatch through the tracker so the source screen's
+    // handler runs (it knows where to navigate). Fall back to raw URL
+    // routing only when the push lacks a generationId — e.g. legacy pushes
+    // from before this change shipped.
     responseListener.current = Notifications.addNotificationResponseReceivedListener(
       (response) => {
-        const data = response.notification.request.content.data as
-          | { type?: string; imageUrl?: string; videoUrl?: string }
-          | undefined
+        const data = response.notification.request.content.data as PushPayload | undefined
+        const dispatched = dispatchPushToTracker(data, router)
+        if (dispatched) return
 
-        if (!data?.type) return
-
-        switch (data.type) {
+        if (!data?.action) return
+        switch (data.action) {
           case 'generation_complete':
             if (data.imageUrl) {
               router.push({ pathname: '/image-viewer', params: { imageUrl: data.imageUrl } })
@@ -165,6 +228,14 @@ export default function RootLayout() {
         <QueryClientProvider client={queryClient}>
           <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
             <AuthGate>
+              {/* Mounted at root so they overlay every modal-presentation route
+                  (product-commercial, video-generator, fashion-editorial, etc).
+                  Mounting under (tabs)/_layout left consent prompts invisible
+                  on screens pushed above the tabs stack. */}
+              <TermsConsentModal />
+              <AIConsentModal />
+              <ExhaustionModal />
+              <InFlightBanner />
               <Stack screenOptions={{ headerShown: false }}>
                 <Stack.Screen name="(onboarding)" />
                 <Stack.Screen name="(auth)" />

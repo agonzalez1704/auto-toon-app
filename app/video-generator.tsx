@@ -1,6 +1,7 @@
 import { ParticleSphere } from '@/components/particle-sphere'
 import { AI_MODELS, getCostLabel } from '@/lib/ai-models'
 import { analyzeProductForVideo, generateVideoSSE } from '@/lib/api'
+import { useGenerationTracker } from '@/stores/use-generation-tracker'
 import { useCreditsStore } from '@/stores/use-credits-store'
 import { useSubscriptionStore } from '@/stores/use-subscription-store'
 import { requireAllConsents } from '@/stores/use-consent-guards'
@@ -254,6 +255,30 @@ export default function VideoGeneratorScreen() {
   const duration = plan?.duration ?? 5
   const videoCostLabel = getCostLabel(AI_MODELS.KLING_V3.id, isPayPerUse, { videoDuration: duration })
 
+  // Register a result handler so backgrounded video generations resume
+  // cleanly via the AppState poll loop instead of staying stuck on a dead
+  // SSE socket. Origin 'video-generator' matches the registerJob call.
+  useEffect(() => {
+    const { registerHandler, unregisterHandler } = useGenerationTracker.getState()
+    registerHandler('video-generator', (_id, result) => {
+      if (result.status === 'completed' && result.videoUrl) {
+        store.setGenerationResult(result.videoUrl, _id)
+        fetchCredits()
+        router.replace({
+          pathname: '/video-player',
+          params: {
+            videoUrl: result.videoUrl,
+            title: plan?.productName || store.productName,
+          },
+        })
+      } else if (result.status === 'failed') {
+        store.setError(result.errorMessage || 'Generation failed')
+        fetchCredits()
+      }
+    })
+    return () => unregisterHandler('video-generator')
+  }, [store, plan, fetchCredits, router])
+
   // Auto-analyze on mount
   useEffect(() => {
     if (store.sourceImageUrl && store.analysisPhase === 'idle') {
@@ -283,7 +308,7 @@ export default function VideoGeneratorScreen() {
     const consented = requireAllConsents(() => handleGenerate())
     if (!consented) return
 
-    if (balance !== null && balance < creditCost) {
+    if (!isPayPerUse && balance !== null && balance < creditCost) {
       setShowExhaustionModal(true)
       return
     }
@@ -304,7 +329,19 @@ export default function VideoGeneratorScreen() {
         onProgress: (event) => {
           store.setGenerationProgress(event.percent, event.message)
         },
+        onJobStarted: (event) => {
+          useGenerationTracker.getState().registerJob({
+            id: event.generationId,
+            kind: event.kind,
+            origin: 'video-generator',
+            startedAt: Date.now(),
+            label: (plan.productName || store.productName)
+              ? `Video: ${plan.productName || store.productName}`
+              : 'Video',
+          })
+        },
         onSuccess: (event) => {
+          useGenerationTracker.getState().removeJob(event.videoGenerationId)
           store.setGenerationResult(event.videoUrl, event.videoGenerationId)
           fetchCredits()
           router.replace({

@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Background Generation — change log</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<style>
+  :root {
+    --bg: #0f1117;
+    --panel: #161924;
+    --panel-2: #1e2232;
+    --border: rgba(255,255,255,0.08);
+    --text: #f4f5fa;
+    --muted: rgba(244,245,250,0.62);
+    --accent: #FBBF24;
+    --accent-2: #F59E0B;
+    --good: #34d399;
+    --bad: #f87171;
+    --warn: #fbbf24;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Inter", system-ui, sans-serif; line-height: 1.55; }
+  body { padding: 48px 24px 96px; max-width: 980px; margin: 0 auto; }
+  h1 { font-size: 32px; margin: 0 0 8px; letter-spacing: -0.02em; }
+  h2 { font-size: 22px; margin: 40px 0 12px; letter-spacing: -0.01em; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+  h3 { font-size: 16px; margin: 24px 0 8px; color: var(--accent); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; }
+  p, li { color: var(--text); font-size: 15px; }
+  .muted { color: var(--muted); font-size: 14px; }
+  .lede { color: var(--muted); font-size: 16px; margin-top: 0; }
+  code { font-family: var(--mono); background: var(--panel-2); padding: 1px 6px; border-radius: 4px; font-size: 13px; }
+  pre { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 16px; overflow-x: auto; font-family: var(--mono); font-size: 13px; line-height: 1.5; }
+  pre code { background: transparent; padding: 0; }
+  .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 20px 22px; margin: 16px 0; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 720px) { .grid-2 { grid-template-columns: 1fr; } }
+  .tag { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+  .tag-new { background: rgba(52,211,153,0.15); color: var(--good); }
+  .tag-changed { background: rgba(251,191,36,0.15); color: var(--warn); }
+  .tag-deferred { background: rgba(248,113,113,0.15); color: var(--bad); }
+  .file { font-family: var(--mono); font-size: 13px; color: var(--accent); }
+  .step { display: flex; gap: 14px; padding: 12px 0; border-top: 1px dashed var(--border); }
+  .step:first-of-type { border-top: 0; }
+  .step .num { font-family: var(--mono); color: var(--accent); font-weight: 700; min-width: 24px; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 14px; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border); }
+  th { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; }
+  .pill { display: inline-block; padding: 3px 10px; border-radius: 6px; background: var(--panel-2); font-family: var(--mono); font-size: 12px; }
+  .callout { border-left: 3px solid var(--accent); background: rgba(251,191,36,0.06); padding: 14px 18px; border-radius: 0 10px 10px 0; margin: 16px 0; }
+  .seq { font-family: var(--mono); white-space: pre; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 16px; overflow-x: auto; font-size: 12px; line-height: 1.55; color: var(--text); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Auto Toon — background-resumable generation</h1>
+  <p class="lede">
+    Generations now survive the user backgrounding the app, locking the device, or quitting and returning later. The bulk of the work was a new SSE protocol that lets the client correlate streamed jobs with persisted server-side records, plus an AppState resume loop that polls those records on foreground and dispatches results to the right screen.
+  </p>
+</header>
+
+<section>
+  <h2>The new SSE job protocol <span class="tag tag-new">core</span></h2>
+
+  <h3>The problem</h3>
+  <p>
+    Both video and commercial generation are end-to-end SSE: the server streams progress, eventually emits a <code>success</code> event with the final URL, and the client navigates to a viewer screen. That works perfectly while the app is in the foreground. It breaks the moment iOS suspends the app — the SSE socket dies, the client never sees <code>success</code>, and there's no recovery: the work might be done on the server but the user has no way to learn that, no way to land on the result, and the UI sits frozen on the generating screen until they hard-quit.
+  </p>
+
+  <h3>The fix in one paragraph</h3>
+  <p>
+    The backend now emits a brand-new SSE event <code>job_started</code> the moment it persists the <code>videoGeneration</code> row, carrying that row's <code>id</code>. The client takes that id and registers it with a central <code>useGenerationTracker</code> zustand store (persisted to AsyncStorage). When the app foregrounds, a <code>useGenerationResume</code> hook polls <code>GET /api/fashion-editorial/video/status/&lt;id&gt;</code> for every tracked id. Any job that reports <code>completed</code> or <code>failed</code> is dispatched through an <code>onComplete</code> handler the source screen registered at mount time, which performs the same navigation it would have on a live SSE <code>success</code>. The result: a video generation that started before the user pulled down on the home indicator finishes its server work, fires a push, and on next foreground the user is dropped straight into the player.
+  </p>
+
+  <h3>Event timeline</h3>
+  <div class="seq">backend (SSE)            client (XHR-SSE)         tracker store              AppState
+─────────────────        ─────────────────         ──────────────             ─────────
+DB row created
+emit {job_started,id} ─► onJobStarted callback ─► registerJob({id, origin})
+emit {progress, …}    ─► onProgress
+                         …
+                         (user backgrounds app)                                background
+                                                                               ↓
+                         SSE socket dies   ✗
+backend keeps running
+DB row → completed
+notifyVideoReady(…,id)                                                         active ─►
+                                                  useGenerationResume()
+                                                  for each tracked id:
+                                                    GET /video/status/:id
+                                                    status === completed?
+                                                  ↓
+                                                  completeJob(id, result)
+                                                  → onComplete handler runs
+                                                  → router.replace('/video-player')
+                                                  → removeJob(id)</div>
+
+  <h3>Why a tracker store and not just a screen-local ref</h3>
+  <p>
+    The screen that started the generation may not be mounted by the time the resume polling fires — the user could have navigated away, sent the app to background, swiped through home, killed the app, come back. The persisted tracker survives all of those: the id stays in AsyncStorage; <code>useGenerationResume</code> runs at the root layout (not the screen layout), so it runs even on cold start; and screens re-register their <code>onComplete</code> handler on mount, so whichever screen the user is on when results come back receives the dispatch.
+  </p>
+
+  <h3>Why push <em>and</em> polling</h3>
+  <p>
+    Push notifications arrive in seconds when the network and APNS cooperate. The push handler in <code>app/_layout.tsx</code> now reads <code>generationId</code> off the payload and calls <code>tracker.completeJob</code> directly — the banner clears instantly without a network round trip, and tapping a notification routes through the same handler that an SSE <code>success</code> would have. Polling is the fallback for when push is slow, dropped, or disabled — there is always exactly one terminal dispatch per job (the tracker checks for the id before dispatching, so push + poll race-safe).
+  </p>
+</section>
+
+<section>
+  <h2>File map</h2>
+
+  <div class="panel">
+    <h3>Backend — canonical + legacy mirror</h3>
+    <table>
+      <thead><tr><th>File</th><th>Repo</th><th>Change</th></tr></thead>
+      <tbody>
+        <tr><td class="file">app/api/fashion-editorial/commercial/generate/route.ts</td><td>auto-toon, toon-converter</td><td>Emits <code>job_started</code>; passes <code>generationId</code> to <code>notifyVideoReady</code> + <code>notifyGenerationFailed</code></td></tr>
+        <tr><td class="file">app/api/fashion-editorial/video/generate/route.ts</td><td>auto-toon, toon-converter</td><td>Emits <code>job_started</code>; added push notify call sites with <code>generationId</code></td></tr>
+        <tr><td class="file">lib/push-notifications.ts</td><td>auto-toon, toon-converter</td><td><code>generationId</code> propagated into the data payload of all three notify functions</td></tr>
+        <tr><td class="file">prisma/schema.prisma</td><td>auto-toon, toon-converter</td><td>New <code>ImageGeneration</code> model + User reverse relation</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="panel">
+    <h3>App — new files</h3>
+    <ul>
+      <li><span class="file">stores/use-generation-tracker.ts</span> — persisted registry of in-flight jobs + non-persisted per-origin completion handlers.</li>
+      <li><span class="file">lib/generation-resume.ts</span> — <code>useGenerationResume</code> hook; polls every tracked job up to 8 × 3s on foreground; dispatches terminal state through the handler.</li>
+      <li><span class="file">components/in-flight-banner.tsx</span> — pulsing pill mounted at the root; visible from any screen while jobs are tracked; tap routes back to the source flow.</li>
+      <li><span class="file">components/exhaustion-modal.tsx</span> — paywall sheet that pops when a non-PAYPERUSE user hits the credit gate (was previously a flag with no UI consumer).</li>
+    </ul>
+  </div>
+
+  <div class="panel">
+    <h3>App — touched files</h3>
+    <ul>
+      <li><span class="file">app/_layout.tsx</span> — mounts <code>useGenerationResume</code>, <code>&lt;InFlightBanner /&gt;</code>, <code>&lt;ExhaustionModal /&gt;</code>; foreground &amp; tap notification handlers now drive the tracker via <code>dispatchPushToTracker</code>.</li>
+      <li><span class="file">app/product-commercial.tsx</span> — registers <code>'commercial'</code> handler on mount; calls <code>registerJob</code> on <code>onJobStarted</code>; <code>removeJob</code> on <code>onSuccess</code>.</li>
+      <li><span class="file">app/video-generator.tsx</span> — same wiring with <code>origin: 'video-generator'</code>.</li>
+      <li><span class="file">lib/api.ts</span> — new <code>JobStartedEvent</code> type, new <code>onJobStarted</code> callback on both <code>generateVideoSSE</code> and <code>generateCommercialSSE</code>; new <code>getVideoGenerationStatus(id)</code>.</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <h2>Tracker store — what it actually stores</h2>
+  <pre><code>interface InFlightJob {
+  id: string                     // videoGeneration.id today, generation.id later
+  kind: 'video' | 'image'
+  origin: string                 // 'commercial' | 'video-generator' | …
+  startedAt: number
+  preview?: string               // e.g. storyboard URL for commercial
+  label?: string                 // 'Commercial: Espresso machine'
+}
+
+interface GenerationTrackerState {
+  jobs: Record&lt;string, InFlightJob&gt;        // persisted
+  handlers: Record&lt;string, OnComplete&gt;     // NOT persisted
+
+  registerJob(job)
+  updateJob(id, patch)
+  completeJob(id, result)                  // calls handler + removes
+  removeJob(id)
+  registerHandler(origin, handler)         // screen calls this on mount
+  unregisterHandler(origin)                // screen calls this on unmount
+}</code></pre>
+  <p class="muted">
+    The handlers map is intentionally non-persisted — functions don't survive serialization, and each screen re-registers its handler when it mounts. If the matching screen isn't mounted when a result arrives (e.g. user is somewhere else in the app), the result sits in the registry until polling re-fetches it; tapping the in-flight banner routes the user back to the source screen, the handler registers, and the next poll dispatches.
+  </p>
+</section>
+
+<section>
+  <h2>Push payload — what the data blob looks like now</h2>
+  <table>
+    <thead><tr><th>Action</th><th>Payload (always)</th><th>Payload (when applicable)</th></tr></thead>
+    <tbody>
+      <tr><td><code>video_ready</code></td><td><code>action</code>, <code>videoUrl</code></td><td><code>generationId</code></td></tr>
+      <tr><td><code>generation_complete</code></td><td><code>action</code>, <code>type</code></td><td><code>generationId</code>, <code>imageUrl</code>, <code>creditsRemaining</code></td></tr>
+      <tr><td><code>generation_failed</code></td><td><code>action</code>, <code>type</code>, <code>reason</code></td><td><code>generationId</code></td></tr>
+    </tbody>
+  </table>
+  <p class="muted">
+    <code>generationId</code> is the contract. With it the tracker can finalize without polling; without it the tap handler falls back to the legacy direct-route behaviour. All three notify functions accept <code>generationId</code> as an optional field — call sites should pass it whenever there's a row to refer to.
+  </p>
+</section>
+
+<section>
+  <h2>Pay-per-use guard fixes <span class="tag tag-changed">bug</span></h2>
+  <p>
+    Four <code>handleGenerate</code> callbacks were silently no-op'ing for PAYPERUSE users by hitting a credit-exhaustion modal that doesn't exist for them:
+  </p>
+  <ul>
+    <li><code>views/create/create-screen.tsx</code></li>
+    <li><code>app/video-generator.tsx</code></li>
+    <li><code>app/model-wizard.tsx</code></li>
+    <li><code>app/restore.tsx</code></li>
+  </ul>
+  <p>All now guard <code>if (!isPayPerUse &amp;&amp; balance &lt; cost)</code>. Server-side metering remains the source of truth.</p>
+  <p>
+    Same change surfaced a second bug: the <code>showExhaustionModal</code> flag had no UI consumer at all, so even credit-plan users got nothing when they ran out. New <span class="file">components/exhaustion-modal.tsx</span> mounted at root closes that gap with three CTAs — <em>See plans</em>, <em>Top up credits</em>, <em>Maybe later</em>.
+  </p>
+</section>
+
+<section>
+  <h2>Consent gate & balance — modals reach modal-presentation routes <span class="tag tag-changed">bug</span></h2>
+  <p>
+    <code>TermsConsentModal</code> and <code>AIConsentModal</code> were mounted in <code>(tabs)/_layout.tsx</code>. Modal-presentation routes (product-commercial, video-generator, fashion-editorial, restore, etc.) are siblings in the root Stack, so the tabs layout was effectively below them and the consent modals never showed when those screens tried to gate generation. Both, plus the new <code>ExhaustionModal</code> and <code>InFlightBanner</code>, are now mounted at root.
+  </p>
+</section>
+
+<section>
+  <h2>Commercial cost — by quality &amp; duration <span class="tag tag-changed">pricing</span></h2>
+  <p>
+    The Generate button on <code>product-commercial.tsx</code> was hardcoded to "8 credits" regardless of plan, model, quality, or duration. Now:
+  </p>
+  <ul>
+    <li>New quality picker (480p / 720p / 1080p, model-dependent set) drives both the price label and the actual EvoLink call (quality is now sent in <code>seedance-with-fallback.ts</code> — previously it defaulted to whatever EvoLink chose, which made cost reconciliation impossible).</li>
+    <li>New shared pricing table in <span class="file">lib/ai-models.ts</span> — <code>COMMERCIAL_VIDEO_PRICING</code> — drives credit charging server-side and label rendering client-side.</li>
+    <li>PAYPERUSE shows USD totals (<code>$0.83</code> for Seedance 5s @ 480p; <code>$3.58</code> for 720p @ 10s, etc.). Credit plans see real credit cost for the chosen tier.</li>
+  </ul>
+  <p>Source: EvoLink public pricing verified May 2026.</p>
+</section>
+
+<section>
+  <h2>Analyze timeout fix <span class="tag tag-changed">bug</span></h2>
+  <p>
+    The global axios timeout (120s) was killing <code>POST /api/analyze-product</code> while the backend was still happily running GPT-5-nano vision (typical cold start: 22-130s). Client gave up, sourceImageUrl was sometimes never set, downstream Generate looked dead. Now per-call timeout 5 min and the catch block surfaces a real Alert instead of just <code>console.error</code>.
+  </p>
+</section>
+
+<section>
+  <h2>What still has to happen <span class="tag tag-deferred">action required</span></h2>
+
+  <div class="panel">
+    <h3>1. Run the prisma migration</h3>
+    <p>
+      The schema gained <code>ImageGeneration</code> but no migration was generated (would have touched the live DB). Run it locally and ship via the usual deploy flow:
+    </p>
+    <pre><code>cd /Users/antoniogonzalez/Sites/auto-toon
+pnpm prisma migrate dev --name add_image_generation
+pnpm prisma generate</code></pre>
+    <p class="muted">Mirror the same in <span class="file">/Users/antoniogonzalez/Sites/toon-converter</span> if that environment also serves prod.</p>
+  </div>
+
+  <div class="panel">
+    <h3>2. Wire image-gen flows to the new pattern</h3>
+    <p>
+      <code>enhance-product</code>, <code>fashion-editorial/generate</code>, <code>edit-image</code>, <code>fashion-editorial/upscale</code>, <code>multi-angle</code>, <code>relight</code> are still sync HTTP. To make them background-resumable they each need:
+    </p>
+    <ol>
+      <li>Create an <code>ImageGeneration</code> row before invoking the provider, return / emit the id.</li>
+      <li>If the route is JSON-only, switch to SSE or expose a <code>GET /api/image-generations/:id</code> endpoint so the resume loop can poll. (Cheapest path: keep the route synchronous for the foreground case, persist the row anyway, build a generic GET status route.)</li>
+      <li>Update the row to <code>completed</code> / <code>failed</code> on terminal state with the final result URL.</li>
+      <li>Pass <code>generationId</code> to <code>notifyGenerationComplete</code> / <code>notifyGenerationFailed</code>.</li>
+      <li>On the app side: import <code>useGenerationTracker</code>, register origin, register handler, call <code>registerJob</code> when the id is known.</li>
+    </ol>
+    <p class="muted">
+      The wiring on the app side is mechanical — copy the pattern from <code>app/product-commercial.tsx</code> + <code>app/video-generator.tsx</code>. The backend side is one row create + one row update per route.
+    </p>
+  </div>
+
+  <div class="panel">
+    <h3>3. Pre-existing prisma client drift</h3>
+    <p>
+      The canonical repo's generated prisma client is stale — it doesn't see <code>VideoGeneration</code>, <code>termsAcceptedAt</code>, <code>pushToken</code>, or <code>notificationsEnabled</code>. Errors are pre-existing (not introduced here) but block typecheck. Resolution:
+    </p>
+    <pre><code>cd /Users/antoniogonzalez/Sites/auto-toon
+pnpm prisma generate</code></pre>
+  </div>
+</section>
+
+<section>
+  <h2>How to verify the new flow end-to-end</h2>
+  <div class="step"><div class="num">1</div><div>Start a video generation (or commercial). Confirm the SSE stream logs <code>{ type: 'job_started', generationId, kind }</code>.</div></div>
+  <div class="step"><div class="num">2</div><div>Background the app via the home indicator within the first 10s.</div></div>
+  <div class="step"><div class="num">3</div><div>Wait ~2 min (longer for 10s clips). A push notification should arrive.</div></div>
+  <div class="step"><div class="num">4</div><div>Foreground the app without tapping the notification. Within ~3s the in-flight banner clears and the app routes to <code>/video-player</code>.</div></div>
+  <div class="step"><div class="num">5</div><div>Repeat but tap the notification instead. Same destination, no double-dispatch.</div></div>
+  <div class="step"><div class="num">6</div><div>Repeat but force-quit the app before the generation finishes. Cold-start. The banner is visible from the moment the JS bundle loads; resume polling fires and dispatches when the row goes terminal.</div></div>
+</section>
+
+<section>
+  <h2>Caveats / known sharp edges</h2>
+  <ul>
+    <li>Resume polling currently runs <strong>8 × 3s = 24s</strong> per active job per foreground. Long-running jobs that don't complete in that window get re-checked on the next foreground tick. No persistent background timer (iOS would kill it).</li>
+    <li>If the SSE stream fires <code>success</code> while the screen is still mounted, <code>removeJob</code> runs <em>before</em> the resume hook would have caught it — no duplicate dispatch.</li>
+    <li>If a generation row is deleted server-side (rare) the GET status endpoint returns 404 and the job stays stuck in the tracker until the user manually clears it. Could add a stale-job sweep later.</li>
+    <li>The in-flight banner currently only routes back to <code>commercial</code> and <code>video-generator</code>. Add more cases to <code>InFlightBanner.onPress</code> when wiring new origins.</li>
+  </ul>
+</section>
+
+<footer style="margin-top:64px; color: var(--muted); font-size: 13px; border-top: 1px solid var(--border); padding-top: 16px;">
+  Generated <span id="date"></span> · auto-toon-app
+  <script>document.getElementById('date').textContent = new Date().toISOString().slice(0,10);</script>
+</footer>
+
+</body>
+</html>

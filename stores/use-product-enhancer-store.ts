@@ -193,6 +193,9 @@ interface ProductEnhancerState {
   generationPhase: 'idle' | 'uploading' | 'generating' | 'complete' | 'error'
   heroImageUrl: string | null
   vignetteImageUrl: string | null
+  // What the server actually generated — source of truth for the results UI
+  serverSecondImageType: SecondImageType | null
+  serverAspectRatio: string | null
   error: string | null
 
   // Preferences
@@ -212,7 +215,7 @@ interface ProductEnhancerState {
   applyAnalysisSuggestions: (analysis: AnalysisResult) => void
   setAnalysisState: (analyzing: boolean, result?: AnalysisResult | null) => void
   setGenerationPhase: (phase: ProductEnhancerState['generationPhase']) => void
-  setGenerationResult: (hero: string | null, vignette: string | null) => void
+  setGenerationResult: (hero: string | null, vignette: string | null, secondImageType?: SecondImageType | null, aspectRatio?: string | null) => void
   setError: (error: string | null) => void
   resetForNewGeneration: () => void
   resetAll: () => void
@@ -244,6 +247,8 @@ export const useProductEnhancerStore = create<ProductEnhancerState>()(
       generationPhase: 'idle',
       heroImageUrl: null,
       vignetteImageUrl: null,
+      serverSecondImageType: null,
+      serverAspectRatio: null,
       error: null,
       autoSuggestEnabled: true,
       seasonalEnabled: false,
@@ -395,8 +400,8 @@ export const useProductEnhancerStore = create<ProductEnhancerState>()(
         set(updates)
       },
 
-      setGenerationResult: (hero, vignette) =>
-        set({ heroImageUrl: hero, vignetteImageUrl: vignette, generationPhase: 'complete', isGenerating: false, isUploading: false }),
+      setGenerationResult: (hero, vignette, secondImageType = null, aspectRatio = null) =>
+        set({ heroImageUrl: hero, vignetteImageUrl: vignette, serverSecondImageType: secondImageType, serverAspectRatio: aspectRatio, generationPhase: 'complete', isGenerating: false, isUploading: false }),
 
       setError: (error) => set({ error, generationPhase: error ? 'error' : 'idle', isGenerating: false, isUploading: false }),
 
@@ -406,6 +411,8 @@ export const useProductEnhancerStore = create<ProductEnhancerState>()(
           uploadedImageUrl: null,
           heroImageUrl: null,
           vignetteImageUrl: null,
+          serverSecondImageType: null,
+          serverAspectRatio: null,
           error: null,
           generationPhase: 'idle',
           isGenerating: false,
@@ -445,6 +452,8 @@ export const useProductEnhancerStore = create<ProductEnhancerState>()(
           generationPhase: 'idle',
           heroImageUrl: null,
           vignetteImageUrl: null,
+          serverSecondImageType: null,
+          serverAspectRatio: null,
           error: null,
         }),
     }),

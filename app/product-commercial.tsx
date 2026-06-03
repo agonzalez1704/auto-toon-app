@@ -9,6 +9,7 @@ import { generateCommercialSSE } from '@/lib/api'
 import { getCommercialShots, PERSONA_OPTIONS, type CommercialPersona } from '@/lib/commercial-shots'
 import { useCommercialStore, type CommercialModel } from '@/stores/use-commercial-store'
 import { useCreditsStore } from '@/stores/use-credits-store'
+import { useGenerationTracker } from '@/stores/use-generation-tracker'
 import { useSubscriptionStore } from '@/stores/use-subscription-store'
 import { requireAllConsents } from '@/stores/use-consent-guards'
 import { Image } from 'expo-image'
@@ -95,6 +96,28 @@ export default function ProductCommercialScreen() {
     }
   }, [store.aiModel, supportedQualities, store])
 
+  // Register a result handler so that if the SSE socket dies (e.g. user
+  // backgrounded the app), the background-resume hook can hand us the final
+  // status by polling the server. Identifier 'commercial' matches the
+  // `origin` we attach to each job when calling registerJob below.
+  useEffect(() => {
+    const { registerHandler, unregisterHandler } = useGenerationTracker.getState()
+    registerHandler('commercial', (_id, result) => {
+      if (result.status === 'completed' && result.videoUrl) {
+        store.setGenerationResult(result.videoUrl, _id)
+        fetchCredits()
+        router.replace({
+          pathname: '/video-player',
+          params: { videoUrl: result.videoUrl, title: store.productName || 'Commercial' },
+        })
+      } else if (result.status === 'failed') {
+        store.setError(result.errorMessage || 'Generation failed')
+        fetchCredits()
+      }
+    })
+    return () => unregisterHandler('commercial')
+  }, [store, fetchCredits, router])
+
   const selectPersona = useCallback(
     (persona: CommercialPersona) => {
       store.setStylePersona(persona)
@@ -132,7 +155,17 @@ export default function ProductCommercialScreen() {
       {
         onProgress: (event) => store.setGenerationProgress(event.percent, event.message),
         onStoryboard: (url) => store.setStoryboard(url),
+        onJobStarted: (event) => {
+          useGenerationTracker.getState().registerJob({
+            id: event.generationId,
+            kind: event.kind,
+            origin: 'commercial',
+            startedAt: Date.now(),
+            label: store.productName ? `Commercial: ${store.productName}` : 'Commercial',
+          })
+        },
         onSuccess: (event) => {
+          useGenerationTracker.getState().removeJob(event.videoGenerationId)
           store.setGenerationResult(event.videoUrl, event.videoGenerationId)
           fetchCredits()
           router.replace({

@@ -340,7 +340,7 @@ export default function ModelWizardScreen() {
     const creditCost = store.mode === 'use-face'
       ? getModelCredits(AI_MODELS.GEMINI_3_IMAGE.id)
       : getModelCredits(AI_MODELS.Z_IMAGE_TURBO.id)
-    if (balance !== null && balance < creditCost) {
+    if (!isPayPerUse && balance !== null && balance < creditCost) {
       setShowExhaustionModal(true)
       isSubmittingRef.current = false
       return

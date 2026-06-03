@@ -218,7 +218,14 @@ export interface AnalysisResult {
   confidence: number
 }
 export async function analyzeProduct(imageUrl: string) {
-  const { data } = await api.post<{ success: boolean; result: AnalysisResult }>('/api/analyze-product', { imageUrl })
+  // GPT-5-nano vision analysis can exceed the global 120s axios timeout under
+  // cold starts. Bump to 5 min so the client waits long enough for the
+  // backend response that's already in-flight.
+  const { data } = await api.post<{ success: boolean; result: AnalysisResult }>(
+    '/api/analyze-product',
+    { imageUrl },
+    { timeout: 300_000 },
+  )
   return data.result
 }
 
@@ -255,6 +262,10 @@ export interface EnhanceResponse {
   text: string
   heroImageUrl?: string
   vignetteImageUrl?: string
+  // What the server actually generated — drives the results UI (grid picker)
+  // independent of editable form/store state.
+  secondImageType?: 'vignette' | 'elements' | 'poster' | '3x3' | 'food' | null
+  aspectRatio?: string
   labels?: string[]
   creditsRemaining: number
   success: boolean
@@ -513,6 +524,7 @@ export function generateVideoSSE(
   params: VideoGenerateRequest,
   callbacks: {
     onProgress: (event: VideoProgressEvent) => void
+    onJobStarted?: (event: JobStartedEvent) => void
     onSuccess: (event: VideoSuccessEvent) => void
     onError: (message: string) => void
     onComplete?: () => void
@@ -533,6 +545,8 @@ export function generateVideoSSE(
         const data = JSON.parse(trimmed.slice(6))
         if (data.type === 'progress') {
           callbacks.onProgress(data as VideoProgressEvent)
+        } else if (data.type === 'job_started') {
+          callbacks.onJobStarted?.(data as JobStartedEvent)
         } else if (data.type === 'success') {
           callbacks.onSuccess(data as VideoSuccessEvent)
         } else if (data.type === 'error') {
@@ -647,16 +661,25 @@ export interface CommercialStoryboardEvent {
   storyboardImageUrl: string
 }
 
+export interface JobStartedEvent {
+  type: 'job_started'
+  generationId: string
+  kind: 'video' | 'image'
+}
+
 /**
  * Start commercial generation via SSE stream.
  * Mirrors generateVideoSSE; adds an `onStoryboard` callback fired when the
- * intermediate storyboard keyframe image is ready.
+ * intermediate storyboard keyframe image is ready, plus `onJobStarted`
+ * fired as soon as the backend persists the generation row (used by the
+ * background-resume tracker so the work survives app suspension).
  */
 export function generateCommercialSSE(
   params: CommercialGenerateRequest,
   callbacks: {
     onProgress: (event: VideoProgressEvent) => void
     onStoryboard: (storyboardImageUrl: string) => void
+    onJobStarted?: (event: JobStartedEvent) => void
     onSuccess: (event: VideoSuccessEvent) => void
     onError: (message: string) => void
     onComplete?: () => void
@@ -679,6 +702,8 @@ export function generateCommercialSSE(
           callbacks.onProgress(data as VideoProgressEvent)
         } else if (data.type === 'storyboard') {
           callbacks.onStoryboard((data as CommercialStoryboardEvent).storyboardImageUrl)
+        } else if (data.type === 'job_started') {
+          callbacks.onJobStarted?.(data as JobStartedEvent)
         } else if (data.type === 'success') {
           callbacks.onSuccess(data as VideoSuccessEvent)
         } else if (data.type === 'error') {
@@ -1301,5 +1326,29 @@ export interface UsageData {
 
 export async function getCurrentUsage() {
   const { data } = await api.get<UsageData>('/api/usage/current')
+  return data
+}
+
+// ─── Video generation status ───────────────────────────────────────────
+// Used by the background resume hook: after the app foregrounds we hit
+// this endpoint for every in-flight videoGeneration id to learn whether
+// the server-side job finished while we were backgrounded.
+
+export interface VideoGenerationStatusResponse {
+  id: string
+  status: 'processing' | 'completed' | 'failed'
+  videoUrl?: string | null
+  lastFrameUrl?: string | null
+  errorMessage?: string | null
+  provider?: string | null
+  duration?: number | null
+  aspectRatio?: string | null
+  createdAt?: string
+}
+
+export async function getVideoGenerationStatus(id: string) {
+  const { data } = await api.get<VideoGenerationStatusResponse>(
+    `/api/fashion-editorial/video/status/${id}`,
+  )
   return data
 }

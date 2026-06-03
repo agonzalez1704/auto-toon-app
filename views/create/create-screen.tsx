@@ -61,12 +61,13 @@ export default function CreateScreen() {
   const creditCost = getModelCredits(store.selectedModel)
   const modelId = AI_MODELS[store.selectedModel].id
   const costLabel = getCostLabel(modelId, isPayPerUse)
-  const canGenerate =
-    !!(store.localImageUri || store.uploadedImageUrl) &&
-    !!store.productName.trim() &&
-    !!store.selectedGoalId &&
-    !store.isUploading &&
-    !store.isGenerating
+  const missing: string[] = []
+  if (!(store.localImageUri || store.uploadedImageUrl)) missing.push('image')
+  if (!store.productName.trim()) missing.push('name')
+  if (!store.selectedGoalId) missing.push('goal')
+  if (store.isUploading) missing.push('upload-in-progress')
+  if (store.isGenerating) missing.push('already-generating')
+  const canGenerate = missing.length === 0
 
   const handleGenerate = useCallback(async () => {
     if (!canGenerate || !store.uploadedImageUrl) return
@@ -74,7 +75,7 @@ export default function CreateScreen() {
     const consented = requireAllConsents(() => handleGenerate())
     if (!consented) return
 
-    if (balance !== null && balance < creditCost) {
+    if (!isPayPerUse && balance !== null && balance < creditCost) {
       setShowExhaustionModal(true)
       return
     }
@@ -109,7 +110,7 @@ export default function CreateScreen() {
       })
 
       if (result.success) {
-        store.setGenerationResult(result.heroImageUrl ?? null, result.vignetteImageUrl ?? null)
+        store.setGenerationResult(result.heroImageUrl ?? null, result.vignetteImageUrl ?? null, result.secondImageType ?? null, result.aspectRatio ?? null)
         useCreditsStore.getState().setCredits(result.creditsRemaining)
         fetchCredits()
       } else {
@@ -123,7 +124,7 @@ export default function CreateScreen() {
         store.setError(err?.message || 'Something went wrong')
       }
     }
-  }, [canGenerate, store, balance, creditCost, fetchCredits, setShowExhaustionModal, mjParams])
+  }, [canGenerate, store, balance, creditCost, isPayPerUse, fetchCredits, setShowExhaustionModal, mjParams])
 
   const resultUrls = [store.heroImageUrl, store.vignetteImageUrl].filter(Boolean) as string[]
 
@@ -140,6 +141,21 @@ export default function CreateScreen() {
         heroImageUrl={store.heroImageUrl}
         vignetteImageUrl={store.vignetteImageUrl}
         goalId={store.selectedGoalId}
+        secondImageType={store.serverSecondImageType}
+        onUpscaleGrid={
+          store.serverSecondImageType === '3x3' && store.vignetteImageUrl
+            ? () =>
+                router.push({
+                  pathname: '/grid-upscale',
+                  params: {
+                    imageUrl: store.vignetteImageUrl as string,
+                    productName: store.productName,
+                    // Respect the aspect ratio the grid was generated at
+                    aspectRatio: store.serverAspectRatio ?? store.seedreamConfig.aspect_ratio,
+                  },
+                })
+            : undefined
+        }
         onZoom={(initialIndex) =>
           router.push({
             pathname: '/image-viewer',
@@ -250,6 +266,11 @@ export default function CreateScreen() {
                 costLabel={costLabel}
                 onPress={handleGenerate}
               />
+              {!canGenerate && !store.isGenerating && (
+                <Text style={styles.disabledReason}>
+                  Missing: {missing.join(', ')}
+                </Text>
+              )}
 
               {!isPayPerUse && balance !== null && (
                 <Text style={styles.balanceHint}>Balance: {balance} credits</Text>
@@ -307,6 +328,13 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(239,68,68,0.08)',
   },
   errorText: { fontSize: 13, color: theme.colors.danger },
+  disabledReason: {
+    fontSize: 12,
+    textAlign: 'center',
+    color: theme.colors.textDisabled,
+    marginTop: -theme.spacing.xs,
+    marginBottom: theme.spacing.sm,
+  },
   balanceHint: {
     fontSize: 12,
     textAlign: 'center',
