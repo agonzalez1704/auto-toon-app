@@ -245,6 +245,10 @@ export default function RootLayout() {
                   options={{ headerShown: false, presentation: 'card' }}
                 />
                 <Stack.Screen
+                  name="assets"
+                  options={{ headerShown: false, presentation: 'card' }}
+                />
+                <Stack.Screen
                   name="grid-upscale"
                   options={{ headerShown: false, presentation: 'modal' }}
                 />

@@ -288,7 +288,7 @@ export default function RelightScreen() {
               style={styles.resultActionBtn}
               onPress={() => {
                 store.reset()
-                router.replace('/(tabs)/assets')
+                router.replace('/assets')
               }}
               activeOpacity={0.7}
             >

@@ -15,22 +15,6 @@ import { GlassCard } from '@/components/glass'
 
 // ── Icons ──────────────────────────────────────────────────────────
 
-function ModelsIcon() {
-  return (
-    <Svg width={28} height={28} viewBox="0 0 24 24" fill="none">
-      <Circle cx="12" cy="7" r="3.5" stroke={theme.colors.accent2} strokeWidth={1.8} fill="none" />
-      <SvgPath
-        d="M5.5 20c0-3.59 2.91-6.5 6.5-6.5s6.5 2.91 6.5 6.5"
-        stroke={theme.colors.accent2}
-        strokeWidth={1.8}
-        strokeLinecap="round"
-        fill="none"
-      />
-      <Rect x="16" y="2" width="6" height="8" rx="1" stroke={theme.colors.accent2} strokeWidth={1.5} fill="none" />
-    </Svg>
-  )
-}
-
 function RestoreIcon() {
   return (
     <Svg width={28} height={28} viewBox="0 0 24 24" fill="none">
@@ -68,6 +52,21 @@ function RelightIcon() {
   )
 }
 
+function AssetsIcon() {
+  return (
+    <Svg width={28} height={28} viewBox="0 0 24 24" fill="none">
+      <Rect x="3" y="6" width="14" height="14" rx="2" stroke={theme.colors.accent} strokeWidth={1.8} fill="none" />
+      <SvgPath
+        d="M7 4h13a1 1 0 0 1 1 1v13"
+        stroke={theme.colors.accent}
+        strokeWidth={1.8}
+        strokeLinecap="round"
+        fill="none"
+      />
+    </Svg>
+  )
+}
+
 // ── Feature definitions ────────────────────────────────────────────
 
 interface Feature {
@@ -81,12 +80,12 @@ interface Feature {
 
 const FEATURES: Feature[] = [
   {
-    key: 'models',
-    title: 'Model Factory',
-    description: 'Create & manage AI fashion models',
-    icon: ModelsIcon,
-    iconTintColor: 'rgba(167,139,250,0.16)',
-    route: '/models',
+    key: 'assets',
+    title: 'Assets',
+    description: 'Browse your generated images & videos',
+    icon: AssetsIcon,
+    iconTintColor: 'rgba(251,191,36,0.16)',
+    route: '/assets',
   },
   {
     key: 'restore',

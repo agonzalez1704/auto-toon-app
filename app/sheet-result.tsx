@@ -143,7 +143,7 @@ export default function SheetResultScreen() {
   }, [sheetUrl])
 
   const handleDone = useCallback(() => {
-    router.replace('/models')
+    router.replace('/model-factory')
   }, [router])
 
   if (!sheetUrl) {

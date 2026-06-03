@@ -43,7 +43,7 @@ export const BENTO_CARDS: BentoCardConfig[] = [
   {
     label: 'Model Factory',
     description: 'Create & save AI models',
-    route: '/models',
+    route: '/model-factory',
     preview: require('@/assets/images/previews/professional_photo.png'),
     backgroundImage: require('@/assets/images/previews/pose-editorial.png'),
     gradient: gradients.fashion,

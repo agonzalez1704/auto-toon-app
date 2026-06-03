@@ -113,7 +113,7 @@ export default function DashboardScreen() {
             <SectionHeader
               label="Recent creations"
               actionLabel="View all"
-              onActionPress={() => router.push('/(tabs)/assets')}
+              onActionPress={() => router.push('/assets')}
             />
           )}
 

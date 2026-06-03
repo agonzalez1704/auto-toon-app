@@ -15,6 +15,7 @@ import { Image } from 'expo-image'
 import { LinearGradient } from 'expo-linear-gradient'
 import * as ImagePicker from 'expo-image-picker'
 import * as FileSystem from 'expo-file-system/legacy'
+import { ImageManipulator, SaveFormat } from 'expo-image-manipulator'
 import { useRouter } from 'expo-router'
 import Svg, { Path as SvgPath, Circle } from 'react-native-svg'
 import { useModelFactoryStore } from '@/stores/use-model-factory-store'
@@ -33,6 +34,25 @@ import { useSubscriptionStore } from '@/stores/use-subscription-store'
 const AURORA_NAVY = '#193153'
 const AURORA_MAGENTA = '#FBBF24'
 const AURORA_TEAL = '#0B5777'
+
+/**
+ * Downscale an iPhone photo to a safe analysis size and return raw base64.
+ *
+ * Originals are 4-8MB; base64 inflates them to ~10MB+ JSON which trips the
+ * backend body-size limit (the original "Unterminated string in JSON at
+ * position 10430776" error). 1024px on the long edge + 80% JPEG quality
+ * keeps the encoded payload well under 1MB while remaining more than
+ * enough resolution for vision-model analysis.
+ */
+async function readResizedBase64(uri: string): Promise<string> {
+  const ctx = ImageManipulator.manipulate(uri)
+    .resize({ width: 1024 })
+  const ref = await ctx.renderAsync()
+  const result = await ref.saveAsync({ format: SaveFormat.JPEG, compress: 0.8, base64: true })
+  if (result.base64) return result.base64
+  // Fallback when base64 wasn't returned (unlikely): read from disk
+  return FileSystem.readAsStringAsync(result.uri, { encoding: 'base64' })
+}
 
 // ─── Icons ──────────────────────────────────────────────────────────
 
@@ -239,9 +259,7 @@ export default function ModelWizardScreen() {
     store.setError(null)
     ;(async () => {
       try {
-        const faceBase64 = await FileSystem.readAsStringAsync(localUri, {
-          encoding: 'base64',
-        })
+        const faceBase64 = await readResizedBase64(localUri)
         const analysis = await analyzeFacePhoto(faceBase64)
         store.setFaceAnalysis(analysis)
       } catch {
@@ -309,8 +327,10 @@ export default function ModelWizardScreen() {
           try {
             const publicUrl = await uploadImage(uri)
             setUploadedUrl(publicUrl)
-          } catch {
-            store.setError('Upload failed. Please try again.')
+          } catch (err: any) {
+            console.error('[model-wizard] uploadImage failed:', err)
+            const msg = err?.message || err?.code || 'Upload failed'
+            store.setError(`Upload failed: ${msg}`)
           } finally {
             setUploading(false)
           }
@@ -365,10 +385,7 @@ export default function ModelWizardScreen() {
         // If body photo exists, analyze and append body context
         store.setPhase('analyzing')
         if (store.bodyUploadedUrl && store.bodyLocalUri) {
-          const bodyBase64 = await FileSystem.readAsStringAsync(
-            store.bodyLocalUri,
-            { encoding: 'base64' }
-          )
+          const bodyBase64 = await readResizedBase64(store.bodyLocalUri)
           const bodyAnalysis = await analyzeBodyPhoto(bodyBase64)
           store.setBodyAnalysis(bodyAnalysis)
 
@@ -399,12 +416,11 @@ export default function ModelWizardScreen() {
       }
 
       if (store.mode === 'use-face') {
-        // Read face photo as base64 for Gemini/Nano Banana
-        const faceBase64 = await FileSystem.readAsStringAsync(
-          store.faceLocalUri!,
-          { encoding: 'base64' }
-        )
-        generateParams.imageBase64 = faceBase64
+        // Pass the already-uploaded R2 URL instead of inlining base64. iPhone
+        // photos are 4-8MB; base64 inflates to ~10MB+ JSON which trips
+        // backend body-size limits (SyntaxError: Unterminated string).
+        // Backend `image` field accepts URLs and fetches server-side.
+        generateParams.image = store.faceUploadedUrl!
         generateParams.aiModelId = AI_MODELS.GEMINI_3_IMAGE.id
       }
 

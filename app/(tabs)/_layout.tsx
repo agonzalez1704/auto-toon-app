@@ -51,7 +51,7 @@ export default function TabLayout() {
         <Tabs.Screen
           name="create"
           options={{
-            title: 'Create',
+            title: 'Enhance',
             tabBarIcon: Platform.select({
               ios: { type: 'sfSymbol', name: 'wand.and.stars' },
               default: { type: 'sfSymbol', name: 'wand.and.stars' },
@@ -59,12 +59,12 @@ export default function TabLayout() {
           }}
         />
         <Tabs.Screen
-          name="assets"
+          name="model-factory"
           options={{
-            title: 'Assets',
+            title: 'Model Factory',
             tabBarIcon: Platform.select({
-              ios: { type: 'sfSymbol', name: 'photo.stack.fill' },
-              default: { type: 'sfSymbol', name: 'photo.stack.fill' },
+              ios: { type: 'sfSymbol', name: 'person.crop.rectangle.stack.fill' },
+              default: { type: 'sfSymbol', name: 'person.crop.rectangle.stack.fill' },
             }) as any,
           }}
         />
