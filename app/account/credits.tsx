@@ -81,10 +81,13 @@ export default function CreditsScreen() {
   // On non-iOS this hook stays `ready: false` and we fall back to Stripe.
   const {
     ready: iapReady,
+    connected: iapConnected,
+    loadedProductCount: iapProductCount,
     isPurchasing,
     isRestoring,
     purchase: purchaseAppleIap,
     restore: restoreAppleIap,
+    retryFetch: iapRetryFetch,
   } = useAppleCreditPurchase({
     onSuccess: ({ balance: newBalance, pack }) => {
       setCredits(newBalance)
@@ -110,8 +113,16 @@ export default function CreditsScreen() {
 
   const handlePurchase = async (packId: string) => {
     if (Platform.OS === 'ios') {
-      if (!iapReady) {
-        Alert.alert('Store loading', 'Connecting to App Store — try again in a moment.')
+      // Only block when StoreKit's connection itself hasn't initialized.
+      // If connected but products haven't been fetched yet, requestPurchase
+      // still works using the SKU directly — Apple's dialog just won't show
+      // the localized price until products resolve.
+      if (!iapConnected) {
+        await iapRetryFetch()
+        Alert.alert(
+          'Store not ready',
+          'Could not reach the App Store. Make sure you\'re signed into your Sandbox Apple Account in Settings → Developer.',
+        )
         return
       }
       await purchaseAppleIap(packId as AppleCreditPack['packageId'])
@@ -172,6 +183,26 @@ export default function CreditsScreen() {
               </View>
             </TouchableOpacity>
           ))}
+
+          {/* Diagnostic banner — surface IAP connection state so the user
+              (and us during sandbox testing) can see why a tap was a no-op
+              instead of staring at a silent button. */}
+          {Platform.OS === 'ios' && (
+            <View style={styles.statusBanner}>
+              <Text style={styles.statusLine}>
+                {iapConnected ? '● Store connected' : '○ Store not connected'}
+              </Text>
+              <Text style={styles.statusLine}>
+                Loaded {iapProductCount}/{PACKS.length} products
+                {iapReady ? ' — ready' : ' — fetching prices…'}
+              </Text>
+              {!iapReady && iapConnected && (
+                <TouchableOpacity onPress={iapRetryFetch} style={{ marginTop: 6 }}>
+                  <Text style={[styles.statusLine, { color: BRAND }]}>Retry product fetch</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          )}
 
           {/* Restore Purchases — Apple guideline 3.1.1 requires this
               affordance on every IAP-enabled screen. Sweeps unfinished
@@ -289,5 +320,18 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: 'rgba(255,255,255,0.55)',
+  },
+  statusBanner: {
+    marginTop: 12,
+    padding: 12,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+  },
+  statusLine: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.55)',
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
   },
 })

@@ -39,8 +39,14 @@ export interface UseAppleCreditPurchaseOptions {
 }
 
 export interface UseAppleCreditPurchaseApi {
-  /** True once IAP is connected AND products have been fetched. iOS-only. */
+  /** True once IAP is connected AND products have been fetched. iOS-only.
+   *  Use `connected` for "tappable" decisions; `ready` is the strict signal
+   *  that the localized prices are also loaded. */
   ready: boolean
+  /** True as soon as StoreKit's initConnection succeeds. iOS-only. */
+  connected: boolean
+  /** How many of the four credit packs resolved against ASC so far. */
+  loadedProductCount: number
   /** Apple-side product details (price, localized title, etc.) keyed by productId. */
   products: Record<string, Product>
   /** True while a purchase + verify roundtrip is in flight. */
@@ -168,6 +174,16 @@ export function useAppleCreditPurchase(
         optionsRef.current.onError?.('Store not connected yet — try again in a moment.')
         return
       }
+      // Best-effort product fetch in case the user taps before fetchProducts
+      // resolved. requestPurchase still works with just the SKU, but Apple's
+      // dialog won't show a localized price if products aren't loaded.
+      if (!productsByid[pack.productId]) {
+        try {
+          await fetchProducts({ skus: [...APPLE_CREDIT_SKUS], type: 'in-app' })
+        } catch {
+          // Ignore — proceed with the SKU directly.
+        }
+      }
       setIsPurchasing(true)
       try {
         await requestPurchase({
@@ -186,7 +202,7 @@ export function useAppleCreditPurchase(
         }
       }
     },
-    [connected, requestPurchase],
+    [connected, requestPurchase, fetchProducts, productsByid],
   )
 
   const [isRestoring, setIsRestoring] = useState(false)
@@ -245,10 +261,13 @@ export function useAppleCreditPurchase(
     }
   }, [availablePurchases, getAvailablePurchases, restorePurchases])
 
-  const ready = isIos && connected && APPLE_CREDIT_PACKS.every(p => !!productsByid[p.productId])
+  const loadedProductCount = APPLE_CREDIT_PACKS.filter(p => !!productsByid[p.productId]).length
+  const ready = isIos && connected && loadedProductCount === APPLE_CREDIT_PACKS.length
 
   return {
     ready,
+    connected: isIos && connected,
+    loadedProductCount,
     products: productsByid,
     isPurchasing,
     isRestoring,
