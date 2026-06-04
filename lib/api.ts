@@ -157,6 +157,27 @@ export async function revokeAIConsent() {
   return data
 }
 
+// Apple IAP — Apple guideline 3.1.1.
+// After StoreKit completes a purchase the client POSTs the transactionId
+// here; backend validates with App Store Server API and grants credits.
+export interface VerifyAppleIAPResponse {
+  success: boolean
+  alreadyProcessed?: boolean
+  credits: number
+  balance: number
+}
+export async function verifyAppleIAP(params: {
+  transactionId: string
+  productId: string
+}) {
+  const { data } = await api.post<VerifyAppleIAPResponse>(
+    '/api/iap/apple/verify',
+    params,
+    { timeout: 60_000 },
+  )
+  return data
+}
+
 // Upload
 export interface UploadUrlRequest {
   filename: string

@@ -23,6 +23,8 @@ import Svg, {
 import { useCreditsStore } from '@/stores/use-credits-store'
 import { purchaseCredits } from '@/lib/api'
 import { CONFIG } from '@/lib/config'
+import { useAppleCreditPurchase } from '@/lib/use-apple-credit-purchase'
+import type { AppleCreditPack } from '@/lib/iap-apple'
 
 const BRAND = '#8B5CF6'
 
@@ -64,7 +66,7 @@ const PACKS = [
 ]
 
 export default function CreditsScreen() {
-  const { balance } = useCreditsStore()
+  const { balance, setCredits } = useCreditsStore()
   const fadeAnim = useRef(new Animated.Value(0)).current
   const scaleAnim = useRef(new Animated.Value(0.8)).current
 
@@ -75,7 +77,28 @@ export default function CreditsScreen() {
     ]).start()
   }, [])
 
+  // Apple guideline 3.1.1 — credits on iOS must go through StoreKit IAP.
+  // On non-iOS this hook stays `ready: false` and we fall back to Stripe.
+  const { ready: iapReady, isPurchasing, purchase: purchaseAppleIap } = useAppleCreditPurchase({
+    onSuccess: ({ balance: newBalance, pack }) => {
+      setCredits(newBalance)
+      Alert.alert(
+        'Purchase complete',
+        `${pack.credits} credits added. New balance: ${newBalance}.`,
+      )
+    },
+    onError: (message) => Alert.alert('Purchase failed', message),
+  })
+
   const handlePurchase = async (packId: string) => {
+    if (Platform.OS === 'ios') {
+      if (!iapReady) {
+        Alert.alert('Store loading', 'Connecting to App Store — try again in a moment.')
+        return
+      }
+      await purchaseAppleIap(packId as AppleCreditPack['packageId'])
+      return
+    }
     try {
       const returnUrl = `${CONFIG.APP_SCHEME}://account/credits?success=true`
       const { url } = await purchaseCredits(packId, returnUrl)

@@ -23,7 +23,11 @@
         "aps-environment": "production"
       },
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSCameraUsageDescription": "Auto Toon uses the camera so you can take a product or face photo for AI generation — for example, snap a shoe on a table to produce an on-model studio shot, or capture a selfie to create a custom AI fashion model.",
+        "NSPhotoLibraryUsageDescription": "Auto Toon needs photo library access so you can pick a product photo (apparel, shoe, accessory, beauty) or face reference image to generate AI fashion editorials, on-model shots, and product videos.",
+        "NSPhotoLibraryAddUsageDescription": "Auto Toon saves your generated AI photos and videos to your photo library so you can share or use them outside the app.",
+        "NSMicrophoneUsageDescription": "Auto Toon uses the microphone if you record audio narration for an AI-generated commercial video; access is only requested when you start a recording."
       }
     },
     "android": {
@@ -42,7 +46,8 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
-      "expo-router"
+      "expo-router",
+      "expo-iap"
     ],
     "experiments": {
       "typedRoutes": true

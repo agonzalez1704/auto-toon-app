@@ -19,6 +19,11 @@ import Svg, {
 import { createCheckoutSession, purchaseCredits } from '@/lib/api'
 import { CONFIG } from '@/lib/config'
 import { useSubscriptionStore } from '@/stores/use-subscription-store'
+import { useCreditsStore } from '@/stores/use-credits-store'
+import { useAppleCreditPurchase } from '@/lib/use-apple-credit-purchase'
+import type { AppleCreditPack } from '@/lib/iap-apple'
+
+const IS_IOS = Platform.OS === 'ios'
 
 const BRAND = '#8B5CF6'
 const BRAND_CYAN = '#06B6D4'
@@ -159,6 +164,7 @@ function BillingToggle({
 
 export default function PricingScreen() {
   const { plan: currentPlan } = useSubscriptionStore()
+  const setCredits = useCreditsStore((s) => s.setCredits)
   const fadeAnim = useRef(new Animated.Value(0)).current
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly')
   const [loading, setLoading] = useState<string | null>(null)
@@ -167,7 +173,20 @@ export default function PricingScreen() {
     Animated.timing(fadeAnim, { toValue: 1, duration: 500, useNativeDriver: true }).start()
   }, [])
 
+  // Apple guideline 3.1.1 — credits on iOS must go through StoreKit IAP.
+  const { ready: iapReady, isPurchasing, purchase: purchaseAppleIap } = useAppleCreditPurchase({
+    onSuccess: ({ balance: newBalance, pack }) => {
+      setCredits(newBalance)
+      Alert.alert(
+        'Purchase complete',
+        `${pack.credits} credits added. New balance: ${newBalance}.`,
+      )
+    },
+    onError: (message) => Alert.alert('Purchase failed', message),
+  })
+
   const handleSubscribe = async (plan: string, period: string) => {
+    if (IS_IOS) return // Apple 3.1.1 — subscriptions are web-only on iOS for now.
     if (loading) return
     setLoading(plan)
     try {
@@ -182,7 +201,15 @@ export default function PricingScreen() {
   }
 
   const handleBuyCredits = async (packId: string) => {
-    if (loading) return
+    if (loading || isPurchasing) return
+    if (IS_IOS) {
+      if (!iapReady) {
+        Alert.alert('Store loading', 'Connecting to App Store — try again in a moment.')
+        return
+      }
+      await purchaseAppleIap(packId as AppleCreditPack['packageId'])
+      return
+    }
     setLoading(packId)
     try {
       const returnUrl = `${CONFIG.APP_SCHEME}://account?success=true`
@@ -196,6 +223,82 @@ export default function PricingScreen() {
   }
 
   const isPaid = currentPlan !== 'FREE' && currentPlan !== ''
+
+  // ─── iOS: simplified screen ────────────────────────────────────────────
+  // Apple guideline 3.1.1 — subscriptions are managed on auto-toon.com (web
+  // checkout) and are not displayed inside the iOS app. Credit packs ship
+  // via In-App Purchase. We render a minimal layout: balance reminder, IAP
+  // credit packs, and an info card pointing users to the web for plans.
+  if (IS_IOS) {
+    return (
+      <View style={styles.root}>
+        <StatusBar barStyle="light-content" />
+        <SafeAreaView style={styles.safeArea} edges={['top']}>
+          <Animated.ScrollView
+            style={{ opacity: fadeAnim }}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+          >
+            <View style={styles.header}>
+              <CrownIcon />
+              <Text style={styles.title}>Buy Credits</Text>
+              <Text style={styles.subtitle}>
+                Use credits to generate product photos, fashion models, and videos.
+              </Text>
+            </View>
+
+            <View style={styles.creditSection}>
+              <Text style={styles.creditSectionTitle}>Credit Packs</Text>
+              <Text style={styles.creditSectionSub}>
+                One-time purchase. Credits never expire.
+              </Text>
+
+              <View style={styles.creditPacksRow}>
+                {CREDIT_PACKS.map((pack) => (
+                  <TouchableOpacity
+                    key={pack.id}
+                    style={[
+                      styles.creditPack,
+                      (!iapReady || isPurchasing) && { opacity: 0.5 },
+                    ]}
+                    activeOpacity={0.7}
+                    disabled={!iapReady || isPurchasing}
+                    onPress={() => handleBuyCredits(pack.id)}
+                  >
+                    <Text style={styles.creditPackLabel}>{pack.label}</Text>
+                    <Text style={styles.creditPackAmount}>{pack.credits}</Text>
+                    <Text style={styles.creditPackUnit}>credits</Text>
+                    <View style={styles.creditPackBtn}>
+                      <Text style={styles.creditPackBtnText}>
+                        {isPurchasing ? '...' : pack.price}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              {!iapReady && (
+                <Text style={[styles.footerNote, { marginTop: 12 }]}>
+                  Connecting to App Store…
+                </Text>
+              )}
+            </View>
+
+            <View style={[styles.creditSection, { marginTop: 8 }]}>
+              <Text style={styles.creditSectionTitle}>Subscriptions</Text>
+              <Text style={styles.creditSectionSub}>
+                Monthly and yearly subscription plans are managed on auto-toon.com. Sign in on the web with the same account to activate or change a plan.
+              </Text>
+            </View>
+
+            <Text style={styles.footerNote}>
+              Purchases are processed by Apple. All charges appear on your Apple ID statement.
+            </Text>
+          </Animated.ScrollView>
+        </SafeAreaView>
+      </View>
+    )
+  }
 
   return (
     <View style={styles.root}>
