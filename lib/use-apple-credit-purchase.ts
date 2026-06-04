@@ -45,8 +45,13 @@ export interface UseAppleCreditPurchaseApi {
   products: Record<string, Product>
   /** True while a purchase + verify roundtrip is in flight. */
   isPurchasing: boolean
+  /** True while restorePurchases is sweeping unfinished StoreKit transactions. */
+  isRestoring: boolean
   /** Trigger a purchase by packageId (micro|small|medium|large). */
   purchase: (packageId: AppleCreditPack['packageId']) => Promise<void>
+  /** Restore unfinished consumable transactions (network drop / reinstall recovery).
+   *  Returns the number of transactions whose credits were granted on this call. */
+  restore: () => Promise<number>
   /** Re-attempt to load products if the initial fetch failed. */
   retryFetch: () => Promise<void>
 }
@@ -118,6 +123,9 @@ export function useAppleCreditPurchase(
     fetchProducts,
     requestPurchase,
     finishTransaction,
+    getAvailablePurchases,
+    restorePurchases,
+    availablePurchases,
   } = useIAP({
     onPurchaseSuccess: handlePurchaseSuccess,
     onPurchaseError: handlePurchaseError,
@@ -181,13 +189,71 @@ export function useAppleCreditPurchase(
     [connected, requestPurchase],
   )
 
+  const [isRestoring, setIsRestoring] = useState(false)
+
+  // Restore credits from unfinished StoreKit transactions.
+  //
+  // Consumable purchases are NOT restorable in the traditional sense
+  // (Apple disposes them once finishTransaction runs). What this covers
+  // is the case where the user purchased + Apple charged, but the backend
+  // grant or finishTransaction didn't complete (network drop, app kill,
+  // reinstall before verify). Those transactions stay in StoreKit's
+  // unfinished queue until they're finished — we forward each one through
+  // /api/iap/apple/verify (idempotent on transactionId) so the user gets
+  // their credits without paying twice.
+  //
+  // Returns the number of transactions successfully granted.
+  const restore = useCallback(async (): Promise<number> => {
+    if (!isIos) return 0
+    setIsRestoring(true)
+    try {
+      // restorePurchases triggers StoreKit to surface unfinished transactions
+      // via the purchase listener (handlePurchaseSuccess); availablePurchases
+      // also fills in for any transactions already queued at hook mount.
+      try {
+        await restorePurchases()
+      } catch (err) {
+        console.warn('[iap] restorePurchases failed:', err)
+      }
+      try {
+        await getAvailablePurchases()
+      } catch (err) {
+        console.warn('[iap] getAvailablePurchases failed:', err)
+      }
+      const pending = availablePurchases ?? []
+      let granted = 0
+      for (const purchase of pending) {
+        const pack = getAppleCreditPack(purchase.productId)
+        if (!pack) continue
+        const txId = purchase.transactionId ?? purchase.id
+        if (!txId) continue
+        try {
+          const result = await verifyAppleIAP({
+            transactionId: txId,
+            productId: purchase.productId,
+          })
+          await finishTransactionRef.current?.({ purchase, isConsumable: true })
+          if (!result.alreadyProcessed) granted++
+          optionsRef.current.onSuccess?.({ balance: result.balance, pack })
+        } catch (err) {
+          console.warn('[iap] restore: verify failed for', txId, err)
+        }
+      }
+      return granted
+    } finally {
+      setIsRestoring(false)
+    }
+  }, [availablePurchases, getAvailablePurchases, restorePurchases])
+
   const ready = isIos && connected && APPLE_CREDIT_PACKS.every(p => !!productsByid[p.productId])
 
   return {
     ready,
     products: productsByid,
     isPurchasing,
+    isRestoring,
     purchase,
+    restore,
     retryFetch: doFetch,
   }
 }

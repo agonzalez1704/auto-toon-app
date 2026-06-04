@@ -79,7 +79,13 @@ export default function CreditsScreen() {
 
   // Apple guideline 3.1.1 — credits on iOS must go through StoreKit IAP.
   // On non-iOS this hook stays `ready: false` and we fall back to Stripe.
-  const { ready: iapReady, isPurchasing, purchase: purchaseAppleIap } = useAppleCreditPurchase({
+  const {
+    ready: iapReady,
+    isPurchasing,
+    isRestoring,
+    purchase: purchaseAppleIap,
+    restore: restoreAppleIap,
+  } = useAppleCreditPurchase({
     onSuccess: ({ balance: newBalance, pack }) => {
       setCredits(newBalance)
       Alert.alert(
@@ -89,6 +95,18 @@ export default function CreditsScreen() {
     },
     onError: (message) => Alert.alert('Purchase failed', message),
   })
+
+  // Apple guideline 3.1.1 requires a "Restore Purchases" affordance for any
+  // app that ships IAP. Restore sweeps unfinished StoreKit transactions
+  // through the backend verify endpoint so users who lost a purchase mid-
+  // flight (network drop, app kill, reinstall) get their credits back.
+  const handleRestore = async () => {
+    if (Platform.OS !== 'ios') return
+    const granted = await restoreAppleIap()
+    if (granted === 0) {
+      Alert.alert('Nothing to restore', 'No unfinished purchases found.')
+    }
+  }
 
   const handlePurchase = async (packId: string) => {
     if (Platform.OS === 'ios') {
@@ -154,6 +172,23 @@ export default function CreditsScreen() {
               </View>
             </TouchableOpacity>
           ))}
+
+          {/* Restore Purchases — Apple guideline 3.1.1 requires this
+              affordance on every IAP-enabled screen. Sweeps unfinished
+              StoreKit transactions through /api/iap/apple/verify so a user
+              who lost a purchase mid-flight gets their credits back. */}
+          {Platform.OS === 'ios' && (
+            <TouchableOpacity
+              style={styles.restoreBtn}
+              onPress={handleRestore}
+              disabled={isRestoring}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.restoreText}>
+                {isRestoring ? 'Restoring…' : 'Restore Purchases'}
+              </Text>
+            </TouchableOpacity>
+          )}
         </Animated.ScrollView>
       </SafeAreaView>
     </View>
@@ -244,5 +279,15 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     color: BRAND,
+  },
+  restoreBtn: {
+    marginTop: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
+  },
+  restoreText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.55)',
   },
 })
