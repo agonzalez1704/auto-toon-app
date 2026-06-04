@@ -53,6 +53,8 @@ export interface UseAppleCreditPurchaseApi {
   isPurchasing: boolean
   /** True while restorePurchases is sweeping unfinished StoreKit transactions. */
   isRestoring: boolean
+  /** Last error message from fetchProducts (null if the most recent fetch succeeded). */
+  lastFetchError: string | null
   /** Trigger a purchase by packageId (micro|small|medium|large). */
   purchase: (packageId: AppleCreditPack['packageId']) => Promise<void>
   /** Restore unfinished consumable transactions (network drop / reinstall recovery).
@@ -142,13 +144,17 @@ export function useAppleCreditPurchase(
   const finishTransactionRef = useRef(finishTransaction)
   finishTransactionRef.current = finishTransaction
 
+  const [lastFetchError, setLastFetchError] = useState<string | null>(null)
   const doFetch = useCallback(async () => {
     if (!isIos) return
     if (!connected) return
+    setLastFetchError(null)
     try {
       await fetchProducts({ skus: [...APPLE_CREDIT_SKUS], type: 'in-app' })
     } catch (err) {
-      console.warn('[iap] fetchProducts failed:', err)
+      const msg = err instanceof Error ? err.message : String(err)
+      console.warn('[iap] fetchProducts failed:', msg)
+      setLastFetchError(msg)
     }
   }, [connected, fetchProducts])
 
@@ -271,6 +277,7 @@ export function useAppleCreditPurchase(
     products: productsByid,
     isPurchasing,
     isRestoring,
+    lastFetchError,
     purchase,
     restore,
     retryFetch: doFetch,

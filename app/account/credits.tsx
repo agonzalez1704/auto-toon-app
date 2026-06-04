@@ -83,6 +83,7 @@ export default function CreditsScreen() {
     ready: iapReady,
     connected: iapConnected,
     loadedProductCount: iapProductCount,
+    lastFetchError: iapFetchError,
     isPurchasing,
     isRestoring,
     purchase: purchaseAppleIap,
@@ -200,6 +201,17 @@ export default function CreditsScreen() {
                 <TouchableOpacity onPress={iapRetryFetch} style={{ marginTop: 6 }}>
                   <Text style={[styles.statusLine, { color: BRAND }]}>Retry product fetch</Text>
                 </TouchableOpacity>
+              )}
+              {iapFetchError && (
+                <Text style={[styles.statusLine, { color: '#F87171', marginTop: 6 }]}>
+                  Apple error: {iapFetchError}
+                </Text>
+              )}
+              {iapConnected && iapProductCount === 0 && !iapFetchError && (
+                <Text style={[styles.statusLine, { marginTop: 6, color: 'rgba(255,255,255,0.45)' }]}>
+                  ASC catalog returned no products. Check: Paid Apps agreement Active, products in
+                  &quot;Ready to Submit&quot; status, IDs match com.autotoon.credits.*
+                </Text>
               )}
             </View>
           )}
