@@ -284,15 +284,70 @@ export default function PricingScreen() {
               )}
             </View>
 
-            <View style={[styles.creditSection, { marginTop: 8 }]}>
-              <Text style={styles.creditSectionTitle}>Subscriptions</Text>
+            {/* Pay-Per-Use — external account-management link.
+                We do NOT execute or describe a purchase inside the app;
+                the button opens auto-toon.com so the user can activate
+                Pay-Per-Use through the web account portal. Apple permits
+                informational links to a developer's website for account
+                management (Reader-app / external-link guidance). */}
+            {currentPlan !== 'PAYPERUSE' && (
+              <View style={{ marginTop: 8 }}>
+                <TouchableOpacity
+                  style={styles.ppuOuter}
+                  activeOpacity={0.85}
+                  onPress={async () => {
+                    await WebBrowser.openBrowserAsync('https://auto-toon.com/dashboard?subscribe=payperuse')
+                  }}
+                >
+                  <LinearGradient
+                    colors={[BRAND, BRAND_CYAN]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.ppuGradientBorder}
+                  />
+                  <View style={styles.ppuCard}>
+                    <View style={styles.ppuTopRow}>
+                      <View style={styles.ppuIconWrap}>
+                        <ZapIcon />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <View style={styles.ppuNameRow}>
+                          <Text style={styles.ppuName}>Pay Per Use</Text>
+                          <View style={styles.ppuBadge}>
+                            <Text style={styles.ppuBadgeText}>RECOMMENDED</Text>
+                          </View>
+                        </View>
+                        <Text style={styles.ppuTagline}>Only pay for what you create</Text>
+                      </View>
+                    </View>
+
+                    <Text style={styles.ppuDescription}>
+                      No subscription. Generate as you go and we bill only for what you actually use. Activate from your web account in the browser.
+                    </Text>
+
+                    <View style={styles.ppuCta}>
+                      <LinearGradient
+                        colors={[BRAND, BRAND_CYAN]}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 0 }}
+                        style={StyleSheet.absoluteFillObject}
+                      />
+                      <Text style={styles.ppuCtaText}>Activate Pay Per Use on the web</Text>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              </View>
+            )}
+
+            <View style={[styles.creditSection, { marginTop: 16 }]}>
+              <Text style={styles.creditSectionTitle}>Subscription plans</Text>
               <Text style={styles.creditSectionSub}>
-                Monthly and yearly subscription plans are managed on auto-toon.com. Sign in on the web with the same account to activate or change a plan.
+                Weekly, monthly, and yearly subscription plans are managed from your web account. Sign in on auto-toon.com with the same account to activate or change a plan.
               </Text>
             </View>
 
             <Text style={styles.footerNote}>
-              Purchases are processed by Apple. All charges appear on your Apple ID statement.
+              Credit packs are processed by Apple. All other plans are managed on the web.
             </Text>
           </Animated.ScrollView>
         </SafeAreaView>

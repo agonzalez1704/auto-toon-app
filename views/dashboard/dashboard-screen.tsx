@@ -4,8 +4,10 @@
  * Dependency Inversion: child components don't import router/stores.
  */
 import { useCallback, useEffect, useRef } from 'react'
-import { Animated, StatusBar, StyleSheet, Text, View } from 'react-native'
+import { Animated, Platform, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
+import * as WebBrowser from 'expo-web-browser'
+import { LinearGradient } from 'expo-linear-gradient'
 import { useUser } from '@clerk/clerk-expo'
 import { useQuery } from '@tanstack/react-query'
 import { useRouter } from 'expo-router'
@@ -99,6 +101,40 @@ export default function DashboardScreen() {
             onPlanPress={() => router.push('/account/pricing')}
           />
 
+          {/* Pay-Per-Use upsell banner — shown on iOS for users not yet on
+              PPU. Apple guideline: this is an external account-management
+              link (no in-app purchase processing), so the button opens the
+              web account portal. On non-iOS we leave Stripe checkout in the
+              existing pricing screen and don't surface the banner here. */}
+          {Platform.OS === 'ios' && plan !== 'PAYPERUSE' && (
+            <TouchableOpacity
+              style={ppuStyles.banner}
+              activeOpacity={0.85}
+              onPress={async () => {
+                await WebBrowser.openBrowserAsync('https://auto-toon.com/dashboard?subscribe=payperuse')
+              }}
+            >
+              <LinearGradient
+                colors={['#8B5CF6', '#06B6D4']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={StyleSheet.absoluteFillObject}
+              />
+              <View style={ppuStyles.bannerInner}>
+                <View style={{ flex: 1 }}>
+                  <View style={ppuStyles.bannerTopRow}>
+                    <Text style={ppuStyles.bannerBadge}>RECOMMENDED</Text>
+                  </View>
+                  <Text style={ppuStyles.bannerTitle}>Switch to Pay Per Use</Text>
+                  <Text style={ppuStyles.bannerSub}>
+                    No subscription. Only pay for what you generate. Activate from your web account.
+                  </Text>
+                </View>
+                <Text style={ppuStyles.bannerCta}>Open ›</Text>
+              </View>
+            </TouchableOpacity>
+          )}
+
           <View style={styles.toolsHeader}>
             <Text style={styles.toolsEyebrow}>STUDIO</Text>
             <Text style={styles.toolsTitle}>Your power tools</Text>
@@ -176,5 +212,56 @@ const styles = StyleSheet.create({
   toolsSub: {
     fontSize: 13,
     color: theme.colors.textMuted,
+  },
+})
+
+const ppuStyles = StyleSheet.create({
+  banner: {
+    marginHorizontal: 16,
+    marginTop: 16,
+    marginBottom: 4,
+    borderRadius: 18,
+    overflow: 'hidden',
+  },
+  bannerInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 18,
+    paddingVertical: 16,
+    gap: 12,
+  },
+  bannerTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 6,
+  },
+  bannerBadge: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#1f1300',
+    backgroundColor: '#FBBF24',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    letterSpacing: 0.5,
+    overflow: 'hidden',
+  },
+  bannerTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 4,
+  },
+  bannerSub: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.85)',
+    lineHeight: 16,
+  },
+  bannerCta: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    paddingLeft: 4,
   },
 })
