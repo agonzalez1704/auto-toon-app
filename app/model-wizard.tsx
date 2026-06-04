@@ -631,37 +631,56 @@ export default function ModelWizardScreen() {
             </View>
           )}
 
-          {/* Generate button */}
-          <TouchableOpacity
-            style={[
-              styles.generateButton,
-              !canGenerate && styles.generateButtonDisabled,
-            ]}
-            onPress={handleGenerate}
-            disabled={!canGenerate}
-            activeOpacity={0.8}
-          >
-            {canGenerate && (
-              <LinearGradient
-                colors={['#FBBF24', '#F59E0B', '#B45309']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={StyleSheet.absoluteFillObject}
-              />
-            )}
-            <View style={styles.generateBtnContent}>
-              <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
-                <Circle cx="12" cy="7" r="4" fill="#FFFFFF" />
-                <SvgPath
-                  d="M5.5 21c0-3.59 2.91-6.5 6.5-6.5s6.5 2.91 6.5 6.5"
-                  fill="#FFFFFF"
-                />
-              </Svg>
-              <Text style={styles.generateBtnText}>
-                Generate Model ({store.mode === 'use-face' ? faceModelCostLabel : turboModelCostLabel})
-              </Text>
-            </View>
-          </TouchableOpacity>
+          {/* Generate button — swaps to "Get more credits" CTA when balance
+              is below the per-call cost (credit-plan users only). Mirrors
+              the web exhaustion behavior so users get a tappable path to
+              StoreKit IAP instead of a silent disabled button. */}
+          {(() => {
+            const generateCost = store.mode === 'use-face'
+              ? getModelCredits(AI_MODELS.GEMINI_3_IMAGE.id)
+              : getModelCredits(AI_MODELS.Z_IMAGE_TURBO.id)
+            const insufficient = !isPayPerUse && balance !== null && balance < generateCost
+            const ctaTappable = insufficient || canGenerate
+            const onPress = insufficient
+              ? () => router.push('/account/credits')
+              : handleGenerate
+            return (
+              <>
+                <TouchableOpacity
+                  style={[styles.generateButton, !ctaTappable && styles.generateButtonDisabled]}
+                  onPress={onPress}
+                  disabled={!ctaTappable}
+                  activeOpacity={0.8}
+                >
+                  {ctaTappable && (
+                    <LinearGradient
+                      colors={['#FBBF24', '#F59E0B', '#B45309']}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      style={StyleSheet.absoluteFillObject}
+                    />
+                  )}
+                  <View style={styles.generateBtnContent}>
+                    <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
+                      <Circle cx="12" cy="7" r="4" fill="#FFFFFF" />
+                      <SvgPath
+                        d="M5.5 21c0-3.59 2.91-6.5 6.5-6.5s6.5 2.91 6.5 6.5"
+                        fill="#FFFFFF"
+                      />
+                    </Svg>
+                    <Text style={styles.generateBtnText}>
+                      {insufficient
+                        ? 'Get more credits'
+                        : `Generate Model (${store.mode === 'use-face' ? faceModelCostLabel : turboModelCostLabel})`}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+                {insufficient && (
+                  <Text style={styles.balanceHint}>Not enough credits — tap to top up via App Store.</Text>
+                )}
+              </>
+            )
+          })()}
 
           {!isPayPerUse && balance !== null && (
             <Text style={styles.balanceHint}>Balance: {balance} credits</Text>

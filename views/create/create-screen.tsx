@@ -71,6 +71,11 @@ export default function CreateScreen() {
   if (store.isUploading) missing.push('upload-in-progress')
   if (store.isGenerating) missing.push('already-generating')
   const canGenerate = missing.length === 0
+  // Credit-plan users with a balance below the per-call cost get a
+  // "Get more credits" CTA in place of Generate (mirrors web). Pay-per-use
+  // users are metered server-side, so the gate never applies.
+  const hasInsufficientCredits =
+    !isPayPerUse && balance !== null && balance < creditCost
 
   const handleGenerate = useCallback(async () => {
     if (!canGenerate) {
@@ -302,9 +307,19 @@ export default function CreateScreen() {
                 canGenerate={canGenerate}
                 isGenerating={store.isGenerating}
                 costLabel={costLabel}
-                onPress={handleGenerate}
+                insufficientCredits={hasInsufficientCredits}
+                onPress={
+                  hasInsufficientCredits
+                    ? () => router.push('/account/credits')
+                    : handleGenerate
+                }
               />
-              {!canGenerate && !store.isGenerating && (
+              {hasInsufficientCredits && !store.isGenerating && (
+                <Text style={styles.disabledReason}>
+                  Not enough credits — tap to top up via App Store.
+                </Text>
+              )}
+              {!hasInsufficientCredits && !canGenerate && !store.isGenerating && (
                 <Text style={styles.disabledReason}>
                   Missing: {missing.join(', ')}
                 </Text>

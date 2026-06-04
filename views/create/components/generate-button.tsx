@@ -7,20 +7,39 @@ interface GenerateButtonProps {
   canGenerate: boolean
   isGenerating: boolean
   costLabel: string
+  /** When true, the button swaps to a "Get more credits" CTA. The parent
+   *  rewires `onPress` to open the credits-exhaustion modal / IAP flow. */
+  insufficientCredits?: boolean
   onPress: () => void
 }
 
-export function GenerateButton({ canGenerate, isGenerating, costLabel, onPress }: GenerateButtonProps) {
-  const showGradient = canGenerate && !isGenerating
+export function GenerateButton({
+  canGenerate,
+  isGenerating,
+  costLabel,
+  insufficientCredits = false,
+  onPress,
+}: GenerateButtonProps) {
+  // "Get more credits" is always tappable when shown — it ignores
+  // canGenerate (the user can buy credits without finishing the form).
+  const isCreditCta = insufficientCredits && !isGenerating
+  const effectiveDisabled = isCreditCta ? false : !canGenerate || isGenerating
+  const showGradient = isCreditCta || (canGenerate && !isGenerating)
   return (
     <TouchableOpacity
-      style={[styles.button, !canGenerate && styles.disabled, isGenerating && { opacity: 0.7 }]}
+      style={[styles.button, effectiveDisabled && styles.disabled, isGenerating && { opacity: 0.7 }]}
       onPress={onPress}
-      disabled={!canGenerate || isGenerating}
+      disabled={effectiveDisabled}
       activeOpacity={0.85}
-      accessibilityLabel={isGenerating ? 'Generating' : `Generate, costs ${costLabel}`}
+      accessibilityLabel={
+        isGenerating
+          ? 'Generating'
+          : isCreditCta
+            ? 'Get more credits'
+            : `Generate, costs ${costLabel}`
+      }
       accessibilityRole="button"
-      accessibilityState={{ disabled: !canGenerate || isGenerating }}
+      accessibilityState={{ disabled: effectiveDisabled }}
     >
       {showGradient && (
         <LinearGradient
@@ -34,6 +53,11 @@ export function GenerateButton({ canGenerate, isGenerating, costLabel, onPress }
         <View style={styles.row}>
           <ActivityIndicator color="#1A1330" size="small" />
           <Text style={[styles.text, { color: '#1A1330' }]}>Generating...</Text>
+        </View>
+      ) : isCreditCta ? (
+        <View style={styles.row}>
+          <SparklesIcon size={20} color="#1A1330" />
+          <Text style={[styles.text, { color: '#1A1330' }]}>Get more credits</Text>
         </View>
       ) : (
         <View style={styles.row}>
