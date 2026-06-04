@@ -262,8 +262,13 @@ export default function ModelWizardScreen() {
         const faceBase64 = await readResizedBase64(localUri)
         const analysis = await analyzeFacePhoto(faceBase64)
         store.setFaceAnalysis(analysis)
-      } catch {
-        store.setError('Face analysis failed. Please try again.')
+      } catch (err: any) {
+        // Suppress error on consent gate — modal handles user recovery.
+        if (err?.code === 'AI_CONSENT_REQUIRED' || err?.code === 'TERMS_NOT_ACCEPTED') {
+          // no-op
+        } else {
+          store.setError('Face analysis failed. Please try again.')
+        }
       } finally {
         isAnalyzingRef.current = false
         setIsAnalyzing(false)
@@ -441,6 +446,9 @@ export default function ModelWizardScreen() {
     } catch (error: any) {
       if (error?.status === 402) {
         setShowExhaustionModal(true)
+      } else if (error?.code === 'AI_CONSENT_REQUIRED' || error?.code === 'TERMS_NOT_ACCEPTED') {
+        // Consent gates open their own modal via the axios interceptor.
+        // Don't show an error toast on top of it.
       } else {
         store.setError(
           error?.message || 'Generation failed. Please try again.'

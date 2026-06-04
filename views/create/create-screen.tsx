@@ -120,8 +120,15 @@ export default function CreateScreen() {
       if (err?.status === 402) {
         setShowExhaustionModal(true)
         store.setGenerationPhase('idle')
+      } else if (err?.code === 'AI_CONSENT_REQUIRED' || err?.code === 'TERMS_NOT_ACCEPTED') {
+        // Consent gates open their own modal via the axios interceptor.
+        // Reset the phase so the user lands back on the create form,
+        // accepts consent, and can re-tap Generate (the modal also queues
+        // the action via requireConsent when going through the guard).
+        store.setGenerationPhase('idle')
       } else {
         store.setError(err?.message || 'Something went wrong')
+        store.setGenerationPhase('idle')
       }
     }
   }, [canGenerate, store, balance, creditCost, isPayPerUse, fetchCredits, setShowExhaustionModal, mjParams])

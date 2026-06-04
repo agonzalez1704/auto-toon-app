@@ -25,6 +25,12 @@ export function useImagePipeline() {
         store.applyAnalysisSuggestions(analysis)
       } catch (err) {
         console.error('Upload/analysis failed:', err)
+        // Consent gates open their own modal via the axios interceptor —
+        // suppress the blocking Alert so it doesn't cover the consent UI.
+        const code = err instanceof ApiError ? err.code : undefined
+        if (code === 'AI_CONSENT_REQUIRED' || code === 'TERMS_NOT_ACCEPTED') {
+          return
+        }
         const isTimeout =
           err instanceof ApiError && /timeout/i.test(err.message)
         Alert.alert(

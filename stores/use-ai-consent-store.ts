@@ -41,7 +41,16 @@ export const useAIConsentStore = create<AIConsentState>()(
       hydrateFromServer: async () => {
         try {
           const { accepted } = await checkAIConsent()
-          set({ accepted })
+          // If backend says NOT accepted, proactively open the modal so the
+          // user can grant consent BEFORE attempting any generation. This
+          // avoids the 403-then-modal race that hard-blocks the upload
+          // pipeline when the modal can't appear in time / is hidden by
+          // an error Alert.
+          if (accepted) {
+            set({ accepted: true, showConsentModal: false })
+          } else {
+            set({ accepted: false, showConsentModal: true })
+          }
         } catch {
           // network / auth — leave as-is.
         }
