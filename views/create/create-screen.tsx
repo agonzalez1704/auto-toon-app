@@ -8,6 +8,7 @@
  */
 import { useCallback, useState } from 'react'
 import {
+  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -27,6 +28,8 @@ import { enhanceProduct } from '@/lib/api'
 import { getCostLabel } from '@/lib/ai-models'
 import { useCreditsStore } from '@/stores/use-credits-store'
 import { useSubscriptionStore } from '@/stores/use-subscription-store'
+import { useAIConsentStore } from '@/stores/use-ai-consent-store'
+import { useTermsConsentStore } from '@/stores/use-terms-consent-store'
 import { requireAllConsents } from '@/stores/use-consent-guards'
 import {
   AI_MODELS,
@@ -70,10 +73,38 @@ export default function CreateScreen() {
   const canGenerate = missing.length === 0
 
   const handleGenerate = useCallback(async () => {
-    if (!canGenerate || !store.uploadedImageUrl) return
+    if (!canGenerate) {
+      // Surface why the button was tappable but generation didn't fire —
+      // this happens when the canGenerate boolean and the per-field
+      // missing[] computation get out of sync.
+      console.warn('[generate] blocked, missing:', missing.join(','))
+      Alert.alert('Not ready', `Missing: ${missing.join(', ') || 'unknown'}`)
+      return
+    }
+    if (!store.uploadedImageUrl) {
+      // Image picked but upload hasn't finished (or failed silently). Tell
+      // the user instead of swallowing the tap.
+      Alert.alert('Upload pending', 'The image is still uploading. Try again in a moment.')
+      return
+    }
 
     const consented = requireAllConsents(() => handleGenerate())
-    if (!consented) return
+    if (!consented) {
+      const terms = useSubscriptionStore.getState().termsAccepted
+      const ai = useAIConsentStore.getState().accepted
+      const termsModal = useTermsConsentStore.getState().showConsentModal
+      const aiModal = useAIConsentStore.getState().showConsentModal
+      console.warn('[generate] consent gate blocked', { terms, ai, termsModal, aiModal })
+      // Defensive fallback: if the consent guard returned false but
+      // somehow no modal is flagged for display (modal mount race, store
+      // re-hydration), force the missing modal open so the user has a
+      // recovery path instead of a silent Generate button.
+      if (!termsModal && !aiModal) {
+        if (!terms) useTermsConsentStore.getState().setShowConsentModal(true)
+        else if (ai !== true) useAIConsentStore.setState({ showConsentModal: true })
+      }
+      return
+    }
 
     if (!isPayPerUse && balance !== null && balance < creditCost) {
       setShowExhaustionModal(true)

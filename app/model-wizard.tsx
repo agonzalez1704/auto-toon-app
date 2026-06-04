@@ -21,6 +21,8 @@ import Svg, { Path as SvgPath, Circle } from 'react-native-svg'
 import { useModelFactoryStore } from '@/stores/use-model-factory-store'
 import { useCreditsStore } from '@/stores/use-credits-store'
 import { requireAllConsents } from '@/stores/use-consent-guards'
+import { useAIConsentStore } from '@/stores/use-ai-consent-store'
+import { useTermsConsentStore } from '@/stores/use-terms-consent-store'
 import { uploadImage } from '@/lib/upload'
 import {
   generateFashionModel,
@@ -350,7 +352,21 @@ export default function ModelWizardScreen() {
   // ─── Generate ─────────────────────────────────────────────────────
 
   const handleGenerate = useCallback(async () => {
-    if (!canGenerate || !store.faceUploadedUrl || isSubmittingRef.current) return
+    if (!canGenerate || !store.faceUploadedUrl || isSubmittingRef.current) {
+      const missingParts: string[] = []
+      if (!store.faceUploadedUrl) missingParts.push('face-not-uploaded')
+      if (isFaceUploading) missingParts.push('face-upload-in-progress')
+      if (isBodyUploading) missingParts.push('body-upload-in-progress')
+      if (isAnalyzing) missingParts.push('face-analysis-in-progress')
+      if (store.phase !== 'idle') missingParts.push(`phase=${store.phase}`)
+      if (store.mode === 'describe-generate' && store.faceAnalysis === null) missingParts.push('face-analysis-missing')
+      if (isSubmittingRef.current) missingParts.push('already-submitting')
+      console.warn('[model-wizard] generate blocked:', missingParts.join(','))
+      if (missingParts.length > 0) {
+        Alert.alert('Not ready', `Missing: ${missingParts.join(', ')}`)
+      }
+      return
+    }
     isSubmittingRef.current = true
 
     const consented = requireAllConsents(() => {
@@ -359,6 +375,15 @@ export default function ModelWizardScreen() {
     })
     if (!consented) {
       isSubmittingRef.current = false
+      const terms = useSubscriptionStore.getState().termsAccepted
+      const ai = useAIConsentStore.getState().accepted
+      const termsModal = useTermsConsentStore.getState().showConsentModal
+      const aiModal = useAIConsentStore.getState().showConsentModal
+      console.warn('[model-wizard] consent gate blocked', { terms, ai, termsModal, aiModal })
+      if (!termsModal && !aiModal) {
+        if (!terms) useTermsConsentStore.getState().setShowConsentModal(true)
+        else if (ai !== true) useAIConsentStore.setState({ showConsentModal: true })
+      }
       return
     }
 
