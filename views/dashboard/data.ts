@@ -51,6 +51,16 @@ export const BENTO_CARDS: BentoCardConfig[] = [
     pro: true,
   },
   {
+    label: 'My Wardrobe',
+    description: 'Try clothing on a model of you',
+    route: '/wardrobe',
+    preview: require('@/assets/images/previews/style-editorial.jpg'),
+    backgroundImage: require('@/assets/images/previews/style-editorial.jpg'),
+    gradient: gradients.fashion,
+    accent: 'rgba(167,139,250,0.55)', // violet
+    pro: true,
+  },
+  {
     label: 'AI Relight',
     description: 'Cinematic lighting presets',
     route: '/relight',

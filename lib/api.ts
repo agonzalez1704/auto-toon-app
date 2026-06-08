@@ -1373,3 +1373,85 @@ export async function getVideoGenerationStatus(id: string) {
   )
   return data
 }
+
+// ─── My Wardrobe ──────────────────────────────────────────────────────
+// Try clothing on a model of yourself. Same backend the web client uses.
+
+export interface WardrobeModel {
+  id: string
+  name: string
+  imageUrl: string
+  baseImageUrl: string
+  createdAt: string
+}
+export interface WardrobeItem {
+  id: string
+  name: string
+  imageUrl: string
+  sourceUrl: string | null
+  category: string | null
+  createdAt: string
+}
+export interface WardrobeLook {
+  id: string
+  fashionModelId: string
+  wardrobeItemId: string | null
+  heroImageUrl: string | null
+  angleUrls: string[]
+  angleCount: number
+  model: string | null
+  status: 'pending' | 'generating' | 'ready' | 'failed'
+  errorMessage: string | null
+  createdAt: string
+  wardrobeItem?: { name: string; imageUrl: string } | null
+  fashionModel?: { name: string } | null
+}
+
+export async function getWardrobeModels() {
+  const { data } = await api.get<{ models: WardrobeModel[] }>('/api/wardrobe/models')
+  return data.models
+}
+
+export async function getWardrobeItems() {
+  const { data } = await api.get<{ items: WardrobeItem[] }>('/api/wardrobe/items')
+  return data.items
+}
+
+export async function saveWardrobeItem(input: {
+  imageUrl: string
+  name?: string
+  sourceUrl?: string
+  category?: string
+}) {
+  const { data } = await api.post<{ item: WardrobeItem }>('/api/wardrobe/items', input)
+  return data.item
+}
+
+export async function scrapeWardrobeGarment(url: string) {
+  const { data } = await api.post<{ imageUrl: string; sourceImageUrl: string; title: string | null }>(
+    '/api/wardrobe/scrape-garment',
+    { url },
+    { timeout: 30_000 },
+  )
+  return data
+}
+
+export async function generateWardrobeLook(input: {
+  fashionModelId: string
+  garmentImageUrl: string
+  wardrobeItemId?: string
+  angleCount: number
+}) {
+  // Multi-angle generation can take a while; bump the timeout.
+  const { data } = await api.post<{ look: WardrobeLook; produced: number; requested: number }>(
+    '/api/wardrobe/generate',
+    input,
+    { timeout: 300_000 },
+  )
+  return data
+}
+
+export async function getWardrobeLooks() {
+  const { data } = await api.get<{ looks: WardrobeLook[] }>('/api/wardrobe/looks')
+  return data.looks
+}
