@@ -23,7 +23,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Platform } from 'react-native'
-import { useIAP, type Product, type Purchase } from 'expo-iap'
+import { useIAP, fetchProducts as fetchProductsStandalone, type Product, type Purchase } from 'expo-iap'
 import {
   APPLE_CREDIT_PACKS,
   APPLE_CREDIT_SKUS,
@@ -150,7 +150,24 @@ export function useAppleCreditPurchase(
     if (!connected) return
     setLastFetchError(null)
     try {
-      await fetchProducts({ skus: [...APPLE_CREDIT_SKUS], type: 'in-app' })
+      // Use the standalone fetchProducts which RETURNS the resolved products,
+      // rather than relying solely on the hook's reactive `products` state
+      // (which intermittently stays empty after the StoreKit query resolves).
+      // Populate from both sources so whichever fills first wins.
+      const result = await fetchProductsStandalone({ skus: [...APPLE_CREDIT_SKUS], type: 'in-app' })
+      const list = (Array.isArray(result) ? result : []) as Product[]
+      if (list.length > 0) {
+        setProductsById((prev) => {
+          const next = { ...prev }
+          for (const p of list) if (p?.id) next[p.id] = p
+          return next
+        })
+      } else {
+        console.warn('[iap] fetchProducts returned 0 products for', APPLE_CREDIT_SKUS)
+      }
+      // Also trigger the hook's fetch so its internal store is primed for
+      // requestPurchase.
+      await fetchProducts({ skus: [...APPLE_CREDIT_SKUS], type: 'in-app' }).catch(() => {})
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err)
       console.warn('[iap] fetchProducts failed:', msg)
@@ -164,9 +181,11 @@ export function useAppleCreditPurchase(
 
   useEffect(() => {
     if (!products || products.length === 0) return
-    const next: Record<string, Product> = {}
-    for (const p of products) next[p.id] = p
-    setProductsById(next)
+    setProductsById((prev) => {
+      const next = { ...prev }
+      for (const p of products) if (p?.id) next[p.id] = p
+      return next
+    })
   }, [products])
 
   const purchase = useCallback(
@@ -181,19 +200,31 @@ export function useAppleCreditPurchase(
         return
       }
       // Best-effort product fetch in case the user taps before fetchProducts
-      // resolved. requestPurchase still works with just the SKU, but Apple's
-      // dialog won't show a localized price if products aren't loaded.
+      // resolved. StoreKit needs the product registered before requestPurchase,
+      // otherwise it throws "SKU not found".
       if (!productsByid[pack.productId]) {
         try {
-          await fetchProducts({ skus: [...APPLE_CREDIT_SKUS], type: 'in-app' })
+          const result = await fetchProductsStandalone({ skus: [...APPLE_CREDIT_SKUS], type: 'in-app' })
+          const list = (Array.isArray(result) ? result : []) as Product[]
+          if (list.length > 0) {
+            setProductsById((prev) => {
+              const next = { ...prev }
+              for (const p of list) if (p?.id) next[p.id] = p
+              return next
+            })
+          }
+          await fetchProducts({ skus: [...APPLE_CREDIT_SKUS], type: 'in-app' }).catch(() => {})
         } catch {
           // Ignore — proceed with the SKU directly.
         }
       }
       setIsPurchasing(true)
       try {
+        // expo-iap v4 canonical key is `apple` (`ios` is a deprecated alias
+        // that the native module may not read → "SKU not found"). Send both.
         await requestPurchase({
           request: {
+            apple: { sku: pack.productId },
             ios: { sku: pack.productId },
           },
           type: 'in-app',
