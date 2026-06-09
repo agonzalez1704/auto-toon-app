@@ -7,7 +7,6 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -35,6 +34,7 @@ import { uploadImage } from '@/lib/upload'
 import { requireAllConsents } from '@/stores/use-consent-guards'
 import { useCreditsStore } from '@/stores/use-credits-store'
 import { AI_MODELS, getModelCredits } from '@/lib/ai-models'
+import { GarmentInput } from './garment-input'
 
 const ANGLE_OPTIONS = [1, 2, 3, 4, 6, 8]
 // Wardrobe renders with GPT-Image-2 — credit cost from the single source.
@@ -53,7 +53,6 @@ export default function WardrobeScreen() {
   const [garmentUrls, setGarmentUrls] = useState<string[]>([])
   const addGarment = useCallback((url: string) => setGarmentUrls((p) => (p.includes(url) ? p : [...p, url])), [])
   const toggleGarment = useCallback((url: string) => setGarmentUrls((p) => (p.includes(url) ? p.filter((u) => u !== url) : [...p, url])), [])
-  const [pasteUrl, setPasteUrl] = useState('')
   const [scraping, setScraping] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [angleCount, setAngleCount] = useState(1)
@@ -133,14 +132,14 @@ export default function WardrobeScreen() {
     }
   }
 
-  const scrape = async () => {
-    if (!pasteUrl.trim()) return
+  const scrape = async (rawUrl: string) => {
+    const url = rawUrl.trim()
+    if (!url) return
     setScraping(true)
     try {
-      const { imageUrl, title } = await scrapeWardrobeGarment(pasteUrl.trim())
+      const { imageUrl, title } = await scrapeWardrobeGarment(url)
       addGarment(imageUrl)
-      saveWardrobeItem({ imageUrl, name: title ?? 'Garment', sourceUrl: pasteUrl.trim() }).then(refresh).catch(() => {})
-      setPasteUrl('')
+      saveWardrobeItem({ imageUrl, name: title ?? 'Garment', sourceUrl: url }).then(refresh).catch(() => {})
     } catch (err) {
       handleError(err)
     } finally {
@@ -241,34 +240,14 @@ export default function WardrobeScreen() {
             </ScrollView>
           )}
 
-          <View style={{ gap: 10 }}>
-            <View style={{ flexDirection: 'row', gap: 10 }}>
-              <Pressable style={styles.uploadBtn} disabled={uploading} onPress={() => pickGarment('gallery')}>
-                {uploading ? <ActivityIndicator color={theme.colors.text} /> : <Text style={styles.uploadBtnText}>Gallery</Text>}
-              </Pressable>
-              <Pressable style={styles.uploadBtn} disabled={uploading} onPress={() => pickGarment('camera')}>
-                <Text style={styles.uploadBtnText}>Camera</Text>
-              </Pressable>
-              <Pressable style={styles.uploadBtn} disabled={uploading} onPress={pasteImage}>
-                <Text style={styles.uploadBtnText}>Paste</Text>
-              </Pressable>
-            </View>
-            <View style={styles.urlRow}>
-              <TextInput
-                style={styles.urlInput}
-                value={pasteUrl}
-                onChangeText={setPasteUrl}
-                placeholder="Paste a product link…"
-                placeholderTextColor={theme.colors.textDisabled}
-                autoCapitalize="none"
-                autoCorrect={false}
-                keyboardType="url"
-              />
-              <Pressable style={styles.fetchBtn} disabled={scraping || !pasteUrl.trim()} onPress={scrape}>
-                {scraping ? <ActivityIndicator color="#1A1330" size="small" /> : <Text style={styles.fetchBtnText}>Fetch</Text>}
-              </Pressable>
-            </View>
-          </View>
+          <GarmentInput
+            onGallery={() => pickGarment('gallery')}
+            onCamera={() => pickGarment('camera')}
+            onPaste={pasteImage}
+            onUrl={scrape}
+            uploading={uploading}
+            scraping={scraping}
+          />
 
           {/* saved garments — tap to add/remove */}
           {items.length > 0 && (
@@ -358,12 +337,6 @@ const styles = StyleSheet.create({
   removeChip: { position: 'absolute', top: 8, right: 8, backgroundColor: 'rgba(0,0,0,0.6)', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999 },
   removeChipText: { color: '#fff', fontSize: 11, fontWeight: '600' },
 
-  uploadBtn: { flex: 1, height: 52, borderRadius: 14, borderWidth: 1, borderColor: theme.colors.borderStrong, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.colors.surface },
-  uploadBtnText: { color: theme.colors.text, fontWeight: '600', fontSize: 14 },
-  urlRow: { flexDirection: 'row', gap: 8 },
-  urlInput: { flex: 1, height: 48, borderRadius: 12, borderWidth: 1, borderColor: theme.colors.border, paddingHorizontal: 14, color: theme.colors.text, backgroundColor: theme.colors.surface },
-  fetchBtn: { paddingHorizontal: 18, height: 48, borderRadius: 12, backgroundColor: theme.colors.accent, alignItems: 'center', justifyContent: 'center' },
-  fetchBtnText: { color: '#1A1330', fontWeight: '700' },
 
   savedThumb: { width: 64, height: 64, borderRadius: 10, overflow: 'hidden', borderWidth: 2, borderColor: theme.colors.border },
   savedThumbActive: { borderColor: '#8B5CF6' },
