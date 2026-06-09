@@ -57,6 +57,7 @@ export default function WardrobeScreen() {
   const [uploading, setUploading] = useState(false)
   const [angleCount, setAngleCount] = useState(1)
   const [generating, setGenerating] = useState(false)
+  const [tab, setTab] = useState<'create' | 'looks'>('create')
 
   const handleError = useCallback((err: unknown) => {
     const code = err instanceof ApiError ? err.code : undefined
@@ -159,6 +160,7 @@ export default function WardrobeScreen() {
       })
       Alert.alert('Look ready', `${produced}/${requested} images generated.`)
       setGarmentUrls([])
+      setTab('looks')
       await refresh()
       useCreditsStore.getState().fetchCredits()
     } catch (err) {
@@ -194,6 +196,45 @@ export default function WardrobeScreen() {
           <View style={{ width: 22 }} />
         </View>
 
+        {/* Segmented tabs — looks reachable in one tap, no scroll */}
+        <View style={styles.segment}>
+          <Pressable style={[styles.segmentBtn, tab === 'create' && styles.segmentBtnActive]} onPress={() => setTab('create')}>
+            <Text style={[styles.segmentText, tab === 'create' && styles.segmentTextActive]}>Create</Text>
+          </Pressable>
+          <Pressable style={[styles.segmentBtn, tab === 'looks' && styles.segmentBtnActive]} onPress={() => setTab('looks')}>
+            <Text style={[styles.segmentText, tab === 'looks' && styles.segmentTextActive]}>
+              Your looks{looks.length > 0 ? ` (${looks.length})` : ''}
+            </Text>
+          </Pressable>
+        </View>
+
+        {tab === 'looks' ? (
+          <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+            {looks.length === 0 ? (
+              <View style={styles.emptyCard}>
+                <Text style={styles.emptyText}>No looks yet. Build one in Create, then it shows up here.</Text>
+                <Pressable style={styles.primaryBtnSm} onPress={() => setTab('create')}>
+                  <Text style={styles.primaryBtnSmText}>Start creating</Text>
+                </Pressable>
+              </View>
+            ) : (
+              <View style={styles.looksGrid}>
+                {looks.map((lk) => (
+                  <View key={lk.id} style={styles.lookCard}>
+                    {lk.heroImageUrl ? (
+                      <Image source={{ uri: lk.heroImageUrl }} style={styles.lookImg} />
+                    ) : (
+                      <View style={[styles.lookImg, styles.center]}>
+                        {lk.status === 'failed' ? <Text style={styles.failText}>Failed</Text> : <ActivityIndicator color={theme.colors.textMuted} />}
+                      </View>
+                    )}
+                  </View>
+                ))}
+              </View>
+            )}
+            <View style={{ height: 40 }} />
+          </ScrollView>
+        ) : (
         <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
           <Text style={styles.subtitle}>Try any clothing on a model of yourself.</Text>
 
@@ -260,50 +301,38 @@ export default function WardrobeScreen() {
             </ScrollView>
           )}
 
-          {/* Step 3: angles */}
-          <Text style={styles.stepLabel}>3. Angles</Text>
-          <View style={styles.angleRow}>
+          {/* Step 3: angles — compact, label + cost on one line, single-row chips */}
+          <View style={styles.angleHead}>
+            <Text style={[styles.stepLabel, { marginTop: 0 }]}>3. Angles</Text>
+            <Text style={styles.costHint}>{angleCount} angle{angleCount > 1 ? 's' : ''} · {angleCount * COST_PER_IMAGE} credits</Text>
+          </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.angleRow}>
             {ANGLE_OPTIONS.map((n) => (
               <Pressable key={n} onPress={() => setAngleCount(n)} style={[styles.angleChip, angleCount === n && styles.angleChipActive]}>
                 <Text style={[styles.angleChipText, angleCount === n && styles.angleChipTextActive]}>{n}</Text>
               </Pressable>
             ))}
-          </View>
-          <Text style={styles.costHint}>{angleCount} angle{angleCount > 1 ? 's' : ''} · {angleCount * COST_PER_IMAGE} credits</Text>
+          </ScrollView>
 
-          {/* Generate */}
-          <Pressable style={[styles.generateBtn, !canGenerate && styles.generateBtnDisabled]} disabled={!canGenerate} onPress={generate}>
-            {canGenerate && (
-              <LinearGradient colors={['#FBBF24', '#F59E0B', '#B45309']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFillObject} />
-            )}
-            {generating ? (
-              <View style={styles.row}><ActivityIndicator color="#1A1330" size="small" /><Text style={styles.generateText}>Generating…</Text></View>
-            ) : (
-              <Text style={styles.generateText}>Generate look</Text>
-            )}
-          </Pressable>
-
-          {/* Looks */}
-          {looks.length > 0 && (
-            <>
-              <Text style={[styles.stepLabel, { marginTop: 24 }]}>Your looks ({looks.length})</Text>
-              <View style={styles.looksGrid}>
-                {looks.map((lk) => (
-                  <View key={lk.id} style={styles.lookCard}>
-                    {lk.heroImageUrl ? (
-                      <Image source={{ uri: lk.heroImageUrl }} style={styles.lookImg} />
-                    ) : (
-                      <View style={[styles.lookImg, styles.center]}>
-                        {lk.status === 'failed' ? <Text style={styles.failText}>Failed</Text> : <ActivityIndicator color={theme.colors.textMuted} />}
-                      </View>
-                    )}
-                  </View>
-                ))}
-              </View>
-            </>
-          )}
-          <View style={{ height: 40 }} />
+          <View style={{ height: 8 }} />
         </ScrollView>
+        )}
+
+        {/* Sticky action bar — Generate always reachable, no scroll past garments */}
+        {tab === 'create' && (
+          <View style={styles.footer}>
+            <Pressable style={[styles.generateBtn, !canGenerate && styles.generateBtnDisabled]} disabled={!canGenerate} onPress={generate}>
+              {canGenerate && (
+                <LinearGradient colors={['#FBBF24', '#F59E0B', '#B45309']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFillObject} />
+              )}
+              {generating ? (
+                <View style={styles.row}><ActivityIndicator color="#1A1330" size="small" /><Text style={styles.generateText}>Generating…</Text></View>
+              ) : (
+                <Text style={styles.generateText}>Generate look</Text>
+              )}
+            </Pressable>
+          </View>
+        )}
       </SafeAreaView>
     </View>
   )
@@ -344,14 +373,23 @@ const styles = StyleSheet.create({
   thumbRemove: { position: 'absolute', top: 3, right: 3, width: 20, height: 20, borderRadius: 10, backgroundColor: 'rgba(0,0,0,0.6)', alignItems: 'center', justifyContent: 'center' },
   thumbRemoveText: { color: '#fff', fontSize: 14, lineHeight: 16, fontWeight: '700' },
 
-  angleRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  segment: { flexDirection: 'row', marginHorizontal: 16, marginBottom: 4, padding: 4, borderRadius: 14, backgroundColor: theme.colors.surface, borderWidth: 1, borderColor: theme.colors.border, gap: 4 },
+  segmentBtn: { flex: 1, height: 38, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  segmentBtnActive: { backgroundColor: 'rgba(139,92,246,0.18)' },
+  segmentText: { fontSize: 13, fontWeight: '600', color: theme.colors.textMuted },
+  segmentTextActive: { color: theme.colors.text },
+
+  footer: { paddingHorizontal: 16, paddingTop: 10, paddingBottom: 12, borderTopWidth: 1, borderTopColor: theme.colors.border, backgroundColor: theme.colors.bg },
+
+  angleHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 12 },
+  angleRow: { flexDirection: 'row', gap: 8, paddingVertical: 2 },
   angleChip: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 999, borderWidth: 1, borderColor: theme.colors.border },
   angleChipActive: { borderColor: '#8B5CF6', backgroundColor: 'rgba(139,92,246,0.15)' },
   angleChipText: { color: theme.colors.textMuted, fontWeight: '600' },
   angleChipTextActive: { color: theme.colors.text },
   costHint: { fontSize: 12, color: theme.colors.textDim },
 
-  generateBtn: { height: 54, borderRadius: 16, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', marginTop: 8 },
+  generateBtn: { height: 54, borderRadius: 16, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   generateBtnDisabled: { backgroundColor: theme.colors.surface },
   generateText: { color: '#1A1330', fontWeight: '700', fontSize: 16 },
 
