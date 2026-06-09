@@ -32,9 +32,11 @@ import {
 import { uploadImage } from '@/lib/upload'
 import { requireAllConsents } from '@/stores/use-consent-guards'
 import { useCreditsStore } from '@/stores/use-credits-store'
+import { AI_MODELS, getModelCredits } from '@/lib/ai-models'
 
 const ANGLE_OPTIONS = [1, 2, 3, 4, 6, 8]
-const COST_PER_IMAGE = 4
+// Wardrobe renders with GPT-Image-2 — credit cost from the single source.
+const COST_PER_IMAGE = getModelCredits(AI_MODELS.GPT_IMAGE_2.id)
 
 export default function WardrobeScreen() {
   const router = useRouter()
