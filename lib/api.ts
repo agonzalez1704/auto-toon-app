@@ -1441,14 +1441,34 @@ export async function generateWardrobeLook(input: {
   garmentImageUrls: string[]
   wardrobeItemId?: string
   angleCount: number
-}) {
-  // Multi-angle generation can take a while; bump the timeout.
-  const { data } = await api.post<{ look: WardrobeLook; produced: number; requested: number }>(
-    '/api/wardrobe/generate',
-    input,
-    { timeout: 300_000 },
-  )
-  return data
+}): Promise<{ heroUrl: string | null; angleUrls: string[]; produced: number; requested: number }> {
+  // The endpoint streams NDJSON (one event per generated image). axios buffers
+  // the full body; we parse the events out of the text. Bump the timeout —
+  // multi-angle generation can take a minute+.
+  const { data } = await api.post<string>('/api/wardrobe/generate', input, {
+    timeout: 300_000,
+    responseType: 'text',
+    transformResponse: [(d) => d], // keep raw NDJSON text
+  })
+
+  let heroUrl: string | null = null
+  const angleUrls: string[] = []
+  let produced = 0
+  let requested = input.angleCount
+  let errorMessage: string | null = null
+
+  for (const line of String(data).split('\n')) {
+    if (!line.trim()) continue
+    let evt: { type: string } & Record<string, unknown>
+    try { evt = JSON.parse(line) } catch { continue }
+    if (evt.type === 'hero') { heroUrl = String(evt.url); produced++ }
+    else if (evt.type === 'angle') { angleUrls.push(String(evt.url)); produced++ }
+    else if (evt.type === 'done') { produced = Number(evt.produced) || produced; requested = Number(evt.requested) || requested }
+    else if (evt.type === 'error') { errorMessage = String(evt.message ?? 'Generation failed') }
+  }
+
+  if (errorMessage && !heroUrl) throw new ApiError(errorMessage, 502)
+  return { heroUrl, angleUrls, produced, requested }
 }
 
 export async function getWardrobeLooks() {

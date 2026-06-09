@@ -158,7 +158,7 @@ export default function WardrobeScreen() {
         garmentImageUrls: garmentUrls,
         angleCount,
       })
-      Alert.alert('Look ready', `${produced}/${requested} angles generated.`)
+      Alert.alert('Look ready', `${produced}/${requested} images generated.`)
       setGarmentUrls([])
       await refresh()
       useCreditsStore.getState().fetchCredits()
