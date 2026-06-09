@@ -13,6 +13,8 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { LinearGradient } from 'expo-linear-gradient'
 import * as ImagePicker from 'expo-image-picker'
+import * as Clipboard from 'expo-clipboard'
+import * as FileSystem from 'expo-file-system/legacy'
 import { useRouter } from 'expo-router'
 import Svg, { Path as SvgPath } from 'react-native-svg'
 
@@ -97,6 +99,29 @@ export default function WardrobeScreen() {
     setUploading(true)
     try {
       const publicUrl = await uploadImage(result.assets[0].uri)
+      setGarmentUrl(publicUrl)
+      saveWardrobeItem({ imageUrl: publicUrl, name: 'Garment' }).then(refresh).catch(() => {})
+    } catch (err) {
+      handleError(err)
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const pasteImage = async () => {
+    if (uploading) return
+    try {
+      const hasImage = await Clipboard.hasImageAsync()
+      if (!hasImage) { Alert.alert('No image', 'Copy an image first, then tap Paste.'); return }
+      const img = await Clipboard.getImageAsync({ format: 'png' })
+      if (!img?.data) { Alert.alert('No image', 'Could not read an image from the clipboard.'); return }
+      setUploading(true)
+      // img.data is a data URI (data:image/png;base64,...). Write the base64
+      // to a temp file so uploadImage (which expects a file URI) can read it.
+      const base64 = img.data.replace(/^data:image\/\w+;base64,/, '')
+      const uri = `${FileSystem.cacheDirectory}wardrobe_paste_${Date.now()}.png`
+      await FileSystem.writeAsStringAsync(uri, base64, { encoding: FileSystem.EncodingType.Base64 })
+      const publicUrl = await uploadImage(uri)
       setGarmentUrl(publicUrl)
       saveWardrobeItem({ imageUrl: publicUrl, name: 'Garment' }).then(refresh).catch(() => {})
     } catch (err) {
@@ -212,6 +237,9 @@ export default function WardrobeScreen() {
                 </Pressable>
                 <Pressable style={styles.uploadBtn} disabled={uploading} onPress={() => pickGarment('camera')}>
                   <Text style={styles.uploadBtnText}>Camera</Text>
+                </Pressable>
+                <Pressable style={styles.uploadBtn} disabled={uploading} onPress={pasteImage}>
+                  <Text style={styles.uploadBtnText}>Paste</Text>
                 </Pressable>
               </View>
               <View style={styles.urlRow}>
