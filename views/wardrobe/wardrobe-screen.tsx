@@ -232,7 +232,7 @@ export default function WardrobeScreen() {
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
               {garmentUrls.map((u) => (
                 <View key={u} style={styles.selectedThumb}>
-                  <Image source={{ uri: u }} style={{ flex: 1 }} />
+                  <Image source={{ uri: u }} style={{ flex: 1 }} resizeMode="contain" />
                   <Pressable style={styles.thumbRemove} onPress={() => setGarmentUrls((p) => p.filter((x) => x !== u))}>
                     <Text style={styles.thumbRemoveText}>×</Text>
                   </Pressable>
@@ -367,7 +367,7 @@ const styles = StyleSheet.create({
 
   savedThumb: { width: 64, height: 64, borderRadius: 10, overflow: 'hidden', borderWidth: 2, borderColor: theme.colors.border },
   savedThumbActive: { borderColor: '#8B5CF6' },
-  selectedThumb: { width: 88, height: 110, borderRadius: 12, overflow: 'hidden', borderWidth: 2, borderColor: '#8B5CF6' },
+  selectedThumb: { width: 188, height: 250, borderRadius: 12, overflow: 'hidden', borderWidth: 2, borderColor: '#8B5CF6', backgroundColor: 'rgba(255,255,255,0.03)' },
   thumbRemove: { position: 'absolute', top: 3, right: 3, width: 20, height: 20, borderRadius: 10, backgroundColor: 'rgba(0,0,0,0.6)', alignItems: 'center', justifyContent: 'center' },
   thumbRemoveText: { color: '#fff', fontSize: 14, lineHeight: 16, fontWeight: '700' },
 
