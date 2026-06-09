@@ -50,7 +50,9 @@ export default function WardrobeScreen() {
   const [loading, setLoading] = useState(true)
 
   const [modelId, setModelId] = useState<string | null>(null)
-  const [garmentUrl, setGarmentUrl] = useState<string | null>(null)
+  const [garmentUrls, setGarmentUrls] = useState<string[]>([])
+  const addGarment = useCallback((url: string) => setGarmentUrls((p) => (p.includes(url) ? p : [...p, url])), [])
+  const toggleGarment = useCallback((url: string) => setGarmentUrls((p) => (p.includes(url) ? p.filter((u) => u !== url) : [...p, url])), [])
   const [pasteUrl, setPasteUrl] = useState('')
   const [scraping, setScraping] = useState(false)
   const [uploading, setUploading] = useState(false)
@@ -99,7 +101,7 @@ export default function WardrobeScreen() {
     setUploading(true)
     try {
       const publicUrl = await uploadImage(result.assets[0].uri)
-      setGarmentUrl(publicUrl)
+      addGarment(publicUrl)
       saveWardrobeItem({ imageUrl: publicUrl, name: 'Garment' }).then(refresh).catch(() => {})
     } catch (err) {
       handleError(err)
@@ -122,7 +124,7 @@ export default function WardrobeScreen() {
       const uri = `${FileSystem.cacheDirectory}wardrobe_paste_${Date.now()}.png`
       await FileSystem.writeAsStringAsync(uri, base64, { encoding: FileSystem.EncodingType.Base64 })
       const publicUrl = await uploadImage(uri)
-      setGarmentUrl(publicUrl)
+      addGarment(publicUrl)
       saveWardrobeItem({ imageUrl: publicUrl, name: 'Garment' }).then(refresh).catch(() => {})
     } catch (err) {
       handleError(err)
@@ -136,7 +138,7 @@ export default function WardrobeScreen() {
     setScraping(true)
     try {
       const { imageUrl, title } = await scrapeWardrobeGarment(pasteUrl.trim())
-      setGarmentUrl(imageUrl)
+      addGarment(imageUrl)
       saveWardrobeItem({ imageUrl, name: title ?? 'Garment', sourceUrl: pasteUrl.trim() }).then(refresh).catch(() => {})
       setPasteUrl('')
     } catch (err) {
@@ -147,17 +149,17 @@ export default function WardrobeScreen() {
   }
 
   const generate = useCallback(async () => {
-    if (!modelId || !garmentUrl || generating) return
+    if (!modelId || garmentUrls.length === 0 || generating) return
     if (!requireAllConsents(() => generate())) return
     setGenerating(true)
     try {
       const { produced, requested } = await generateWardrobeLook({
         fashionModelId: modelId,
-        garmentImageUrl: garmentUrl,
+        garmentImageUrls: garmentUrls,
         angleCount,
       })
       Alert.alert('Look ready', `${produced}/${requested} angles generated.`)
-      setGarmentUrl(null)
+      setGarmentUrls([])
       await refresh()
       useCreditsStore.getState().fetchCredits()
     } catch (err) {
@@ -165,7 +167,7 @@ export default function WardrobeScreen() {
     } finally {
       setGenerating(false)
     }
-  }, [modelId, garmentUrl, angleCount, generating, handleError, refresh])
+  }, [modelId, garmentUrls, angleCount, generating, handleError, refresh])
 
   if (loading) {
     return (
@@ -177,7 +179,7 @@ export default function WardrobeScreen() {
     )
   }
 
-  const canGenerate = !!modelId && !!garmentUrl && !generating
+  const canGenerate = !!modelId && garmentUrls.length > 0 && !generating
 
   return (
     <View style={styles.root}>
@@ -220,51 +222,59 @@ export default function WardrobeScreen() {
             </ScrollView>
           )}
 
-          {/* Step 2: garment */}
-          <Text style={styles.stepLabel}>2. Add a garment</Text>
-          {garmentUrl ? (
-            <View style={styles.garmentPreview}>
-              <Image source={{ uri: garmentUrl }} style={styles.garmentImg} resizeMode="contain" />
-              <Pressable style={styles.removeChip} onPress={() => setGarmentUrl(null)}>
-                <Text style={styles.removeChipText}>Remove</Text>
-              </Pressable>
-            </View>
-          ) : (
-            <View style={{ gap: 10 }}>
-              <View style={{ flexDirection: 'row', gap: 10 }}>
-                <Pressable style={styles.uploadBtn} disabled={uploading} onPress={() => pickGarment('gallery')}>
-                  {uploading ? <ActivityIndicator color={theme.colors.text} /> : <Text style={styles.uploadBtnText}>Gallery</Text>}
-                </Pressable>
-                <Pressable style={styles.uploadBtn} disabled={uploading} onPress={() => pickGarment('camera')}>
-                  <Text style={styles.uploadBtnText}>Camera</Text>
-                </Pressable>
-                <Pressable style={styles.uploadBtn} disabled={uploading} onPress={pasteImage}>
-                  <Text style={styles.uploadBtnText}>Paste</Text>
-                </Pressable>
-              </View>
-              <View style={styles.urlRow}>
-                <TextInput
-                  style={styles.urlInput}
-                  value={pasteUrl}
-                  onChangeText={setPasteUrl}
-                  placeholder="Paste a product link…"
-                  placeholderTextColor={theme.colors.textDisabled}
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  keyboardType="url"
-                />
-                <Pressable style={styles.fetchBtn} disabled={scraping || !pasteUrl.trim()} onPress={scrape}>
-                  {scraping ? <ActivityIndicator color="#1A1330" size="small" /> : <Text style={styles.fetchBtnText}>Fetch</Text>}
-                </Pressable>
-              </View>
-            </View>
+          {/* Step 2: garments (multi) */}
+          <Text style={styles.stepLabel}>
+            2. Add garments{garmentUrls.length > 0 ? `  ·  ${garmentUrls.length} selected` : ''}
+          </Text>
+
+          {/* selected garments */}
+          {garmentUrls.length > 0 && (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+              {garmentUrls.map((u) => (
+                <View key={u} style={styles.selectedThumb}>
+                  <Image source={{ uri: u }} style={{ flex: 1 }} />
+                  <Pressable style={styles.thumbRemove} onPress={() => setGarmentUrls((p) => p.filter((x) => x !== u))}>
+                    <Text style={styles.thumbRemoveText}>×</Text>
+                  </Pressable>
+                </View>
+              ))}
+            </ScrollView>
           )}
 
-          {/* saved garments */}
+          <View style={{ gap: 10 }}>
+            <View style={{ flexDirection: 'row', gap: 10 }}>
+              <Pressable style={styles.uploadBtn} disabled={uploading} onPress={() => pickGarment('gallery')}>
+                {uploading ? <ActivityIndicator color={theme.colors.text} /> : <Text style={styles.uploadBtnText}>Gallery</Text>}
+              </Pressable>
+              <Pressable style={styles.uploadBtn} disabled={uploading} onPress={() => pickGarment('camera')}>
+                <Text style={styles.uploadBtnText}>Camera</Text>
+              </Pressable>
+              <Pressable style={styles.uploadBtn} disabled={uploading} onPress={pasteImage}>
+                <Text style={styles.uploadBtnText}>Paste</Text>
+              </Pressable>
+            </View>
+            <View style={styles.urlRow}>
+              <TextInput
+                style={styles.urlInput}
+                value={pasteUrl}
+                onChangeText={setPasteUrl}
+                placeholder="Paste a product link…"
+                placeholderTextColor={theme.colors.textDisabled}
+                autoCapitalize="none"
+                autoCorrect={false}
+                keyboardType="url"
+              />
+              <Pressable style={styles.fetchBtn} disabled={scraping || !pasteUrl.trim()} onPress={scrape}>
+                {scraping ? <ActivityIndicator color="#1A1330" size="small" /> : <Text style={styles.fetchBtnText}>Fetch</Text>}
+              </Pressable>
+            </View>
+          </View>
+
+          {/* saved garments — tap to add/remove */}
           {items.length > 0 && (
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, marginTop: 10 }}>
               {items.map((it) => (
-                <Pressable key={it.id} onPress={() => setGarmentUrl(it.imageUrl)} style={[styles.savedThumb, garmentUrl === it.imageUrl && styles.savedThumbActive]}>
+                <Pressable key={it.id} onPress={() => toggleGarment(it.imageUrl)} style={[styles.savedThumb, garmentUrls.includes(it.imageUrl) && styles.savedThumbActive]}>
                   <Image source={{ uri: it.imageUrl }} style={{ flex: 1 }} />
                 </Pressable>
               ))}
@@ -357,6 +367,9 @@ const styles = StyleSheet.create({
 
   savedThumb: { width: 64, height: 64, borderRadius: 10, overflow: 'hidden', borderWidth: 2, borderColor: theme.colors.border },
   savedThumbActive: { borderColor: '#8B5CF6' },
+  selectedThumb: { width: 88, height: 110, borderRadius: 12, overflow: 'hidden', borderWidth: 2, borderColor: '#8B5CF6' },
+  thumbRemove: { position: 'absolute', top: 3, right: 3, width: 20, height: 20, borderRadius: 10, backgroundColor: 'rgba(0,0,0,0.6)', alignItems: 'center', justifyContent: 'center' },
+  thumbRemoveText: { color: '#fff', fontSize: 14, lineHeight: 16, fontWeight: '700' },
 
   angleRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   angleChip: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 999, borderWidth: 1, borderColor: theme.colors.border },

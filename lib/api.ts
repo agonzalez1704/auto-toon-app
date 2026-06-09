@@ -1438,7 +1438,7 @@ export async function scrapeWardrobeGarment(url: string) {
 
 export async function generateWardrobeLook(input: {
   fashionModelId: string
-  garmentImageUrl: string
+  garmentImageUrls: string[]
   wardrobeItemId?: string
   angleCount: number
 }) {
