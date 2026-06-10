@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useState } from 'react'
 import {
   ActivityIndicator,
   Alert,
@@ -14,7 +14,7 @@ import { LinearGradient } from 'expo-linear-gradient'
 import * as ImagePicker from 'expo-image-picker'
 import * as Clipboard from 'expo-clipboard'
 import * as FileSystem from 'expo-file-system/legacy'
-import { useRouter } from 'expo-router'
+import { useRouter, useFocusEffect } from 'expo-router'
 import Svg, { Path as SvgPath } from 'react-native-svg'
 import Animated, { FadeIn, FadeInDown, FadeInUp, LinearTransition } from 'react-native-reanimated'
 
@@ -88,7 +88,8 @@ export default function WardrobeScreen() {
     }
   }, [handleError])
 
-  useEffect(() => { refresh() }, [refresh])
+  // Refetch on focus so a model created in the wizard shows up on return.
+  useFocusEffect(useCallback(() => { refresh() }, [refresh]))
 
   const pickGarment = async (source: 'camera' | 'gallery') => {
     if (source === 'camera') {
