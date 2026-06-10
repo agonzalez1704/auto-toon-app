@@ -3,19 +3,19 @@ import {
   ActivityIndicator,
   Alert,
   Image,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { LinearGradient } from 'expo-linear-gradient'
 import * as ImagePicker from 'expo-image-picker'
 import * as Clipboard from 'expo-clipboard'
 import * as FileSystem from 'expo-file-system/legacy'
 import { useRouter, useFocusEffect } from 'expo-router'
-import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs'
 import Svg, { Path as SvgPath } from 'react-native-svg'
 import Animated, { FadeIn, FadeInDown, FadeInUp, LinearTransition } from 'react-native-reanimated'
 
@@ -45,8 +45,11 @@ const COST_PER_IMAGE = getModelCredits(AI_MODELS.GPT_IMAGE_2.id)
 export default function WardrobeScreen() {
   const router = useRouter()
   const setShowExhaustionModal = useCreditsStore((s) => s.setShowExhaustionModal)
-  // Pad the sticky footer past the translucent native tab bar.
-  const tabBarHeight = useBottomTabBarHeight()
+  // Pad the sticky footer past the translucent native tab bar. The unstable
+  // native tab navigator doesn't expose useBottomTabBarHeight, so derive it
+  // from the safe-area inset + the platform tab-bar height.
+  const insets = useSafeAreaInsets()
+  const tabBarHeight = insets.bottom + (Platform.OS === 'ios' ? 49 : 64)
 
   const [models, setModels] = useState<WardrobeModel[]>([])
   const [items, setItems] = useState<WardrobeItem[]>([])
