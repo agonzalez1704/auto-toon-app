@@ -15,6 +15,7 @@ import * as ImagePicker from 'expo-image-picker'
 import * as Clipboard from 'expo-clipboard'
 import * as FileSystem from 'expo-file-system/legacy'
 import { useRouter, useFocusEffect } from 'expo-router'
+import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs'
 import Svg, { Path as SvgPath } from 'react-native-svg'
 import Animated, { FadeIn, FadeInDown, FadeInUp, LinearTransition } from 'react-native-reanimated'
 
@@ -44,6 +45,8 @@ const COST_PER_IMAGE = getModelCredits(AI_MODELS.GPT_IMAGE_2.id)
 export default function WardrobeScreen() {
   const router = useRouter()
   const setShowExhaustionModal = useCreditsStore((s) => s.setShowExhaustionModal)
+  // Pad the sticky footer past the translucent native tab bar.
+  const tabBarHeight = useBottomTabBarHeight()
 
   const [models, setModels] = useState<WardrobeModel[]>([])
   const [items, setItems] = useState<WardrobeItem[]>([])
@@ -262,7 +265,7 @@ export default function WardrobeScreen() {
                 })}
               </View>
             )}
-            <View style={{ height: 40 }} />
+            <View style={{ height: tabBarHeight + 40 }} />
           </Animated.ScrollView>
         ) : (
         <Animated.ScrollView key="create" entering={FadeIn.duration(250)} contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
@@ -350,7 +353,7 @@ export default function WardrobeScreen() {
 
         {/* Sticky action bar — Generate always reachable, no scroll past garments */}
         {tab === 'create' && (
-          <Animated.View entering={FadeInUp.duration(300)} style={styles.footer}>
+          <Animated.View entering={FadeInUp.duration(300)} style={[styles.footer, { paddingBottom: tabBarHeight + 12 }]}>
             <Pressable style={({ pressed }) => [styles.generateBtn, !canGenerate && styles.generateBtnDisabled, pressed && canGenerate && styles.generatePressed]} disabled={!canGenerate} onPress={generate}>
               {canGenerate && (
                 <LinearGradient colors={['#FBBF24', '#F59E0B', '#B45309']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFillObject} />
