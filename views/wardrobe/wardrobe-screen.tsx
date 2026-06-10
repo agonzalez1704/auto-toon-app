@@ -364,7 +364,7 @@ export default function WardrobeScreen() {
               {generating ? (
                 <View style={styles.row}><ActivityIndicator color="#1A1330" size="small" /><Text style={styles.generateText}>Generating…</Text></View>
               ) : (
-                <Text style={styles.generateText}>Generate look</Text>
+                <Text style={[styles.generateText, !canGenerate && styles.generateTextDisabled]}>Generate look</Text>
               )}
             </Pressable>
           </Animated.View>
@@ -428,6 +428,7 @@ const styles = StyleSheet.create({
   generateBtn: { height: 54, borderRadius: 16, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   generateBtnDisabled: { backgroundColor: theme.colors.surface },
   generateText: { color: '#1A1330', fontWeight: '700', fontSize: 16 },
+  generateTextDisabled: { color: theme.colors.textDim },
 
   looksGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   lookCardWrap: { width: '48%' },
