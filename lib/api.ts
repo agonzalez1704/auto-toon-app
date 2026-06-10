@@ -1478,39 +1478,53 @@ export async function scrapeWardrobeGarment(url: string) {
   return data
 }
 
-export async function generateWardrobeLook(input: {
-  fashionModelId: string
-  garmentImageUrls: string[]
-  wardrobeItemId?: string
-  angleCount: number
-}): Promise<{ heroUrl: string | null; angleUrls: string[]; produced: number; requested: number }> {
-  // The endpoint streams NDJSON (one event per generated image). axios buffers
-  // the full body; we parse the events out of the text. Bump the timeout —
-  // multi-angle generation can take a minute+.
-  const { data } = await api.post<string>('/api/wardrobe/generate', input, {
-    timeout: 300_000,
-    responseType: 'text',
-    transformResponse: [(d) => d], // keep raw NDJSON text
-  })
+export async function generateWardrobeLook(
+  input: {
+    fashionModelId: string
+    garmentImageUrls: string[]
+    wardrobeItemId?: string
+    angleCount: number
+  },
+  onProgress?: (p: { heroUrl: string | null; angleUrls: string[] }) => void,
+): Promise<{ heroUrl: string | null; angleUrls: string[]; produced: number; requested: number }> {
+  // Generation is DECOUPLED on the server (runs via after(), independent of
+  // this request), so the POST returns a lookId immediately. We then poll the
+  // persisted look for progress + the final result. This is what lets the
+  // user switch apps and come back without the run being cancelled: the
+  // server keeps rendering, and on foreground the poll loop resumes and
+  // picks up whatever finished while we were backgrounded.
+  const { data } = await api.post<{ lookId: string; total: number }>(
+    '/api/wardrobe/generate',
+    input,
+    { timeout: 60_000 },
+  )
+  const lookId = data.lookId
+  const requested = data.total ?? input.angleCount
 
-  let heroUrl: string | null = null
-  const angleUrls: string[] = []
-  let produced = 0
-  let requested = input.angleCount
-  let errorMessage: string | null = null
-
-  for (const line of String(data).split('\n')) {
-    if (!line.trim()) continue
-    let evt: { type: string } & Record<string, unknown>
-    try { evt = JSON.parse(line) } catch { continue }
-    if (evt.type === 'hero') { heroUrl = String(evt.url); produced++ }
-    else if (evt.type === 'angle') { angleUrls.push(String(evt.url)); produced++ }
-    else if (evt.type === 'done') { produced = Number(evt.produced) || produced; requested = Number(evt.requested) || requested }
-    else if (evt.type === 'error') { errorMessage = String(evt.message ?? 'Generation failed') }
+  const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
+  // Wall-clock deadline (not iteration count) so time spent backgrounded
+  // doesn't falsely time the run out.
+  const deadline = Date.now() + 8 * 60 * 1000
+  while (Date.now() < deadline) {
+    await sleep(2500)
+    let look: WardrobeLook | undefined
+    try {
+      const looks = await getWardrobeLooks()
+      look = looks.find((l) => l.id === lookId)
+    } catch {
+      continue // transient network/background — keep polling
+    }
+    if (!look) continue
+    onProgress?.({ heroUrl: look.heroImageUrl, angleUrls: look.angleUrls })
+    if (look.status === 'ready') {
+      const produced = (look.heroImageUrl ? 1 : 0) + look.angleUrls.length
+      return { heroUrl: look.heroImageUrl, angleUrls: look.angleUrls, produced, requested }
+    }
+    if (look.status === 'failed') {
+      throw new ApiError(look.errorMessage || 'Generation failed', 502)
+    }
   }
-
-  if (errorMessage && !heroUrl) throw new ApiError(errorMessage, 502)
-  return { heroUrl, angleUrls, produced, requested }
+  throw new ApiError('Generation is taking longer than expected. Check Your looks shortly.', 504)
 }
 
 export async function getWardrobeLooks() {
