@@ -351,11 +351,11 @@ const styles = StyleSheet.create({
 
   emptyCard: { borderRadius: 16, borderWidth: 1, borderColor: theme.colors.border, padding: 18, alignItems: 'center', gap: 12 },
   emptyText: { fontSize: 13, color: theme.colors.textMuted, textAlign: 'center' },
-  primaryBtnSm: { backgroundColor: '#8B5CF6', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12 },
+  primaryBtnSm: { backgroundColor: '#F59E0B', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12 },
   primaryBtnSmText: { color: '#fff', fontWeight: '700', fontSize: 13 },
 
   modelCard: { width: 96, borderRadius: 14, overflow: 'hidden', borderWidth: 2, borderColor: theme.colors.border, backgroundColor: theme.colors.surface },
-  modelCardActive: { borderColor: '#8B5CF6' },
+  modelCardActive: { borderColor: '#F59E0B' },
   modelImg: { width: '100%', aspectRatio: 3 / 4 },
   modelName: { fontSize: 11, color: theme.colors.textMuted, padding: 6 },
   modelNew: { alignItems: 'center', justifyContent: 'center', aspectRatio: undefined, height: 128, borderStyle: 'dashed' },
@@ -368,14 +368,14 @@ const styles = StyleSheet.create({
 
 
   savedThumb: { width: 64, height: 64, borderRadius: 10, overflow: 'hidden', borderWidth: 2, borderColor: theme.colors.border },
-  savedThumbActive: { borderColor: '#8B5CF6' },
-  selectedThumb: { width: 188, height: 250, borderRadius: 12, overflow: 'hidden', borderWidth: 2, borderColor: '#8B5CF6', backgroundColor: 'rgba(255,255,255,0.03)' },
+  savedThumbActive: { borderColor: '#F59E0B' },
+  selectedThumb: { width: 188, height: 250, borderRadius: 12, overflow: 'hidden', borderWidth: 2, borderColor: '#F59E0B', backgroundColor: 'rgba(255,255,255,0.03)' },
   thumbRemove: { position: 'absolute', top: 3, right: 3, width: 20, height: 20, borderRadius: 10, backgroundColor: 'rgba(0,0,0,0.6)', alignItems: 'center', justifyContent: 'center' },
   thumbRemoveText: { color: '#fff', fontSize: 14, lineHeight: 16, fontWeight: '700' },
 
   segment: { flexDirection: 'row', marginHorizontal: 16, marginBottom: 4, padding: 4, borderRadius: 14, backgroundColor: theme.colors.surface, borderWidth: 1, borderColor: theme.colors.border, gap: 4 },
   segmentBtn: { flex: 1, height: 38, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
-  segmentBtnActive: { backgroundColor: 'rgba(139,92,246,0.18)' },
+  segmentBtnActive: { backgroundColor: 'rgba(245,158,11,0.18)' },
   segmentText: { fontSize: 13, fontWeight: '600', color: theme.colors.textMuted },
   segmentTextActive: { color: theme.colors.text },
 
@@ -384,7 +384,7 @@ const styles = StyleSheet.create({
   angleHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 12 },
   angleRow: { flexDirection: 'row', gap: 8, paddingVertical: 2 },
   angleChip: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 999, borderWidth: 1, borderColor: theme.colors.border },
-  angleChipActive: { borderColor: '#8B5CF6', backgroundColor: 'rgba(139,92,246,0.15)' },
+  angleChipActive: { borderColor: '#F59E0B', backgroundColor: 'rgba(245,158,11,0.15)' },
   angleChipText: { color: theme.colors.textMuted, fontWeight: '600' },
   angleChipTextActive: { color: theme.colors.text },
   costHint: { fontSize: 12, color: theme.colors.textDim },

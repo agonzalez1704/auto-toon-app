@@ -12,7 +12,7 @@ import { theme } from '@/constants/theme'
  * Mirrors the web GarmentInput. The screen owns the actual upload/scrape
  * logic; this component just renders the affordances and reports intent.
  */
-const VIOLET = '#8B5CF6'
+const ACCENT = '#F59E0B'
 
 function Icon({ d, color = theme.colors.text }: { d: string; color?: string }) {
   return (
@@ -97,8 +97,8 @@ export function GarmentInput({
           />
         </View>
         <Pressable style={[styles.fetchBtn, (scraping || !url.trim()) && { opacity: 0.4 }]} disabled={scraping || !url.trim()} onPress={submit}>
-          {scraping ? <ActivityIndicator color="#fff" size="small" /> : (
-            <Svg width={18} height={18} viewBox="0 0 24 24" fill="none"><SvgPath d="M5 12h14M13 6l6 6-6 6" stroke="#fff" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" /></Svg>
+          {scraping ? <ActivityIndicator color="#1A1330" size="small" /> : (
+            <Svg width={18} height={18} viewBox="0 0 24 24" fill="none"><SvgPath d="M5 12h14M13 6l6 6-6 6" stroke="#1A1330" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" /></Svg>
           )}
         </Pressable>
       </View>
@@ -123,5 +123,5 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.2)', flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, gap: 8,
   },
   urlInput: { flex: 1, color: theme.colors.text, fontSize: 14, paddingVertical: 0 },
-  fetchBtn: { width: 48, height: 44, borderRadius: 12, backgroundColor: VIOLET, alignItems: 'center', justifyContent: 'center' },
+  fetchBtn: { width: 48, height: 44, borderRadius: 12, backgroundColor: ACCENT, alignItems: 'center', justifyContent: 'center' },
 })
