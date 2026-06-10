@@ -100,6 +100,16 @@ export default function CreditsScreen() {
     onError: (message) => Alert.alert('Purchase failed', message),
   })
 
+  // Auto-reconcile charged-but-ungranted transactions when the store is
+  // ready (e.g. a purchase whose verify call failed mid-flight). Silent —
+  // any grant surfaces its own "Purchase complete" alert via onSuccess.
+  const didAutoRestore = useRef(false)
+  useEffect(() => {
+    if (Platform.OS !== 'ios' || !iapReady || didAutoRestore.current) return
+    didAutoRestore.current = true
+    restoreAppleIap().catch(() => {})
+  }, [iapReady, restoreAppleIap])
+
   // Apple guideline 3.1.1 requires a "Restore Purchases" affordance for any
   // app that ships IAP. Restore sweeps unfinished StoreKit transactions
   // through the backend verify endpoint so users who lost a purchase mid-

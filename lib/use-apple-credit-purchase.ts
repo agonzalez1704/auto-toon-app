@@ -268,12 +268,17 @@ export function useAppleCreditPurchase(
       } catch (err) {
         console.warn('[iap] restorePurchases failed:', err)
       }
+      // Use the array RETURNED by getAvailablePurchases — the reactive
+      // `availablePurchases` state won't have updated within this same tick,
+      // so reading it would see a stale (usually empty) list and grant 0.
+      let returned: Purchase[] = []
       try {
-        await getAvailablePurchases()
+        const res = await getAvailablePurchases()
+        if (Array.isArray(res)) returned = res as Purchase[]
       } catch (err) {
         console.warn('[iap] getAvailablePurchases failed:', err)
       }
-      const pending = availablePurchases ?? []
+      const pending = returned.length > 0 ? returned : (availablePurchases ?? [])
       let granted = 0
       for (const purchase of pending) {
         const pack = getAppleCreditPack(purchase.productId)

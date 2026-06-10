@@ -174,7 +174,13 @@ export default function PricingScreen() {
   }, [])
 
   // Apple guideline 3.1.1 — credits on iOS must go through StoreKit IAP.
-  const { ready: iapReady, isPurchasing, purchase: purchaseAppleIap } = useAppleCreditPurchase({
+  const {
+    ready: iapReady,
+    isPurchasing,
+    isRestoring,
+    purchase: purchaseAppleIap,
+    restore: restoreAppleIap,
+  } = useAppleCreditPurchase({
     onSuccess: ({ balance: newBalance, pack }) => {
       setCredits(newBalance)
       Alert.alert(
@@ -184,6 +190,30 @@ export default function PricingScreen() {
     },
     onError: (message) => Alert.alert('Purchase failed', message),
   })
+
+  // Recover any charged-but-ungranted transaction (e.g. the verify call
+  // failed mid-purchase) the moment the store is ready. Consumables stay in
+  // StoreKit's unfinished queue until granted, so this reconciles silently
+  // without the user re-tapping anything or paying twice.
+  const didAutoRestore = useRef(false)
+  useEffect(() => {
+    if (!IS_IOS || !iapReady || didAutoRestore.current) return
+    didAutoRestore.current = true
+    restoreAppleIap().catch(() => {})
+  }, [iapReady, restoreAppleIap])
+
+  const handleRestore = async () => {
+    if (isRestoring) return
+    try {
+      const granted = await restoreAppleIap()
+      if (granted === 0) {
+        Alert.alert('Nothing to restore', 'No unfinished purchases found.')
+      }
+      // Successful grants surface their own "Purchase complete" alert via onSuccess.
+    } catch (err: any) {
+      Alert.alert('Restore failed', err?.message || 'Could not restore purchases.')
+    }
+  }
 
   const handleSubscribe = async (plan: string, period: string) => {
     if (IS_IOS) return // Apple 3.1.1 — subscriptions are web-only on iOS for now.
@@ -282,6 +312,19 @@ export default function PricingScreen() {
                   Connecting to App Store…
                 </Text>
               )}
+
+              {/* Restore — recovers a purchase that charged but didn't grant
+                  (verify failed mid-flow). Apple 3.1.1 also requires this. */}
+              <TouchableOpacity
+                style={styles.restoreBtn}
+                onPress={handleRestore}
+                disabled={isRestoring || !iapReady}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.restoreText}>
+                  {isRestoring ? 'Restoring…' : 'Restore purchases'}
+                </Text>
+              </TouchableOpacity>
             </View>
 
             {/* Pay-Per-Use — external account-management link.
@@ -1124,5 +1167,17 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.35)',
     textAlign: 'center',
     marginTop: 8,
+  },
+  restoreBtn: {
+    marginTop: 16,
+    alignSelf: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+  },
+  restoreText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.6)',
+    textDecorationLine: 'underline',
   },
 })
