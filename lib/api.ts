@@ -15,6 +15,28 @@ export function setTokenGetter(getter: () => Promise<string | null>) {
   tokenGetter = getter
 }
 
+/**
+ * Poll the Clerk token getter until it returns a non-null token or the
+ * timeout elapses. The StoreKit / Apple-login sheet backgrounds the app;
+ * on resume Clerk may not have re-attached the session yet, so a request
+ * fired immediately (e.g. IAP verify) would go out unauthenticated and 401.
+ */
+export async function waitForAuthToken(timeoutMs = 6000): Promise<string | null> {
+  const start = Date.now()
+  while (Date.now() - start < timeoutMs) {
+    if (tokenGetter) {
+      try {
+        const t = await tokenGetter()
+        if (t) return t
+      } catch {
+        /* Clerk not ready yet — retry */
+      }
+    }
+    await new Promise((r) => setTimeout(r, 300))
+  }
+  return null
+}
+
 // Request interceptor: attach Bearer token
 api.interceptors.request.use(async (config: InternalAxiosRequestConfig) => {
   if (tokenGetter) {
@@ -170,12 +192,32 @@ export async function verifyAppleIAP(params: {
   transactionId: string
   productId: string
 }) {
-  const { data } = await api.post<VerifyAppleIAPResponse>(
-    '/api/iap/apple/verify',
-    params,
-    { timeout: 60_000 },
-  )
-  return data
+  // The Apple purchase/login sheet backgrounds the app; on resume Clerk may
+  // not have re-attached the session token yet. Wait for it, then retry on
+  // 401/403 (auth-not-ready) so the grant isn't lost. The backend is
+  // idempotent on transactionId, so retries never double-grant.
+  await waitForAuthToken()
+  let lastErr: unknown
+  for (let attempt = 0; attempt < 4; attempt++) {
+    try {
+      const { data } = await api.post<VerifyAppleIAPResponse>(
+        '/api/iap/apple/verify',
+        params,
+        { timeout: 60_000 },
+      )
+      return data
+    } catch (err) {
+      lastErr = err
+      const status = (err as AxiosError)?.response?.status
+      if (status === 401 || status === 403) {
+        await waitForAuthToken()
+        await new Promise((r) => setTimeout(r, 600 * (attempt + 1)))
+        continue
+      }
+      throw err
+    }
+  }
+  throw lastErr
 }
 
 // Upload
@@ -1372,4 +1414,120 @@ export async function getVideoGenerationStatus(id: string) {
     `/api/fashion-editorial/video/status/${id}`,
   )
   return data
+}
+
+// ─── My Wardrobe ──────────────────────────────────────────────────────
+// Try clothing on a model of yourself. Same backend the web client uses.
+
+export interface WardrobeModel {
+  id: string
+  name: string
+  imageUrl: string
+  baseImageUrl: string
+  createdAt: string
+}
+export interface WardrobeItem {
+  id: string
+  name: string
+  imageUrl: string
+  sourceUrl: string | null
+  category: string | null
+  createdAt: string
+}
+export interface WardrobeLook {
+  id: string
+  fashionModelId: string
+  wardrobeItemId: string | null
+  heroImageUrl: string | null
+  angleUrls: string[]
+  angleCount: number
+  model: string | null
+  status: 'pending' | 'generating' | 'ready' | 'failed'
+  errorMessage: string | null
+  createdAt: string
+  wardrobeItem?: { name: string; imageUrl: string } | null
+  fashionModel?: { name: string } | null
+}
+
+export async function getWardrobeModels() {
+  const { data } = await api.get<{ models: WardrobeModel[] }>('/api/wardrobe/models')
+  return data.models
+}
+
+export async function getWardrobeItems() {
+  const { data } = await api.get<{ items: WardrobeItem[] }>('/api/wardrobe/items')
+  return data.items
+}
+
+export async function saveWardrobeItem(input: {
+  imageUrl: string
+  name?: string
+  sourceUrl?: string
+  category?: string
+}) {
+  const { data } = await api.post<{ item: WardrobeItem }>('/api/wardrobe/items', input)
+  return data.item
+}
+
+export async function scrapeWardrobeGarment(url: string) {
+  const { data } = await api.post<{ imageUrl: string; sourceImageUrl: string; title: string | null }>(
+    '/api/wardrobe/scrape-garment',
+    { url },
+    { timeout: 30_000 },
+  )
+  return data
+}
+
+export async function generateWardrobeLook(
+  input: {
+    fashionModelId: string
+    garmentImageUrls: string[]
+    wardrobeItemId?: string
+    angleCount: number
+  },
+  onProgress?: (p: { heroUrl: string | null; angleUrls: string[] }) => void,
+): Promise<{ heroUrl: string | null; angleUrls: string[]; produced: number; requested: number }> {
+  // Generation is DECOUPLED on the server (runs via after(), independent of
+  // this request), so the POST returns a lookId immediately. We then poll the
+  // persisted look for progress + the final result. This is what lets the
+  // user switch apps and come back without the run being cancelled: the
+  // server keeps rendering, and on foreground the poll loop resumes and
+  // picks up whatever finished while we were backgrounded.
+  const { data } = await api.post<{ lookId: string; total: number }>(
+    '/api/wardrobe/generate',
+    input,
+    { timeout: 60_000 },
+  )
+  const lookId = data.lookId
+  const requested = data.total ?? input.angleCount
+
+  const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
+  // Wall-clock deadline (not iteration count) so time spent backgrounded
+  // doesn't falsely time the run out.
+  const deadline = Date.now() + 8 * 60 * 1000
+  while (Date.now() < deadline) {
+    await sleep(2500)
+    let look: WardrobeLook | undefined
+    try {
+      const looks = await getWardrobeLooks()
+      look = looks.find((l) => l.id === lookId)
+    } catch {
+      continue // transient network/background — keep polling
+    }
+    if (!look) continue
+    onProgress?.({ heroUrl: look.heroImageUrl, angleUrls: look.angleUrls })
+    if (look.status === 'ready') {
+      const produced = (look.heroImageUrl ? 1 : 0) + look.angleUrls.length
+      return { heroUrl: look.heroImageUrl, angleUrls: look.angleUrls, produced, requested }
+    }
+    if (look.status === 'failed') {
+      throw new ApiError(look.errorMessage || 'Generation failed', 502)
+    }
+  }
+  throw new ApiError('Generation is taking longer than expected. Check Your looks shortly.', 504)
+}
+
+export async function getWardrobeLooks() {
+  const { data } = await api.get<{ looks: WardrobeLook[] }>('/api/wardrobe/looks')
+  return data.looks
 }

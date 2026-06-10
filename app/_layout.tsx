@@ -265,6 +265,10 @@ export default function RootLayout() {
                   options={{ headerShown: false, presentation: 'modal', animation: 'slide_from_bottom' }}
                 />
                 <Stack.Screen
+                  name="model-factory"
+                  options={{ headerShown: false, animation: 'slide_from_right' }}
+                />
+                <Stack.Screen
                   name="model-result"
                   options={{ headerShown: false, presentation: 'modal', animation: 'fade' }}
                 />

@@ -87,11 +87,11 @@ export const AI_MODELS = {
     name: 'GPT Image 2',
     provider: 'openai',
     type: 'image',
-    credits: 10,
+    credits: 3, // medium quality default; use getGptImageCredits(quality) for tiered pricing
     cost: {
-      perImage: 0.211 // high quality, 1024x1024
+      perImage: 0.053 // medium quality, 1024x1024
     },
-    payPerUseRate: 0.38, // $0.211 × 1.8
+    payPerUseRate: 0.095, // $0.053 × 1.8 (medium)
     inputConfig: {
       defaultResolution: '1024x1024',
       maxImages: 1
