@@ -11,7 +11,6 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRouter } from 'expo-router'
 import Svg, { Path as SvgPath, Circle, Rect } from 'react-native-svg'
 import { theme } from '@/constants/theme'
-import { GlassCard } from '@/components/glass'
 
 // ── Icons ──────────────────────────────────────────────────────────
 
@@ -69,6 +68,21 @@ function AssetsIcon() {
 
 // ── Feature definitions ────────────────────────────────────────────
 
+function ModelFactoryIcon() {
+  return (
+    <Svg width={28} height={28} viewBox="0 0 24 24" fill="none">
+      <Circle cx="12" cy="8.5" r="3.2" stroke={theme.colors.accent} strokeWidth={1.8} fill="none" />
+      <SvgPath
+        d="M5.5 20a6.5 6.5 0 0 1 13 0"
+        stroke={theme.colors.accent}
+        strokeWidth={1.8}
+        strokeLinecap="round"
+        fill="none"
+      />
+    </Svg>
+  )
+}
+
 interface Feature {
   key: string
   title: string
@@ -79,6 +93,14 @@ interface Feature {
 }
 
 const FEATURES: Feature[] = [
+  {
+    key: 'model-factory',
+    title: 'Model Factory',
+    description: 'Create & save AI models of yourself',
+    icon: ModelFactoryIcon,
+    iconTintColor: 'rgba(251,191,36,0.16)',
+    route: '/model-factory',
+  },
   {
     key: 'assets',
     title: 'Assets',
@@ -135,29 +157,28 @@ export default function MoreScreen() {
               <TouchableOpacity
                 key={feature.key}
                 onPress={() => handlePress(feature)}
-                activeOpacity={0.85}
+                activeOpacity={0.7}
                 accessibilityLabel={feature.title}
                 accessibilityHint={feature.description}
                 accessibilityRole="button"
+                style={styles.card}
               >
-                <GlassCard tier="md" tint="neutral" style={styles.card}>
-                  <View style={[styles.iconContainer, { backgroundColor: feature.iconTintColor }]}>
-                    <Icon />
-                  </View>
-                  <View style={styles.cardText}>
-                    <Text style={styles.cardTitle}>{feature.title}</Text>
-                    <Text style={styles.cardDescription}>{feature.description}</Text>
-                  </View>
-                  <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
-                    <SvgPath
-                      d="M9 18l6-6-6-6"
-                      stroke={theme.colors.textDim}
-                      strokeWidth={2}
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </Svg>
-                </GlassCard>
+                <View style={[styles.iconContainer, { backgroundColor: feature.iconTintColor }]}>
+                  <Icon />
+                </View>
+                <View style={styles.cardText}>
+                  <Text style={styles.cardTitle}>{feature.title}</Text>
+                  <Text style={styles.cardDescription}>{feature.description}</Text>
+                </View>
+                <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
+                  <SvgPath
+                    d="M9 18l6-6-6-6"
+                    stroke={theme.colors.textDim}
+                    strokeWidth={2}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </Svg>
               </TouchableOpacity>
             )
           })}
@@ -194,6 +215,10 @@ const styles = StyleSheet.create({
     paddingVertical: theme.spacing.lg,
     gap: theme.spacing.lg,
     minHeight: 84,
+    backgroundColor: theme.colors.bgRaised,
+    borderRadius: theme.radius.lg,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
   },
   iconContainer: {
     width: 48,
