@@ -42,3 +42,6 @@ yarn-error.*
 /android
 
 /app-store-screenshots/*
+# Local EAS build artifacts
+*.ipa
+build-*.ipa
