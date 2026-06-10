@@ -15,6 +15,28 @@ export function setTokenGetter(getter: () => Promise<string | null>) {
   tokenGetter = getter
 }
 
+/**
+ * Poll the Clerk token getter until it returns a non-null token or the
+ * timeout elapses. The StoreKit / Apple-login sheet backgrounds the app;
+ * on resume Clerk may not have re-attached the session yet, so a request
+ * fired immediately (e.g. IAP verify) would go out unauthenticated and 401.
+ */
+export async function waitForAuthToken(timeoutMs = 6000): Promise<string | null> {
+  const start = Date.now()
+  while (Date.now() - start < timeoutMs) {
+    if (tokenGetter) {
+      try {
+        const t = await tokenGetter()
+        if (t) return t
+      } catch {
+        /* Clerk not ready yet — retry */
+      }
+    }
+    await new Promise((r) => setTimeout(r, 300))
+  }
+  return null
+}
+
 // Request interceptor: attach Bearer token
 api.interceptors.request.use(async (config: InternalAxiosRequestConfig) => {
   if (tokenGetter) {
@@ -170,12 +192,32 @@ export async function verifyAppleIAP(params: {
   transactionId: string
   productId: string
 }) {
-  const { data } = await api.post<VerifyAppleIAPResponse>(
-    '/api/iap/apple/verify',
-    params,
-    { timeout: 60_000 },
-  )
-  return data
+  // The Apple purchase/login sheet backgrounds the app; on resume Clerk may
+  // not have re-attached the session token yet. Wait for it, then retry on
+  // 401/403 (auth-not-ready) so the grant isn't lost. The backend is
+  // idempotent on transactionId, so retries never double-grant.
+  await waitForAuthToken()
+  let lastErr: unknown
+  for (let attempt = 0; attempt < 4; attempt++) {
+    try {
+      const { data } = await api.post<VerifyAppleIAPResponse>(
+        '/api/iap/apple/verify',
+        params,
+        { timeout: 60_000 },
+      )
+      return data
+    } catch (err) {
+      lastErr = err
+      const status = (err as AxiosError)?.response?.status
+      if (status === 401 || status === 403) {
+        await waitForAuthToken()
+        await new Promise((r) => setTimeout(r, 600 * (attempt + 1)))
+        continue
+      }
+      throw err
+    }
+  }
+  throw lastErr
 }
 
 // Upload
