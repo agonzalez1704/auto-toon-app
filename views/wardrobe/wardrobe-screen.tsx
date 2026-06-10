@@ -357,8 +357,8 @@ export default function WardrobeScreen() {
         {/* Sticky action bar — Generate always reachable, no scroll past garments */}
         {tab === 'create' && (
           <Animated.View entering={FadeInUp.duration(300)} style={[styles.footer, { paddingBottom: tabBarHeight + 12 }]}>
-            <Pressable style={({ pressed }) => [styles.generateBtn, !canGenerate && styles.generateBtnDisabled, pressed && canGenerate && styles.generatePressed]} disabled={!canGenerate} onPress={generate}>
-              {canGenerate && (
+            <Pressable style={({ pressed }) => [styles.generateBtn, !canGenerate && !generating && styles.generateBtnDisabled, pressed && canGenerate && styles.generatePressed]} disabled={!canGenerate} onPress={generate}>
+              {(canGenerate || generating) && (
                 <LinearGradient colors={['#FBBF24', '#F59E0B', '#B45309']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFillObject} />
               )}
               {generating ? (
