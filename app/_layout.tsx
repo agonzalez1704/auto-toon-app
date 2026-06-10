@@ -265,8 +265,8 @@ export default function RootLayout() {
                   options={{ headerShown: false, presentation: 'modal', animation: 'slide_from_bottom' }}
                 />
                 <Stack.Screen
-                  name="wardrobe"
-                  options={{ headerShown: false, presentation: 'modal', animation: 'slide_from_bottom' }}
+                  name="model-factory"
+                  options={{ headerShown: false, animation: 'slide_from_right' }}
                 />
                 <Stack.Screen
                   name="model-result"

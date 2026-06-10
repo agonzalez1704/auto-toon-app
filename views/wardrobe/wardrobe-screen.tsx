@@ -16,6 +16,7 @@ import * as Clipboard from 'expo-clipboard'
 import * as FileSystem from 'expo-file-system/legacy'
 import { useRouter } from 'expo-router'
 import Svg, { Path as SvgPath } from 'react-native-svg'
+import Animated, { FadeIn, FadeInDown, FadeInUp, LinearTransition } from 'react-native-reanimated'
 
 import { theme } from '@/constants/theme'
 import {
@@ -148,6 +149,16 @@ export default function WardrobeScreen() {
     }
   }
 
+  // Open a look's full image set (hero + angles) in the fullscreen viewer.
+  const openLook = useCallback((lk: WardrobeLook) => {
+    const urls = [lk.heroImageUrl, ...lk.angleUrls].filter(Boolean) as string[]
+    if (urls.length === 0) return
+    router.push({
+      pathname: '/image-viewer',
+      params: { urls: JSON.stringify(urls), title: 'Look', hideVideo: '1' },
+    })
+  }, [router])
+
   const generate = useCallback(async () => {
     if (!modelId || garmentUrls.length === 0 || generating) return
     if (!requireAllConsents(() => generate())) return
@@ -187,55 +198,73 @@ export default function WardrobeScreen() {
       <SafeAreaView style={{ flex: 1 }} edges={['top']}>
         {/* Header */}
         <View style={styles.header}>
-          <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={10}>
-            <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
-              <SvgPath d="M15 18l-6-6 6-6" stroke={theme.colors.text} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
-            </Svg>
-          </Pressable>
+          {router.canGoBack() ? (
+            <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={10}>
+              <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
+                <SvgPath d="M15 18l-6-6 6-6" stroke={theme.colors.text} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+              </Svg>
+            </Pressable>
+          ) : (
+            <View style={{ width: 22 }} />
+          )}
           <Text style={styles.title}>My Wardrobe</Text>
           <View style={{ width: 22 }} />
         </View>
 
         {/* Segmented tabs — looks reachable in one tap, no scroll */}
-        <View style={styles.segment}>
-          <Pressable style={[styles.segmentBtn, tab === 'create' && styles.segmentBtnActive]} onPress={() => setTab('create')}>
+        <Animated.View entering={FadeInDown.duration(350)} style={styles.segment}>
+          <Pressable style={({ pressed }) => [styles.segmentBtn, tab === 'create' && styles.segmentBtnActive, pressed && styles.pressed]} onPress={() => setTab('create')}>
             <Text style={[styles.segmentText, tab === 'create' && styles.segmentTextActive]}>Create</Text>
           </Pressable>
-          <Pressable style={[styles.segmentBtn, tab === 'looks' && styles.segmentBtnActive]} onPress={() => setTab('looks')}>
+          <Pressable style={({ pressed }) => [styles.segmentBtn, tab === 'looks' && styles.segmentBtnActive, pressed && styles.pressed]} onPress={() => setTab('looks')}>
             <Text style={[styles.segmentText, tab === 'looks' && styles.segmentTextActive]}>
               Your looks{looks.length > 0 ? ` (${looks.length})` : ''}
             </Text>
           </Pressable>
-        </View>
+        </Animated.View>
 
         {tab === 'looks' ? (
-          <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+          <Animated.ScrollView key="looks" entering={FadeIn.duration(250)} contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
             {looks.length === 0 ? (
-              <View style={styles.emptyCard}>
+              <Animated.View entering={FadeInUp.duration(350)} style={styles.emptyCard}>
                 <Text style={styles.emptyText}>No looks yet. Build one in Create, then it shows up here.</Text>
-                <Pressable style={styles.primaryBtnSm} onPress={() => setTab('create')}>
+                <Pressable style={({ pressed }) => [styles.primaryBtnSm, pressed && styles.pressed]} onPress={() => setTab('create')}>
                   <Text style={styles.primaryBtnSmText}>Start creating</Text>
                 </Pressable>
-              </View>
+              </Animated.View>
             ) : (
               <View style={styles.looksGrid}>
-                {looks.map((lk) => (
-                  <View key={lk.id} style={styles.lookCard}>
-                    {lk.heroImageUrl ? (
-                      <Image source={{ uri: lk.heroImageUrl }} style={styles.lookImg} />
-                    ) : (
-                      <View style={[styles.lookImg, styles.center]}>
-                        {lk.status === 'failed' ? <Text style={styles.failText}>Failed</Text> : <ActivityIndicator color={theme.colors.textMuted} />}
-                      </View>
-                    )}
-                  </View>
-                ))}
+                {looks.map((lk, i) => {
+                  const ready = !!lk.heroImageUrl
+                  return (
+                    <Animated.View key={lk.id} entering={FadeInDown.delay(i * 60).duration(360)} layout={LinearTransition} style={styles.lookCardWrap}>
+                      <Pressable
+                        disabled={!ready}
+                        onPress={() => openLook(lk)}
+                        style={({ pressed }) => [styles.lookCard, pressed && styles.lookCardPressed]}
+                      >
+                        {ready ? (
+                          <Image source={{ uri: lk.heroImageUrl! }} style={styles.lookImg} />
+                        ) : (
+                          <View style={[styles.lookImg, styles.center]}>
+                            {lk.status === 'failed' ? <Text style={styles.failText}>Failed</Text> : <ActivityIndicator color={theme.colors.textMuted} />}
+                          </View>
+                        )}
+                        {ready && lk.angleUrls.length > 0 && (
+                          <View style={styles.countPill}>
+                            <Text style={styles.countPillText}>{lk.angleUrls.length + 1}</Text>
+                          </View>
+                        )}
+                      </Pressable>
+                    </Animated.View>
+                  )
+                })}
               </View>
             )}
             <View style={{ height: 40 }} />
-          </ScrollView>
+          </Animated.ScrollView>
         ) : (
-        <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+        <Animated.ScrollView key="create" entering={FadeIn.duration(250)} contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
           <Text style={styles.subtitle}>Try any clothing on a model of yourself.</Text>
 
           {/* Step 1: model */}
@@ -243,19 +272,19 @@ export default function WardrobeScreen() {
           {models.length === 0 ? (
             <View style={styles.emptyCard}>
               <Text style={styles.emptyText}>No model yet. Create one of yourself in Model Factory, then come back.</Text>
-              <Pressable style={styles.primaryBtnSm} onPress={() => router.push('/model-wizard')}>
+              <Pressable style={({ pressed }) => [styles.primaryBtnSm, pressed && styles.pressed]} onPress={() => router.push('/model-wizard')}>
                 <Text style={styles.primaryBtnSmText}>Create my model</Text>
               </Pressable>
             </View>
           ) : (
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10 }}>
               {models.map((m) => (
-                <Pressable key={m.id} onPress={() => setModelId(m.id)} style={[styles.modelCard, modelId === m.id && styles.modelCardActive]}>
+                <Pressable key={m.id} onPress={() => setModelId(m.id)} style={({ pressed }) => [styles.modelCard, modelId === m.id && styles.modelCardActive, pressed && styles.cardPressed]}>
                   <Image source={{ uri: m.imageUrl }} style={styles.modelImg} />
                   <Text style={styles.modelName} numberOfLines={1}>{m.name}</Text>
                 </Pressable>
               ))}
-              <Pressable onPress={() => router.push('/model-wizard')} style={[styles.modelCard, styles.modelNew]}>
+              <Pressable onPress={() => router.push('/model-wizard')} style={({ pressed }) => [styles.modelCard, styles.modelNew, pressed && styles.cardPressed]}>
                 <Text style={styles.modelNewPlus}>+</Text>
                 <Text style={styles.modelName}>New</Text>
               </Pressable>
@@ -308,20 +337,20 @@ export default function WardrobeScreen() {
           </View>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.angleRow}>
             {ANGLE_OPTIONS.map((n) => (
-              <Pressable key={n} onPress={() => setAngleCount(n)} style={[styles.angleChip, angleCount === n && styles.angleChipActive]}>
+              <Pressable key={n} onPress={() => setAngleCount(n)} style={({ pressed }) => [styles.angleChip, angleCount === n && styles.angleChipActive, pressed && styles.cardPressed]}>
                 <Text style={[styles.angleChipText, angleCount === n && styles.angleChipTextActive]}>{n}</Text>
               </Pressable>
             ))}
           </ScrollView>
 
           <View style={{ height: 8 }} />
-        </ScrollView>
+        </Animated.ScrollView>
         )}
 
         {/* Sticky action bar — Generate always reachable, no scroll past garments */}
         {tab === 'create' && (
-          <View style={styles.footer}>
-            <Pressable style={[styles.generateBtn, !canGenerate && styles.generateBtnDisabled]} disabled={!canGenerate} onPress={generate}>
+          <Animated.View entering={FadeInUp.duration(300)} style={styles.footer}>
+            <Pressable style={({ pressed }) => [styles.generateBtn, !canGenerate && styles.generateBtnDisabled, pressed && canGenerate && styles.generatePressed]} disabled={!canGenerate} onPress={generate}>
               {canGenerate && (
                 <LinearGradient colors={['#FBBF24', '#F59E0B', '#B45309']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFillObject} />
               )}
@@ -331,7 +360,7 @@ export default function WardrobeScreen() {
                 <Text style={styles.generateText}>Generate look</Text>
               )}
             </Pressable>
-          </View>
+          </Animated.View>
         )}
       </SafeAreaView>
     </View>
@@ -394,7 +423,14 @@ const styles = StyleSheet.create({
   generateText: { color: '#1A1330', fontWeight: '700', fontSize: 16 },
 
   looksGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  lookCard: { width: '48%', borderRadius: 14, overflow: 'hidden', borderWidth: 1, borderColor: theme.colors.border },
+  lookCardWrap: { width: '48%' },
+  lookCard: { width: '100%', borderRadius: 14, overflow: 'hidden', borderWidth: 1, borderColor: theme.colors.border },
+  lookCardPressed: { opacity: 0.85, transform: [{ scale: 0.97 }] },
   lookImg: { width: '100%', aspectRatio: 3 / 4, backgroundColor: theme.colors.surface },
+  countPill: { position: 'absolute', top: 8, right: 8, minWidth: 22, height: 22, paddingHorizontal: 6, borderRadius: 11, backgroundColor: 'rgba(0,0,0,0.6)', alignItems: 'center', justifyContent: 'center' },
+  countPillText: { color: '#fff', fontSize: 11, fontWeight: '700' },
+  pressed: { opacity: 0.6 },
+  cardPressed: { opacity: 0.8, transform: [{ scale: 0.96 }] },
+  generatePressed: { transform: [{ scale: 0.98 }] },
   failText: { color: '#F87171', fontSize: 12 },
 })

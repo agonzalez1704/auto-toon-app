@@ -59,12 +59,12 @@ export default function TabLayout() {
           }}
         />
         <Tabs.Screen
-          name="model-factory"
+          name="wardrobe"
           options={{
-            title: 'Model Factory',
+            title: 'Wardrobe',
             tabBarIcon: Platform.select({
-              ios: { type: 'sfSymbol', name: 'person.crop.rectangle.stack.fill' },
-              default: { type: 'sfSymbol', name: 'person.crop.rectangle.stack.fill' },
+              ios: { type: 'sfSymbol', name: 'tshirt.fill' },
+              default: { type: 'sfSymbol', name: 'tshirt.fill' },
             }) as any,
           }}
         />
