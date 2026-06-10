@@ -51,7 +51,7 @@ export const BENTO_CARDS: BentoCardConfig[] = [
     pro: true,
   },
   {
-    label: 'My Wardrobe',
+    label: 'Fitting Room',
     description: 'Try clothing on a model of you',
     route: '/wardrobe',
     preview: require('@/assets/images/previews/style-editorial.jpg'),

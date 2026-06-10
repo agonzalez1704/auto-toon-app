@@ -214,7 +214,7 @@ export default function WardrobeScreen() {
           ) : (
             <View style={{ width: 22 }} />
           )}
-          <Text style={styles.title}>My Wardrobe</Text>
+          <Text style={styles.title}>Fitting Room</Text>
           <View style={{ width: 22 }} />
         </View>
 
