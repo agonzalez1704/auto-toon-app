@@ -1,10 +1,10 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { ActivityIndicator, Alert, Image, Pressable, StyleSheet, Text, View } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useRouter } from 'expo-router'
 import { theme } from '@/constants/theme'
 import { AI_MODELS, getModelCredits } from '@/lib/ai-models'
-import { ApiError, startProductAngles, confirmProductAngles, type ProductAngleKey } from '@/lib/api'
+import { ApiError, startProductAngles, confirmProductAngles, awaitProductHero, awaitProductAngles, getProductAngleSets, type ProductAngleKey } from '@/lib/api'
 import { requireAllConsents } from '@/stores/use-consent-guards'
 import { useCreditsStore } from '@/stores/use-credits-store'
 import { useProductEnhancerStore } from '@/stores/use-product-enhancer-store'
@@ -57,6 +57,46 @@ export function MultiAngleFlow() {
       setBusy(false)
     }
   }, [ready, busy, uploadedImageUrl, productName, aspectRatio, selected, handleErr])
+
+  // Resume an in-progress run after an app reload / navigation. Generation is
+  // decoupled server-side, so the set keeps progressing; re-attach the poll.
+  const didResume = useRef(false)
+  useEffect(() => {
+    if (didResume.current) return
+    didResume.current = true
+    let cancelled = false
+    ;(async () => {
+      try {
+        const sets = await getProductAngleSets()
+        const active = sets.find((s) =>
+          s.status === 'generating_hero' || s.status === 'awaiting_confirmation' || s.status === 'generating_angles')
+        if (!active || cancelled) return
+        setAngleSetId(active.id)
+        setSelected(active.selectedAngles)
+        if (active.heroImageUrl) setHero(active.heroImageUrl)
+
+        if (active.status === 'awaiting_confirmation') {
+          setPhase('confirm')
+        } else if (active.status === 'generating_angles') {
+          setPhase('generating'); setBusy(true)
+          const { allUrls, allKeys } = await awaitProductAngles(active.id)
+          if (cancelled) return
+          useCreditsStore.getState().fetchCredits()
+          setPhase('select'); setHero(null); setAngleSetId(null); setSelected(['front'])
+          router.push({ pathname: '/image-viewer', params: { urls: JSON.stringify(allUrls), initialIndex: '0', title: active.productName ?? '', angleSetId: active.id, angleKeys: JSON.stringify(allKeys) } })
+        } else {
+          setBusy(true)
+          const { heroUrl } = await awaitProductHero(active.id)
+          if (cancelled) return
+          setHero(heroUrl); setPhase('confirm'); setBusy(false)
+        }
+      } catch {
+        if (!cancelled) setBusy(false)
+      }
+    })()
+    return () => { cancelled = true }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const confirm = useCallback(async (ok: boolean) => {
     if (!angleSetId) return

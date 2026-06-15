@@ -1557,19 +1557,22 @@ async function getAngleSet(angleSetId: string): Promise<ProductAngleSet | undefi
 }
 
 const angleSleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
+// Poll fast for the first 10s (snappy first image), then back off.
+const anglePollInterval = (elapsedMs: number) => (elapsedMs < 10_000 ? 1000 : 2500)
 
-/** Phase 1: start, poll until the hero is ready. Returns the hero for confirmation. */
-export async function startProductAngles(input: {
-  sourceImageUrl: string
-  productName?: string
-  aspectRatio?: string
-  selectedAngles: ProductAngleKey[]
-}): Promise<{ angleSetId: string; heroUrl: string }> {
-  const { data } = await api.post<{ angleSetId: string }>('/api/product-angles/generate', input, { timeout: 60_000 })
-  const angleSetId = data.angleSetId
-  const deadline = Date.now() + 6 * 60 * 1000
+export interface ProductAnglesResult {
+  heroUrl: string | null
+  angleUrls: string[]
+  allUrls: string[]
+  allKeys: ProductAngleKey[]
+}
+
+/** Poll until the hero lands (awaiting_confirmation). Used by start AND resume. */
+async function pollProductHero(angleSetId: string): Promise<{ angleSetId: string; heroUrl: string }> {
+  const started = Date.now()
+  const deadline = started + 6 * 60 * 1000
   while (Date.now() < deadline) {
-    await angleSleep(2500)
+    await angleSleep(anglePollInterval(Date.now() - started))
     let set: ProductAngleSet | undefined
     try { set = await getAngleSet(angleSetId) } catch { continue }
     if (!set) continue
@@ -1579,18 +1582,16 @@ export async function startProductAngles(input: {
   throw new ApiError('Hero is taking longer than expected.', 504)
 }
 
-/** Phase 2: confirm (or cancel). If confirmed, poll until ready and return all urls. */
-export async function confirmProductAngles(
+/** Poll the remaining angles to completion. Used by confirm AND resume. */
+async function pollProductAngles(
   angleSetId: string,
-  confirmed: boolean,
   onAngle?: (key: ProductAngleKey, url: string) => void,
-): Promise<{ heroUrl: string | null; angleUrls: string[]; allUrls: string[]; allKeys: ProductAngleKey[] }> {
-  await api.post('/api/product-angles/confirm', { angleSetId, confirmed }, { timeout: 60_000 })
-  if (!confirmed) return { heroUrl: null, angleUrls: [], allUrls: [], allKeys: [] }
+): Promise<ProductAnglesResult> {
   let seen = 0
-  const deadline = Date.now() + 8 * 60 * 1000
+  const started = Date.now()
+  const deadline = started + 8 * 60 * 1000
   while (Date.now() < deadline) {
-    await angleSleep(2500)
+    await angleSleep(anglePollInterval(Date.now() - started))
     let set: ProductAngleSet | undefined
     try { set = await getAngleSet(angleSetId) } catch { continue }
     if (!set) continue
@@ -1602,13 +1603,41 @@ export async function confirmProductAngles(
     if (set.status === 'ready') {
       const all = set.angleUrls
       const hero = set.heroImageUrl
-      const angleUrls = all.filter((u) => u !== hero)
-      return { heroUrl: hero, angleUrls, allUrls: all, allKeys: set.angleKeys }
+      return { heroUrl: hero, angleUrls: all.filter((u) => u !== hero), allUrls: all, allKeys: set.angleKeys }
     }
     if (set.status === 'failed') throw new ApiError(set.errorMessage || 'Generation failed', 502)
   }
   throw new ApiError('Generation is taking longer than expected.', 504)
 }
+
+/** Phase 1: start, poll until the hero is ready. Returns the hero for confirmation. */
+export async function startProductAngles(input: {
+  sourceImageUrl: string
+  productName?: string
+  aspectRatio?: string
+  selectedAngles: ProductAngleKey[]
+}): Promise<{ angleSetId: string; heroUrl: string }> {
+  const { data } = await api.post<{ angleSetId: string }>('/api/product-angles/generate', input, { timeout: 60_000 })
+  return pollProductHero(data.angleSetId)
+}
+
+/** Resume polling an existing set's hero (after a reload/navigation). */
+export const awaitProductHero = (angleSetId: string) => pollProductHero(angleSetId)
+
+/** Phase 2: confirm (or cancel). If confirmed, poll until ready and return all urls. */
+export async function confirmProductAngles(
+  angleSetId: string,
+  confirmed: boolean,
+  onAngle?: (key: ProductAngleKey, url: string) => void,
+): Promise<ProductAnglesResult> {
+  await api.post('/api/product-angles/confirm', { angleSetId, confirmed }, { timeout: 60_000 })
+  if (!confirmed) return { heroUrl: null, angleUrls: [], allUrls: [], allKeys: [] }
+  return pollProductAngles(angleSetId, onAngle)
+}
+
+/** Resume polling an existing set's angles (after a reload/navigation). */
+export const awaitProductAngles = (angleSetId: string, onAngle?: (key: ProductAngleKey, url: string) => void) =>
+  pollProductAngles(angleSetId, onAngle)
 
 export async function refineProductLogo(input: {
   angleSetId: string
