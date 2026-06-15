@@ -19,6 +19,9 @@ import { Image } from 'expo-image'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import * as FileSystem from 'expo-file-system/legacy'
 import * as MediaLibrary from 'expo-media-library'
+import * as ImagePicker from 'expo-image-picker'
+import { uploadImage } from '@/lib/upload'
+import { refineProductLogo, type ProductAngleKey } from '@/lib/api'
 import Svg, { Path as SvgPath, Rect, Circle } from 'react-native-svg'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useVideoStore } from '@/stores/use-video-store'
@@ -189,9 +192,13 @@ export default function ImageViewerScreen() {
     hideVideo?: string
     assetType?: string // fashion_editorial | upscale_batch | vignette | elements | poster | etc.
     modelId?: string // When viewing a saved model — shows "Create Photoshoot" CTA
+    angleSetId?: string // Multi-Angle context — enables "Save all" + "Logo HD"
+    angleKeys?: string // JSON ProductAngleKey[] parallel to urls
   }>()
 
-  const urls: string[] = params.urls ? JSON.parse(params.urls) : []
+  const [urls, setUrls] = useState<string[]>(params.urls ? JSON.parse(params.urls) : [])
+  const angleSetId = params.angleSetId || ''
+  const angleKeys: string[] = params.angleKeys ? JSON.parse(params.angleKeys) : []
   const initialIndex = parseInt(params.initialIndex || '0', 10)
   const title = params.title || ''
   const hideVideo = params.hideVideo === '1'
@@ -223,6 +230,42 @@ export default function ImageViewerScreen() {
     }
   }, [])
 
+  const saveAll = useCallback(async () => {
+    setIsSaving(true)
+    try {
+      const { status } = await MediaLibrary.requestPermissionsAsync()
+      if (status !== 'granted') { Alert.alert('Permission Required', 'Allow photo library access to save images.'); return }
+      for (let i = 0; i < urls.length; i++) {
+        const fileUri = `${FileSystem.cacheDirectory}angle_${Date.now()}_${i}.jpg`
+        await FileSystem.downloadAsync(urls[i], fileUri)
+        await MediaLibrary.saveToLibraryAsync(fileUri)
+      }
+      Alert.alert('Saved', `${urls.length} images saved to your photo library.`)
+    } catch {
+      Alert.alert('Error', 'Failed to save images.')
+    } finally {
+      setIsSaving(false)
+    }
+  }, [urls])
+
+  const refineCurrentLogo = useCallback(async () => {
+    const angleKey = angleKeys[currentIndex] as ProductAngleKey | undefined
+    if (!angleSetId || !angleKey) return
+    const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 1 })
+    if (res.canceled || !res.assets[0]) return
+    setIsSaving(true)
+    try {
+      const logoUrl = await uploadImage(res.assets[0].uri)
+      const newUrl = await refineProductLogo({ angleSetId, angleKey, logoImageUrl: logoUrl })
+      setUrls((p) => p.map((u, i) => (i === currentIndex ? newUrl : u)))
+      Alert.alert('Listo', 'El logo se refinó en HD.')
+    } catch (err) {
+      Alert.alert('Error', err instanceof Error ? err.message : 'No se pudo refinar el logo.')
+    } finally {
+      setIsSaving(false)
+    }
+  }, [angleSetId, angleKeys, currentIndex])
+
   const shareImage = useCallback(async (url: string) => {
     try {
       if (Platform.OS === 'ios') {
@@ -239,25 +282,31 @@ export default function ImageViewerScreen() {
     const url = urls[currentIndex]
     if (!url) return
 
+    const isAngles = !!angleSetId
     if (Platform.OS === 'ios') {
+      const options = ['Save to Photos', ...(isAngles ? ['Save all', 'Logo HD'] : []), 'Share', 'Cancel']
       ActionSheetIOS.showActionSheetWithOptions(
-        {
-          options: ['Save to Photos', 'Share', 'Cancel'],
-          cancelButtonIndex: 2,
-        },
+        { options, cancelButtonIndex: options.length - 1 },
         (buttonIndex) => {
-          if (buttonIndex === 0) saveImage(url)
-          else if (buttonIndex === 1) shareImage(url)
+          const label = options[buttonIndex]
+          if (label === 'Save to Photos') saveImage(url)
+          else if (label === 'Save all') saveAll()
+          else if (label === 'Logo HD') refineCurrentLogo()
+          else if (label === 'Share') shareImage(url)
         }
       )
     } else {
       Alert.alert('Image Options', undefined, [
         { text: 'Save to Photos', onPress: () => saveImage(url) },
+        ...(isAngles ? [
+          { text: 'Save all', onPress: () => saveAll() },
+          { text: 'Logo HD', onPress: () => refineCurrentLogo() },
+        ] : []),
         { text: 'Share', onPress: () => shareImage(url) },
-        { text: 'Cancel', style: 'cancel' },
+        { text: 'Cancel', style: 'cancel' as const },
       ])
     }
-  }, [urls, currentIndex, saveImage, shareImage])
+  }, [urls, currentIndex, saveImage, shareImage, angleSetId, saveAll, refineCurrentLogo])
 
   const onViewableItemsChanged = useCallback(
     ({ viewableItems }: { viewableItems: Array<{ index: number | null }> }) => {

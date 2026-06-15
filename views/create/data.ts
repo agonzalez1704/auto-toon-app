@@ -6,6 +6,7 @@ import type { GoalId, ImageModelId } from '@/stores/use-product-enhancer-store'
 import type { ComponentType } from 'react'
 import {
   CameraGoalIcon,
+  CubeGoalIcon,
   FoodIcon,
   InstagramIcon,
   PaletteIcon,
@@ -43,6 +44,7 @@ export const GOALS: GoalDef[] = [
   { id: 'printable-poster', label: 'Printable Poster', description: 'Print-ready poster design', preview: 'poster.png' },
   { id: 'food-photography', label: 'Food Photography', description: 'Appetizing food shots', preview: 'food_photography.png' },
   { id: 'professional-photo', label: 'Professional Photo', description: 'Clean product shot', preview: 'pro-photo.png' },
+  { id: 'multi-angle', label: 'Multi-Angle', description: 'Your product from 6 angles', preview: 'pro-photo.png' },
 ]
 
 export const GOAL_ICONS: Record<GoalId, ComponentType> = {
@@ -52,6 +54,7 @@ export const GOAL_ICONS: Record<GoalId, ComponentType> = {
   'printable-poster': PosterIcon,
   'food-photography': FoodIcon,
   'professional-photo': CameraGoalIcon,
+  'multi-angle': CubeGoalIcon,
 }
 
 export function getResultLabel(goalId: GoalId | null | undefined): string {

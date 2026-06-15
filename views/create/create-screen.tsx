@@ -49,6 +49,7 @@ import { ModelToggle } from './components/model-toggle'
 import { GenerateButton } from './components/generate-button'
 import { GeneratingView } from './components/generating-view'
 import { ResultView } from './components/result-view'
+import { MultiAngleFlow } from './components/multi-angle-flow'
 
 export default function CreateScreen() {
   const router = useRouter()
@@ -295,6 +296,10 @@ export default function CreateScreen() {
                 onSelectAspect={(value) => store.setSeedreamConfig({ aspect_ratio: value })}
               />
 
+              {store.selectedGoalId === 'multi-angle' ? (
+                <MultiAngleFlow />
+              ) : (
+              <>
               {store.selectedModel === 'MIDJOURNEY_V7' && (
                 <MidjourneyParamsPanel
                   params={mjParams}
@@ -323,6 +328,8 @@ export default function CreateScreen() {
                 <Text style={styles.disabledReason}>
                   Missing: {missing.join(', ')}
                 </Text>
+              )}
+              </>
               )}
 
               {!isPayPerUse && balance !== null && (

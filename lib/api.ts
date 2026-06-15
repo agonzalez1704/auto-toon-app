@@ -1531,3 +1531,95 @@ export async function getWardrobeLooks() {
   const { data } = await api.get<{ looks: WardrobeLook[] }>('/api/wardrobe/looks')
   return data.looks
 }
+
+// ─── Multi-Angle (product angles) ───────────────────────────────────────
+// Decoupled, polled like wardrobe. Two phases: start renders the hero and
+// pauses (awaiting_confirmation); confirm renders the remaining angles.
+
+export type ProductAngleKey = 'front' | 'back' | 'left' | 'right' | 'top' | 'bottom'
+
+export interface ProductAngleSet {
+  id: string
+  productName: string | null
+  aspectRatio: string
+  selectedAngles: ProductAngleKey[]
+  heroImageUrl: string | null
+  angleKeys: ProductAngleKey[]
+  angleUrls: string[]
+  status: 'generating_hero' | 'awaiting_confirmation' | 'generating_angles' | 'ready' | 'failed' | 'cancelled'
+  errorMessage: string | null
+  createdAt: string
+}
+
+async function getAngleSet(angleSetId: string): Promise<ProductAngleSet | undefined> {
+  const { data } = await api.get<{ sets: ProductAngleSet[] }>('/api/product-angles')
+  return data.sets.find((s) => s.id === angleSetId)
+}
+
+const angleSleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
+
+/** Phase 1: start, poll until the hero is ready. Returns the hero for confirmation. */
+export async function startProductAngles(input: {
+  sourceImageUrl: string
+  productName?: string
+  aspectRatio?: string
+  selectedAngles: ProductAngleKey[]
+}): Promise<{ angleSetId: string; heroUrl: string }> {
+  const { data } = await api.post<{ angleSetId: string }>('/api/product-angles/generate', input, { timeout: 60_000 })
+  const angleSetId = data.angleSetId
+  const deadline = Date.now() + 6 * 60 * 1000
+  while (Date.now() < deadline) {
+    await angleSleep(2500)
+    let set: ProductAngleSet | undefined
+    try { set = await getAngleSet(angleSetId) } catch { continue }
+    if (!set) continue
+    if (set.status === 'awaiting_confirmation' && set.heroImageUrl) return { angleSetId, heroUrl: set.heroImageUrl }
+    if (set.status === 'failed') throw new ApiError(set.errorMessage || 'Generation failed', 502)
+  }
+  throw new ApiError('Hero is taking longer than expected.', 504)
+}
+
+/** Phase 2: confirm (or cancel). If confirmed, poll until ready and return all urls. */
+export async function confirmProductAngles(
+  angleSetId: string,
+  confirmed: boolean,
+  onAngle?: (key: ProductAngleKey, url: string) => void,
+): Promise<{ heroUrl: string | null; angleUrls: string[]; allUrls: string[]; allKeys: ProductAngleKey[] }> {
+  await api.post('/api/product-angles/confirm', { angleSetId, confirmed }, { timeout: 60_000 })
+  if (!confirmed) return { heroUrl: null, angleUrls: [], allUrls: [], allKeys: [] }
+  let seen = 0
+  const deadline = Date.now() + 8 * 60 * 1000
+  while (Date.now() < deadline) {
+    await angleSleep(2500)
+    let set: ProductAngleSet | undefined
+    try { set = await getAngleSet(angleSetId) } catch { continue }
+    if (!set) continue
+    while (seen < set.angleKeys.length) {
+      const k = set.angleKeys[seen]
+      if (k !== 'front') onAngle?.(k, set.angleUrls[seen])
+      seen++
+    }
+    if (set.status === 'ready') {
+      const all = set.angleUrls
+      const hero = set.heroImageUrl
+      const angleUrls = all.filter((u) => u !== hero)
+      return { heroUrl: hero, angleUrls, allUrls: all, allKeys: set.angleKeys }
+    }
+    if (set.status === 'failed') throw new ApiError(set.errorMessage || 'Generation failed', 502)
+  }
+  throw new ApiError('Generation is taking longer than expected.', 504)
+}
+
+export async function refineProductLogo(input: {
+  angleSetId: string
+  angleKey: ProductAngleKey
+  logoImageUrl: string
+}): Promise<string> {
+  const { data } = await api.post<{ url: string }>('/api/product-angles/refine-logo', input, { timeout: 120_000 })
+  return data.url
+}
+
+export async function getProductAngleSets() {
+  const { data } = await api.get<{ sets: ProductAngleSet[] }>('/api/product-angles')
+  return data.sets
+}

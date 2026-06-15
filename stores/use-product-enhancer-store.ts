@@ -17,6 +17,7 @@ export type GoalId =
   | 'printable-poster'
   | 'food-photography'
   | 'professional-photo'
+  | 'multi-angle'
 
 export type ImageModelId =
   | 'GEMINI_3_IMAGE'
@@ -116,6 +117,13 @@ export const GOAL_MAP: Record<GoalId, {
   'professional-photo': {
     generationMode: 'enhance-only',
     imageUseCase: 'shopify-product',
+    secondImageType: null,
+  },
+  // Multi-Angle runs its own flow (cube + product-angles API); the normal
+  // generation config is unused for this goal.
+  'multi-angle': {
+    generationMode: 'enhance-only',
+    imageUseCase: 'general',
     secondImageType: null,
   },
 }
