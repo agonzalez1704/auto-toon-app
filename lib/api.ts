@@ -362,7 +362,7 @@ export interface Asset {
   vignetteImageUrl: string | null
   originalImageUrl?: string | null // original image for restore before/after
   upscaledUrls: string[]
-  secondImageType: 'vignette' | 'elements' | 'poster' | '3x3' | 'food' | 'none' | 'upscale_batch' | 'restore' | 'fashion_editorial'
+  secondImageType: 'vignette' | 'elements' | 'poster' | '3x3' | 'food' | 'none' | 'upscale_batch' | 'restore' | 'fashion_editorial' | 'wardrobe_look' | 'product_angles' | 'video'
   createdAt: string
 }
 export async function getAssets() {

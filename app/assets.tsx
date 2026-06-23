@@ -138,6 +138,9 @@ export default function AssetsScreen() {
 
     // Add assets
     for (const asset of assets) {
+      // Videos come from getUserVideos (with playable videoUrl); skip the
+      // video assets the /api/assets feed now also returns to avoid duplicates.
+      if (asset.secondImageType === 'video') continue
       if (asset.secondImageType === 'upscale_batch' && asset.upscaledUrls?.length > 0) {
         for (let i = 0; i < asset.upscaledUrls.length; i++) {
           items.push({
