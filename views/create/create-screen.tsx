@@ -6,7 +6,7 @@
  *   - Open/closed: extend via data.ts (models / aspects / goals)
  *   - Dependency inversion: children take props/callbacks, no router or store imports
  */
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import {
   Alert,
   KeyboardAvoidingView,
@@ -173,6 +173,17 @@ export default function CreateScreen() {
   // Poster gate: generation is only reachable after the user opens the config
   // sheet (language, copy, style) and taps the sheet's confirm CTA.
   const isPoster = store.selectedGoalId === 'printable-poster'
+
+  // Auto-open the poster config sheet when the poster goal becomes active
+  // (picked manually or auto-suggested by analysis) and an image is present.
+  // Fires on goal change only, so dismissing it doesn't immediately reopen.
+  // The user reviews + confirms inside the sheet before generation is allowed.
+  const hasImageForPoster = !!(store.localImageUri || store.uploadedImageUrl)
+  useEffect(() => {
+    if (isPoster && hasImageForPoster && !store.posterConfirmed) setConfigModalVisible(true)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [store.selectedGoalId, hasImageForPoster])
+
   const handlePosterGenerate = useCallback(() => {
     store.setPosterConfirmed(true)
     setConfigModalVisible(false)
