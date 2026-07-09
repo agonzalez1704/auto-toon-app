@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import {
+  ActivityIndicator,
   Modal,
   ScrollView,
   StyleSheet,
@@ -9,6 +10,7 @@ import {
   View,
 } from 'react-native'
 import { theme } from '@/constants/theme'
+import { generateTagline } from '@/lib/api'
 import { useProductEnhancerStore } from '@/stores/use-product-enhancer-store'
 import type { GoalId } from '@/stores/use-product-enhancer-store'
 import { CloseIcon } from '../icons'
@@ -17,17 +19,44 @@ interface CustomizeModalProps {
   visible: boolean
   goalId: GoalId | null
   onClose: () => void
+  /**
+   * Poster gate: when provided, a sticky "generate" CTA is shown at the bottom
+   * of the sheet. Tapping it confirms the config and fires generation (owned by
+   * the create screen, which holds consent/credit logic). Poster generation is
+   * only reachable through this button.
+   */
+  onConfirmGenerate?: () => void
+  confirmLabel?: string
+  confirming?: boolean
 }
 
 type FontStyle = 'sans-serif' | 'serif' | 'display' | 'handwritten'
+type Language = 'es' | 'en'
+type AspectRatio = '1:1' | '4:5' | '9:16' | '16:9' | '3:4'
+type ColorScheme = 'monochromatic' | 'complementary' | 'analogous' | 'custom'
+type BackgroundType = 'gradient' | 'solid' | 'textured' | 'abstract'
 
 const FONT_STYLES: FontStyle[] = ['sans-serif', 'serif', 'display', 'handwritten']
+const LANGUAGES: { id: Language; label: string }[] = [
+  { id: 'es', label: 'Español' },
+  { id: 'en', label: 'English' },
+]
+const ASPECT_RATIOS: AspectRatio[] = ['1:1', '4:5', '9:16', '16:9', '3:4']
+const COLOR_SCHEMES: ColorScheme[] = ['monochromatic', 'complementary', 'analogous', 'custom']
+const BACKGROUND_TYPES: BackgroundType[] = ['gradient', 'solid', 'textured', 'abstract']
 
 /**
  * Bottom-sheet modal for customizing elements/poster goal config.
  * Reads + writes via store. Pure UI — no router or query deps.
  */
-export function CustomizeModal({ visible, goalId, onClose }: CustomizeModalProps) {
+export function CustomizeModal({
+  visible,
+  goalId,
+  onClose,
+  onConfirmGenerate,
+  confirmLabel = 'Generate poster',
+  confirming = false,
+}: CustomizeModalProps) {
   const store = useProductEnhancerStore()
   const [newElement, setNewElement] = useState('')
   const [newEnhancer, setNewEnhancer] = useState('')
@@ -75,6 +104,7 @@ export function CustomizeModal({ visible, goalId, onClose }: CustomizeModalProps
           {isPoster && posterConfig && (
             <PosterConfig
               cfg={posterConfig}
+              productName={store.productName}
               onSet={(patch) =>
                 store.setSecondImageConfig({
                   posterConfig: { ...posterConfig, ...patch } as any,
@@ -83,6 +113,24 @@ export function CustomizeModal({ visible, goalId, onClose }: CustomizeModalProps
             />
           )}
         </ScrollView>
+
+        {isPoster && onConfirmGenerate && (
+          <View style={styles.footer}>
+            <TouchableOpacity
+              style={[styles.confirmBtn, confirming && { opacity: 0.6 }]}
+              onPress={onConfirmGenerate}
+              disabled={confirming}
+              activeOpacity={0.85}
+              accessibilityRole="button"
+            >
+              {confirming ? (
+                <ActivityIndicator color={theme.colors.text} />
+              ) : (
+                <Text style={styles.confirmBtnText}>{confirmLabel}</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
     </Modal>
   )
@@ -156,17 +204,68 @@ function ElementsConfig({
 
 interface PosterProps {
   cfg: Record<string, any>
+  productName: string
   onSet: (patch: Record<string, any>) => void
 }
 
-function PosterConfig({ cfg, onSet }: PosterProps) {
+function PosterConfig({ cfg, productName, onSet }: PosterProps) {
+  const [retranslating, setRetranslating] = useState(false)
+  const language: Language = cfg.language === 'en' ? 'en' : 'es'
+
+  // Switching language regenerates the poster copy in that language so the
+  // preview text is real localized copy, not a render-model guess. On failure
+  // we still flip the language flag (the render prompt enforces the language).
+  const changeLanguage = async (lang: Language) => {
+    if (lang === language) return
+    onSet({ language: lang })
+    if (!productName.trim()) return
+    setRetranslating(true)
+    try {
+      const r = await generateTagline(productName, cfg.headline, lang)
+      const patch: Record<string, any> = { language: lang }
+      if (r.headline) patch.headline = r.headline
+      if (r.tagline) patch.tagline = r.tagline
+      if (r.text) patch.text = r.text
+      onSet(patch)
+    } catch {
+      // Keep the language flag; copy stays as-is.
+    } finally {
+      setRetranslating(false)
+    }
+  }
+
   return (
     <>
+      <View style={styles.langRow}>
+        <Text style={styles.sectionTitle}>Language</Text>
+        {retranslating && <ActivityIndicator size="small" color={theme.colors.accent} />}
+      </View>
+      <View style={styles.chipWrap}>
+        {LANGUAGES.map((l) => {
+          const active = language === l.id
+          return (
+            <TouchableOpacity
+              key={l.id}
+              style={[styles.chip, active && styles.chipActive]}
+              onPress={() => changeLanguage(l.id)}
+              disabled={retranslating}
+              activeOpacity={0.75}
+            >
+              <Text style={[styles.chipText, active && styles.chipTextActive]}>{l.label}</Text>
+            </TouchableOpacity>
+          )
+        })}
+      </View>
+      <Text style={styles.hint}>
+        Poster text is baked into the image — pick the language before generating.
+      </Text>
+
       <FieldText
         label="Top Label"
         value={cfg.topLabel ?? ''}
         placeholder="e.g. NEW, SALE, OFFER"
         onChange={(v) => onSet({ topLabel: v })}
+        marginTop
       />
       <FieldText
         label="Headline"
@@ -183,6 +282,14 @@ function PosterConfig({ cfg, onSet }: PosterProps) {
         multiline
         marginTop
       />
+
+      <ChipSelect
+        label="Aspect Ratio"
+        options={ASPECT_RATIOS}
+        value={cfg.aspectRatio ?? '4:5'}
+        onSelect={(v) => onSet({ aspectRatio: v })}
+      />
+
       <FieldText
         label="Primary Color"
         value={cfg.primaryColor ?? ''}
@@ -190,19 +297,77 @@ function PosterConfig({ cfg, onSet }: PosterProps) {
         onChange={(v) => onSet({ primaryColor: v })}
         marginTop
       />
+      <ChipSelect
+        label="Color Scheme"
+        options={COLOR_SCHEMES}
+        value={cfg.colorScheme ?? 'monochromatic'}
+        onSelect={(v) => onSet({ colorScheme: v })}
+      />
 
-      <Text style={[styles.sectionTitle, { marginTop: theme.spacing.xl }]}>Font Style</Text>
+      <ChipSelect
+        label="Font Style"
+        options={FONT_STYLES}
+        value={cfg.fontStyle ?? 'sans-serif'}
+        onSelect={(v) => onSet({ fontStyle: v })}
+      />
+
+      <ChipSelect
+        label="Background"
+        options={BACKGROUND_TYPES}
+        value={cfg.backgroundType ?? 'gradient'}
+        onSelect={(v) => onSet({ backgroundType: v })}
+      />
+
+      <Text style={[styles.sectionTitle, { marginTop: theme.spacing.xl }]}>Decorative Elements</Text>
       <View style={styles.chipWrap}>
-        {FONT_STYLES.map((fs) => {
-          const active = cfg.fontStyle === fs
+        {(['halftone', 'particles', 'geometricShapes'] as const).map((key) => {
+          const active = !!cfg.decorativeElements?.[key]
+          const label = key === 'geometricShapes' ? 'geometric' : key
           return (
             <TouchableOpacity
-              key={fs}
+              key={key}
               style={[styles.chip, active && styles.chipActive]}
-              onPress={() => onSet({ fontStyle: fs })}
+              onPress={() =>
+                onSet({
+                  decorativeElements: { ...(cfg.decorativeElements ?? {}), [key]: !active },
+                })
+              }
               activeOpacity={0.75}
             >
-              <Text style={[styles.chipText, active && styles.chipTextActive]}>{fs}</Text>
+              <Text style={[styles.chipText, active && styles.chipTextActive]}>{label}</Text>
+            </TouchableOpacity>
+          )
+        })}
+      </View>
+    </>
+  )
+}
+
+function ChipSelect<T extends string>({
+  label,
+  options,
+  value,
+  onSelect,
+}: {
+  label: string
+  options: readonly T[]
+  value: T
+  onSelect: (v: T) => void
+}) {
+  return (
+    <>
+      <Text style={[styles.sectionTitle, { marginTop: theme.spacing.xl }]}>{label}</Text>
+      <View style={styles.chipWrap}>
+        {options.map((opt) => {
+          const active = value === opt
+          return (
+            <TouchableOpacity
+              key={opt}
+              style={[styles.chip, active && styles.chipActive]}
+              onPress={() => onSelect(opt)}
+              activeOpacity={0.75}
+            >
+              <Text style={[styles.chipText, active && styles.chipTextActive]}>{opt}</Text>
             </TouchableOpacity>
           )
         })}
@@ -383,5 +548,36 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700',
     color: theme.colors.text,
+  },
+  langRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.sm,
+  },
+  hint: {
+    fontSize: 12,
+    color: theme.colors.textDisabled,
+    marginBottom: theme.spacing.sm,
+    marginTop: -theme.spacing.xs,
+  },
+  footer: {
+    paddingHorizontal: theme.spacing['2xl'],
+    paddingTop: theme.spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: theme.glass.border,
+  },
+  confirmBtn: {
+    paddingVertical: theme.spacing.lg,
+    borderRadius: theme.radius.md,
+    backgroundColor: theme.palette.violet,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 52,
+  },
+  confirmBtnText: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: theme.colors.text,
+    letterSpacing: 0.3,
   },
 })

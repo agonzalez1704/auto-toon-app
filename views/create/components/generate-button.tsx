@@ -10,6 +10,9 @@ interface GenerateButtonProps {
   /** When true, the button swaps to a "Get more credits" CTA. The parent
    *  rewires `onPress` to open the credits-exhaustion modal / IAP flow. */
   insufficientCredits?: boolean
+  /** Overrides the default "Generate ({cost})" label — e.g. a poster gate that
+   *  opens the config sheet instead of generating directly. */
+  label?: string
   onPress: () => void
 }
 
@@ -18,6 +21,7 @@ export function GenerateButton({
   isGenerating,
   costLabel,
   insufficientCredits = false,
+  label,
   onPress,
 }: GenerateButtonProps) {
   // "Get more credits" is always tappable when shown — it ignores
@@ -62,7 +66,7 @@ export function GenerateButton({
       ) : (
         <View style={styles.row}>
           <SparklesIcon size={20} color="#1A1330" />
-          <Text style={[styles.text, { color: '#1A1330' }]}>Generate ({costLabel})</Text>
+          <Text style={[styles.text, { color: '#1A1330' }]}>{label ?? `Generate (${costLabel})`}</Text>
         </View>
       )}
     </TouchableOpacity>

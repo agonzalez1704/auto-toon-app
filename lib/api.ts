@@ -292,6 +292,30 @@ export async function analyzeProduct(imageUrl: string) {
   return data.result
 }
 
+/**
+ * Regenerate poster copy (headline + tagline + extended text) for a given
+ * language. Used by the poster config sheet when the user switches the poster
+ * language so the previewed copy is real localized text, not a machine
+ * translation baked into the image by the render model.
+ */
+export interface TaglineResult {
+  headline?: string
+  tagline?: string
+  text?: string
+}
+export async function generateTagline(
+  productName: string,
+  headline: string | undefined,
+  language: 'es' | 'en',
+): Promise<TaglineResult> {
+  const { data } = await api.post<TaglineResult>(
+    '/api/generate-tagline',
+    { productName, headline, language },
+    { timeout: 60_000 },
+  )
+  return data
+}
+
 // Enhance product
 export interface EnhanceRequest {
   imageUrl: string

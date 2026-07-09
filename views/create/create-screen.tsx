@@ -170,6 +170,15 @@ export default function CreateScreen() {
     }
   }, [canGenerate, store, balance, creditCost, isPayPerUse, fetchCredits, setShowExhaustionModal, mjParams])
 
+  // Poster gate: generation is only reachable after the user opens the config
+  // sheet (language, copy, style) and taps the sheet's confirm CTA.
+  const isPoster = store.selectedGoalId === 'printable-poster'
+  const handlePosterGenerate = useCallback(() => {
+    store.setPosterConfirmed(true)
+    setConfigModalVisible(false)
+    handleGenerate()
+  }, [store, handleGenerate])
+
   const resultUrls = [store.heroImageUrl, store.vignetteImageUrl].filter(Boolean) as string[]
 
   // ── Generating phase ──
@@ -270,6 +279,9 @@ export default function CreateScreen() {
               visible={configModalVisible}
               goalId={store.selectedGoalId}
               onClose={() => setConfigModalVisible(false)}
+              onConfirmGenerate={isPoster ? handlePosterGenerate : undefined}
+              confirmLabel={`Generate poster (${costLabel})`}
+              confirming={store.isGenerating}
             />
 
             <CarouselPickerModal
@@ -313,10 +325,13 @@ export default function CreateScreen() {
                 isGenerating={store.isGenerating}
                 costLabel={costLabel}
                 insufficientCredits={hasInsufficientCredits}
+                label={isPoster && !hasInsufficientCredits ? 'Configure poster' : undefined}
                 onPress={
                   hasInsufficientCredits
                     ? () => router.push('/account/credits')
-                    : handleGenerate
+                    : isPoster
+                      ? () => setConfigModalVisible(true)
+                      : handleGenerate
                 }
               />
               {hasInsufficientCredits && !store.isGenerating && (

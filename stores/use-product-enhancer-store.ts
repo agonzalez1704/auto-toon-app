@@ -64,6 +64,7 @@ export interface PosterConfig {
   fontWeight: 'light' | 'regular' | 'bold' | 'extra-bold'
   textAlignment: 'left' | 'center' | 'right'
   fontFamily?: string
+  language: 'es' | 'en'
 }
 
 export type SecondImageType = 'vignette' | 'elements' | 'poster' | '3x3' | 'food'
@@ -163,6 +164,7 @@ export const DEFAULT_POSTER_CONFIG: PosterConfig = {
   fontStyle: 'sans-serif',
   fontWeight: 'extra-bold',
   textAlignment: 'center',
+  language: 'es',
 }
 
 export function getModelCredits(modelKey: ImageModelId): number {
@@ -210,6 +212,11 @@ interface ProductEnhancerState {
   autoSuggestEnabled: boolean
   seasonalEnabled: boolean
 
+  // Poster gate — poster generation is blocked until the user reviews +
+  // confirms the poster config (language, copy, style). Reset whenever the
+  // poster goal is (re)selected or the config changes.
+  posterConfirmed: boolean
+
   // Actions
   setProductName: (name: string) => void
   setLocalImageUri: (uri: string | null) => void
@@ -225,6 +232,7 @@ interface ProductEnhancerState {
   setGenerationPhase: (phase: ProductEnhancerState['generationPhase']) => void
   setGenerationResult: (hero: string | null, vignette: string | null, secondImageType?: SecondImageType | null, aspectRatio?: string | null) => void
   setError: (error: string | null) => void
+  setPosterConfirmed: (confirmed: boolean) => void
   resetForNewGeneration: () => void
   resetAll: () => void
 }
@@ -260,6 +268,7 @@ export const useProductEnhancerStore = create<ProductEnhancerState>()(
       error: null,
       autoSuggestEnabled: true,
       seasonalEnabled: false,
+      posterConfirmed: false,
 
       // Actions
       setProductName: (name) => set({ productName: name }),
@@ -271,6 +280,8 @@ export const useProductEnhancerStore = create<ProductEnhancerState>()(
         const updates: Partial<ProductEnhancerState> = {
           selectedGoalId: goalId,
           generationMode: goalConfig.generationMode,
+          // Switching goals invalidates any prior poster confirmation.
+          posterConfirmed: false,
         }
 
         if (goalConfig.secondImageType) {
@@ -413,6 +424,8 @@ export const useProductEnhancerStore = create<ProductEnhancerState>()(
 
       setError: (error) => set({ error, generationPhase: error ? 'error' : 'idle', isGenerating: false, isUploading: false }),
 
+      setPosterConfirmed: (confirmed) => set({ posterConfirmed: confirmed }),
+
       resetForNewGeneration: () =>
         set({
           localImageUri: null,
@@ -434,6 +447,7 @@ export const useProductEnhancerStore = create<ProductEnhancerState>()(
           selectedStyleVariant: null,
           extractedText: null,
           productName: '',
+          posterConfirmed: false,
         }),
 
       resetAll: () =>
@@ -463,6 +477,7 @@ export const useProductEnhancerStore = create<ProductEnhancerState>()(
           serverSecondImageType: null,
           serverAspectRatio: null,
           error: null,
+          posterConfirmed: false,
         }),
     }),
     {
