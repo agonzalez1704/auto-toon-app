@@ -41,20 +41,10 @@ export default function TabLayout() {
         <Tabs.Screen
           name="index"
           options={{
-            title: 'Dashboard',
+            title: 'Crear',
             tabBarIcon: Platform.select({
               ios: { type: 'sfSymbol', name: 'square.grid.2x2.fill' },
               default: { type: 'sfSymbol', name: 'square.grid.2x2.fill' },
-            }) as any,
-          }}
-        />
-        <Tabs.Screen
-          name="create"
-          options={{
-            title: 'Enhance',
-            tabBarIcon: Platform.select({
-              ios: { type: 'sfSymbol', name: 'wand.and.stars' },
-              default: { type: 'sfSymbol', name: 'wand.and.stars' },
             }) as any,
           }}
         />

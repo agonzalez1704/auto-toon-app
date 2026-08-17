@@ -435,7 +435,7 @@ export default function ImageViewerScreen() {
               onPress={() => {
                 // /relight ya no es una ruta: la función vive dentro de Crear.
                 router.push({
-                  pathname: '/(tabs)/create',
+                  pathname: '/(tabs)',
                   params: { panel: 'relight', imageUrl: urls[currentIndex] },
                 })
               }}

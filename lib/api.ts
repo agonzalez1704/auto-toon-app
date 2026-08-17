@@ -1676,3 +1676,43 @@ export async function getProductAngleSets() {
   const { data } = await api.get<{ sets: ProductAngleSet[] }>('/api/product-angles')
   return data.sets
 }
+
+
+// ── Crear: análisis y director conversacional ────────────────────────────
+// Mismo servidor y mismo protocolo que la web. El parser de A2UI vive en
+// `lib/create/a2ui.ts`, copiado tal cual; aquí solo viaja el JSON.
+
+export interface CreateAnalysis {
+  kind: 'product' | 'garment' | 'person' | 'scene' | 'unknown'
+  subject: string
+  category: string | null
+  confidence: number
+}
+
+export async function analyzeForCreate(imageUrl: string): Promise<CreateAnalysis> {
+  const { data } = await api.post<CreateAnalysis>('/api/create/analyze', { imageUrl })
+  return data
+}
+
+/** Una entrada del transcripto: lo que dijo el director, o lo que hizo el cliente. */
+export type DirectorEntry =
+  | { from: 'director'; messages: unknown }
+  | { from: 'user'; action: unknown }
+
+export interface DirectorReply {
+  /** Ya parseado por el servidor; el cliente lo vuelve a validar con parseSurface. */
+  surface: unknown | null
+  /** El JSON crudo que el modelo produjo, para devolverlo en el siguiente turno. */
+  messages: unknown | null
+}
+
+export async function askDirector(params: {
+  imageUrl: string
+  subject: string
+  transcript: DirectorEntry[]
+}): Promise<DirectorReply> {
+  const { data } = await api.post<DirectorReply>('/api/create/agent', params, {
+    timeout: 90_000,
+  })
+  return data
+}

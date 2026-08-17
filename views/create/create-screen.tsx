@@ -43,6 +43,8 @@ import {
 import { GOALS } from './data'
 import { RestorePanel } from './panels/restore-panel'
 import { RelightPanel } from './panels/relight-panel'
+import { DirectorSession } from './director/director-session'
+import { analyzeForCreate, type CreateAnalysis } from '@/lib/api'
 import { useImagePipeline } from './lib/use-image-pipeline'
 import { UploadSection } from './components/upload-section'
 import { NameInput } from './components/name-input'
@@ -65,6 +67,8 @@ export default function CreateScreen() {
    */
   const [panel, setPanel] = useState<'restore' | 'relight' | null>(null)
 
+
+
   /**
    * Abierto desde otra pantalla — el visor de imágenes tenía un botón que
    * navegaba a `/relight`. Esa ruta ya no existe, así que ahora manda aquí con
@@ -80,6 +84,29 @@ export default function CreateScreen() {
   const [mjParams, setMjParams] = useState<MjParams>(DEFAULT_MJ_PARAMS)
 
   const store = useProductEnhancerStore()
+
+  /**
+   * Lo que decidimos que es la imagen, y si el cliente prefiere el formulario.
+   *
+   * El director es la vía principal: se le muestra una lectura y unas ideas, no
+   * una lista de objetivos. El formulario de siempre sigue ahí para quien ya
+   * sabe qué quiere — pero detrás de un toque, no delante.
+   */
+  const [analysis, setAnalysis] = useState<CreateAnalysis | null>(null)
+  const [analysing, setAnalysing] = useState(false)
+  const [showStandard, setShowStandard] = useState(false)
+
+  useEffect(() => {
+    const url = store.uploadedImageUrl
+    if (!url || analysis || analysing) return
+    setAnalysing(true)
+    analyzeForCreate(url)
+      .then(setAnalysis)
+      // Sin lectura no hay director, pero el formulario sigue sirviendo: la
+      // pantalla no se queda sin salida.
+      .catch(() => setShowStandard(true))
+      .finally(() => setAnalysing(false))
+  }, [store.uploadedImageUrl, analysis, analysing])
   const { balance, fetchCredits, setShowExhaustionModal } = useCreditsStore()
   const isPayPerUse = useSubscriptionStore((s) => s.plan) === 'PAYPERUSE'
   const { isPicking, pickFromGallery, takePhoto } = useImagePipeline()
@@ -233,6 +260,36 @@ export default function CreateScreen() {
               }}
               onCancel={() => setPanel(null)}
             />
+          </View>
+        </SafeAreaView>
+      </View>
+    )
+  }
+
+  // ── Director (la vía principal) ──
+  if (store.uploadedImageUrl && analysis && !showStandard && !panel && store.generationPhase === 'idle') {
+    return (
+      <View style={styles.root}>
+        <StatusBar barStyle="light-content" />
+        <SafeAreaView style={styles.safeArea} edges={['top']}>
+          <View style={styles.content}>
+            <DirectorSession
+              imageUrl={store.uploadedImageUrl}
+              subject={analysis.subject}
+              onConceptPicked={(concept) => {
+                // La idea elegida se vuelve la escena que se genera, en vez de
+                // la que habríamos escrito nosotros.
+                store.setProductName(concept.title)
+                store.setPromptCustomizations({
+                  ...store.promptCustomizations,
+                  composition: concept.visual,
+                })
+                setShowStandard(true)
+              }}
+            />
+            <Pressable style={styles.standardLink} onPress={() => setShowStandard(true)}>
+              <Text style={styles.standardLinkLabel}>¿Prefieres algo estándar? Ver las opciones →</Text>
+            </Pressable>
           </View>
         </SafeAreaView>
       </View>
@@ -441,6 +498,8 @@ export default function CreateScreen() {
 }
 
 const styles = StyleSheet.create({
+  standardLink: { paddingVertical: theme.spacing.md, alignItems: 'center' },
+  standardLinkLabel: { ...theme.typography.bodySm, color: theme.colors.textDim },
   panelRow: { flexDirection: 'row', gap: theme.spacing.sm, marginTop: theme.spacing.md },
   panelBtn: {
     flex: 1,
