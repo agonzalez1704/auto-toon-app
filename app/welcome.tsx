@@ -1,13 +1,6 @@
 import { useEffect, useRef } from 'react'
-import {
-  Animated,
-  Dimensions,
-  Platform,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native'
+import { Animated, Dimensions, Platform, StyleSheet, TouchableOpacity, View } from 'react-native'
+import { Text } from '@/components/text'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useRouter } from 'expo-router'
 import Svg, {

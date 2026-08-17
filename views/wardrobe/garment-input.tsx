@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 'react-native'
+import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native'
+import { Text, TextInput } from '@/components/text'
 import Svg, { Path as SvgPath } from 'react-native-svg'
 import { theme } from '@/constants/theme'
 

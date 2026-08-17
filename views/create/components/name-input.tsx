@@ -1,4 +1,5 @@
-import { StyleSheet, Text, TextInput, View } from 'react-native'
+import { StyleSheet, View } from 'react-native'
+import { Text, TextInput } from '@/components/text'
 import { theme } from '@/constants/theme'
 
 interface NameInputProps {

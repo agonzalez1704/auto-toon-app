@@ -1,16 +1,8 @@
 import { Image } from 'expo-image'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useEffect, useRef } from 'react'
-import {
-  Animated,
-  Dimensions,
-  Modal,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native'
+import { Animated, Dimensions, Modal, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native'
+import { Text } from '@/components/text'
 import Svg, { Path as SvgPath } from 'react-native-svg'
 import { useTutorialSeen } from '@/lib/hooks/use-tutorial-seen'
 

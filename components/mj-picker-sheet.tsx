@@ -6,16 +6,8 @@
  * aria/accessibility labels, safe-area aware.
  */
 import { useCallback, useMemo } from 'react'
-import {
-  FlatList,
-  Modal,
-  Platform,
-  Pressable,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native'
+import { FlatList, Modal, Platform, Pressable, StyleSheet, TouchableOpacity, View } from 'react-native'
+import { Text } from '@/components/text'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import * as Haptics from 'expo-haptics'
 import type { MjKitOption } from '@/lib/mj-photo-kit'

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { ActivityIndicator, Alert, Image, Pressable, StyleSheet, Text, View } from 'react-native'
+import { ActivityIndicator, Alert, Image, Pressable, StyleSheet, View } from 'react-native'
+import { Text } from '@/components/text'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useRouter } from 'expo-router'
 import { theme } from '@/constants/theme'

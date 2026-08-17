@@ -6,14 +6,8 @@
  * all at once. Advanced controls live behind "Customize" for power users.
  */
 import { useMemo, useState } from 'react'
-import {
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native'
+import { Platform, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native'
+import { Text } from '@/components/text'
 import * as Haptics from 'expo-haptics'
 import { LinearGradient } from 'expo-linear-gradient'
 import {

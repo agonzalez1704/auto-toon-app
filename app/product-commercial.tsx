@@ -16,16 +16,8 @@ import { Image } from 'expo-image'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useRouter } from 'expo-router'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import {
-  Dimensions,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from 'react-native'
+import { Dimensions, ScrollView, StatusBar, StyleSheet, TouchableOpacity, View } from 'react-native'
+import { Text, TextInput } from '@/components/text'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Svg, { Path as SvgPath, Rect } from 'react-native-svg'
 

@@ -1,16 +1,6 @@
 import { useState, useCallback, useEffect, useMemo } from 'react'
-import {
-  View,
-  Text,
-  FlatList,
-  ScrollView,
-  TouchableOpacity,
-  StyleSheet,
-  ActivityIndicator,
-  Alert,
-  RefreshControl,
-  StatusBar,
-} from 'react-native'
+import { View, FlatList, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, RefreshControl, StatusBar } from 'react-native'
+import { Text } from '@/components/text'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Image } from 'expo-image'
 import { LinearGradient } from 'expo-linear-gradient'

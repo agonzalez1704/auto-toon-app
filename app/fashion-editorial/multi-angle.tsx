@@ -13,18 +13,8 @@ import { LinearGradient } from 'expo-linear-gradient'
 import * as MediaLibrary from 'expo-media-library'
 import { useRouter } from 'expo-router'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import {
-  ActionSheetIOS,
-  Alert,
-  Dimensions,
-  Platform,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native'
+import { ActionSheetIOS, Alert, Dimensions, Platform, ScrollView, StatusBar, StyleSheet, TouchableOpacity, View } from 'react-native'
+import { Text } from '@/components/text'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Svg, { Path as SvgPath, Defs, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg'
 

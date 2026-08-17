@@ -7,16 +7,8 @@
  *   - Dependency inversion: children take props/callbacks, no router or store imports
  */
 import { useCallback, useEffect, useState } from 'react'
-import {
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native'
+import { Alert, KeyboardAvoidingView, Platform, ScrollView, StatusBar, StyleSheet, View } from 'react-native'
+import { Text } from '@/components/text'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRouter } from 'expo-router'
 

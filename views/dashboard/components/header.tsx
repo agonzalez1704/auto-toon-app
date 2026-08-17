@@ -1,6 +1,7 @@
 import { Image } from 'expo-image'
 import { LinearGradient } from 'expo-linear-gradient'
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { StyleSheet, TouchableOpacity, View } from 'react-native'
+import { Text } from '@/components/text'
 import { theme, gradients } from '@/constants/theme'
 import { PlusIcon } from '../icons'
 

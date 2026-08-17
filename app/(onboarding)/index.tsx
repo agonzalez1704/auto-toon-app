@@ -6,17 +6,8 @@ import { LinearGradient } from 'expo-linear-gradient'
 import { useRouter } from 'expo-router'
 import * as WebBrowser from 'expo-web-browser'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import {
-  Animated,
-  Dimensions,
-  Platform,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native'
+import { Animated, Dimensions, Platform, ScrollView, StatusBar, StyleSheet, TouchableOpacity, View } from 'react-native'
+import { Text } from '@/components/text'
 import Svg, {
   Circle,
   Defs,

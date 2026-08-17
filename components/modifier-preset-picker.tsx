@@ -3,17 +3,8 @@ import { LinearGradient } from 'expo-linear-gradient'
 import { useRouter } from 'expo-router'
 import { useCallback, useEffect, useState } from 'react'
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import {
-  ActivityIndicator,
-  Dimensions,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from 'react-native'
+import { ActivityIndicator, Dimensions, ScrollView, StatusBar, StyleSheet, TouchableOpacity, View } from 'react-native'
+import { Text, TextInput } from '@/components/text'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Svg, { Path as SvgPath } from 'react-native-svg'
 import { useModifierPreview, type CanvasSubject, type ModifierKind } from '@/lib/hooks/use-modifier-preview'

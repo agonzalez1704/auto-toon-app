@@ -1,4 +1,5 @@
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native'
+import { Text } from '@/components/text'
 import { theme } from '@/constants/theme'
 import { AI_MODELS, type ImageModelId } from '@/stores/use-product-enhancer-store'
 import { ASPECT_RATIOS, VISIBLE_MODELS } from '../data'

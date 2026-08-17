@@ -2,7 +2,10 @@
  * Learn more about Light and Dark modes:
  * https://docs.expo.io/guides/color-schemes/
  */
-import { Text as DefaultText, View as DefaultView } from 'react-native';
+import { View as DefaultView } from 'react-native';
+// Routed through the app's Text so this wrapper carries the typeface too —
+// it is a base component, and a base that opts out defeats the point.
+import { Text as DefaultText } from './text';
 
 import { useColorScheme } from './useColorScheme';
 
@@ -13,7 +16,7 @@ type ThemeProps = {
   darkColor?: string;
 };
 
-export type TextProps = ThemeProps & DefaultText['props'];
+export type TextProps = ThemeProps & React.ComponentProps<typeof DefaultText>;
 export type ViewProps = ThemeProps & DefaultView['props'];
 
 export function useThemeColor(

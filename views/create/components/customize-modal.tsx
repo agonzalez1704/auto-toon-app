@@ -1,14 +1,6 @@
 import { useState } from 'react'
-import {
-  ActivityIndicator,
-  Modal,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from 'react-native'
+import { ActivityIndicator, Modal, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native'
+import { Text, TextInput } from '@/components/text'
 import { theme } from '@/constants/theme'
 import { generateTagline } from '@/lib/api'
 import { useProductEnhancerStore } from '@/stores/use-product-enhancer-store'

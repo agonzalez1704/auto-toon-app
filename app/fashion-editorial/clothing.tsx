@@ -9,19 +9,8 @@ import * as ImagePicker from 'expo-image-picker'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useRouter } from 'expo-router'
 import { useCallback } from 'react'
-import {
-  ActionSheetIOS,
-  ActivityIndicator,
-  Alert,
-  Dimensions,
-  Platform,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native'
+import { ActionSheetIOS, ActivityIndicator, Alert, Dimensions, Platform, ScrollView, StatusBar, StyleSheet, TouchableOpacity, View } from 'react-native'
+import { Text } from '@/components/text'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Svg, { Path as SvgPath } from 'react-native-svg'
 

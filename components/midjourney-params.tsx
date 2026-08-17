@@ -11,13 +11,8 @@
  *   speed              draft | fast | turbo (API param, not prompt flag)
  */
 import { useState } from 'react'
-import {
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from 'react-native'
+import { StyleSheet, TouchableOpacity, View } from 'react-native'
+import { Text, TextInput } from '@/components/text'
 import Svg, { Path as SvgPath } from 'react-native-svg'
 import type { MjPhotoKitSelection } from '@/lib/mj-photo-kit'
 import { MjCameraLook } from './mj-camera-look'

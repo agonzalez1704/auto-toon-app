@@ -1,19 +1,6 @@
 import { useState, useCallback, useRef } from 'react'
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  ActivityIndicator,
-  Alert,
-  Dimensions,
-  StatusBar,
-  FlatList,
-  Share,
-  Platform,
-  ActionSheetIOS,
-  ScrollView,
-} from 'react-native'
+import { View, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, Dimensions, StatusBar, FlatList, Share, Platform, ActionSheetIOS, ScrollView } from 'react-native'
+import { Text } from '@/components/text'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Image } from 'expo-image'
 import { useLocalSearchParams, useRouter } from 'expo-router'

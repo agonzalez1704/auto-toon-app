@@ -1,16 +1,6 @@
 import { useCallback, useRef, useState, useEffect } from 'react'
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  StatusBar,
-  Dimensions,
-  TextInput,
-  Animated,
-  ScrollView,
-  ActivityIndicator,
-} from 'react-native'
+import { View, TouchableOpacity, StyleSheet, StatusBar, Dimensions, Animated, ScrollView, ActivityIndicator } from 'react-native'
+import { Text, TextInput } from '@/components/text'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Image } from 'expo-image'
 import { useRouter } from 'expo-router'

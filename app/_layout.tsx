@@ -1,6 +1,12 @@
 import { useEffect, useRef } from 'react'
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native'
 import { useFonts } from 'expo-font'
+import {
+  InstrumentSans_400Regular,
+  InstrumentSans_500Medium,
+  InstrumentSans_600SemiBold,
+  InstrumentSans_700Bold,
+} from '@expo-google-fonts/instrument-sans'
 import { Stack, useRouter, useSegments } from 'expo-router'
 import * as SplashScreen from 'expo-splash-screen'
 import { ClerkProvider, ClerkLoaded, useAuth } from '@clerk/clerk-expo'
@@ -206,6 +212,12 @@ function AuthGate({ children }: { children: React.ReactNode }) {
 export default function RootLayout() {
   const colorScheme = useColorScheme()
   const [fontsLoaded, fontError] = useFonts({
+    // The app's face. React Native has no cascade, so loading it here only
+    // makes it available — `components/text.tsx` is what actually applies it.
+    InstrumentSans_400Regular,
+    InstrumentSans_500Medium,
+    InstrumentSans_600SemiBold,
+    InstrumentSans_700Bold,
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   })
 

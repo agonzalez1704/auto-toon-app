@@ -1,4 +1,5 @@
-import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { ActivityIndicator, StyleSheet, TouchableOpacity, View } from 'react-native'
+import { Text } from '@/components/text'
 import { LinearGradient } from 'expo-linear-gradient'
 import { theme, gradients } from '@/constants/theme'
 import { SparklesIcon } from '../icons'

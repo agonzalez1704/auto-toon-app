@@ -1,4 +1,5 @@
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { StyleSheet, TouchableOpacity, View } from 'react-native'
+import { Text } from '@/components/text'
 import { theme } from '@/constants/theme'
 import { GlassCard } from '@/components/glass'
 import { CoinsIcon, SparklesIcon } from '../icons'

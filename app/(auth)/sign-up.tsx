@@ -4,18 +4,8 @@ import { useRouter } from 'expo-router'
 import { useSignUpStore } from '@/stores/use-signup-store'
 import * as WebBrowser from 'expo-web-browser'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import {
-  ActivityIndicator,
-  Animated,
-  KeyboardAvoidingView,
-  Platform,
-  StatusBar,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from 'react-native'
+import { ActivityIndicator, Animated, KeyboardAvoidingView, Platform, StatusBar, StyleSheet, TouchableOpacity, View } from 'react-native'
+import { Text, TextInput } from '@/components/text'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Svg, {
   Defs,

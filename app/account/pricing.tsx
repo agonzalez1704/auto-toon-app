@@ -1,15 +1,6 @@
 import { useRef, useEffect, useState } from 'react'
-import {
-  Animated,
-  Platform,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-  Alert,
-} from 'react-native'
+import { Animated, Platform, ScrollView, StatusBar, StyleSheet, TouchableOpacity, View, Alert } from 'react-native'
+import { Text } from '@/components/text'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { LinearGradient } from 'expo-linear-gradient'
 import * as WebBrowser from 'expo-web-browser'

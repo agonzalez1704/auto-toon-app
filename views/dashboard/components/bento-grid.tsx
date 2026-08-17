@@ -1,6 +1,7 @@
 import { theme } from '@/constants/theme'
 import { LinearGradient } from 'expo-linear-gradient'
-import { Dimensions, Platform, Image as RNImage, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { Dimensions, Platform, Image as RNImage, StyleSheet, TouchableOpacity, View } from 'react-native'
+import { Text } from '@/components/text'
 import type { BentoCardConfig } from '../data'
 
 const SCREEN_WIDTH = Dimensions.get('window').width

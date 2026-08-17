@@ -4,7 +4,8 @@
  * Dependency Inversion: child components don't import router/stores.
  */
 import { useCallback, useEffect, useRef } from 'react'
-import { Animated, Platform, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { Animated, Platform, StatusBar, StyleSheet, TouchableOpacity, View } from 'react-native'
+import { Text } from '@/components/text'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import * as WebBrowser from 'expo-web-browser'
 import { LinearGradient } from 'expo-linear-gradient'

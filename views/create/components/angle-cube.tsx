@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Pressable, StyleSheet, Text, View } from 'react-native'
+import { Pressable, StyleSheet, View } from 'react-native'
+import { Text } from '@/components/text'
 import Svg, { Polygon, Path as SvgPath, Text as SvgText } from 'react-native-svg'
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated'
 import { theme } from '@/constants/theme'

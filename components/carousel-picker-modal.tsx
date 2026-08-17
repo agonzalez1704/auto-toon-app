@@ -2,15 +2,8 @@ import { CONFIG } from '@/lib/config'
 import { Image } from 'expo-image'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useRef, useState } from 'react'
-import {
-  Dimensions,
-  FlatList,
-  Modal,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native'
+import { Dimensions, FlatList, Modal, StyleSheet, TouchableOpacity, View } from 'react-native'
+import { Text } from '@/components/text'
 import Svg, { Path as SvgPath } from 'react-native-svg'
 
 // ─── Layout Constants ────────────────────────────────────────────────────────

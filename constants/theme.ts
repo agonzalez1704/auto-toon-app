@@ -130,28 +130,32 @@ export const radius = {
   pill: 999,
 } as const
 
+import { FONT } from '@/components/text'
+
 // ── Typography (mobile-design skill compliant) ────────────────────────
+// Every token names its own family: RN resolves custom-font weights
+// unreliably on Android, where an unnamed weight renders as regular.
 export const typography = {
   // Page title — large
-  pageTitle: { fontSize: 28, fontWeight: '700' as const, letterSpacing: -0.3 },
+  pageTitle: { fontFamily: FONT.bold, fontSize: 28, fontWeight: '700' as const, letterSpacing: -0.3 },
   // Section header
-  sectionTitle: { fontSize: 20, fontWeight: '700' as const },
-  sectionLabel: { fontSize: 12, fontWeight: '600' as const, letterSpacing: 0.5 },
+  sectionTitle: { fontFamily: FONT.bold, fontSize: 20, fontWeight: '700' as const },
+  sectionLabel: { fontFamily: FONT.semibold, fontSize: 12, fontWeight: '600' as const, letterSpacing: 0.5 },
   // Body
-  bodyLg: { fontSize: 16, fontWeight: '400' as const },
-  body: { fontSize: 15, fontWeight: '400' as const },
-  bodySm: { fontSize: 13, fontWeight: '400' as const },
+  bodyLg: { fontFamily: FONT.regular, fontSize: 16, fontWeight: '400' as const },
+  body: { fontFamily: FONT.regular, fontSize: 15, fontWeight: '400' as const },
+  bodySm: { fontFamily: FONT.regular, fontSize: 13, fontWeight: '400' as const },
   // Labels
-  label: { fontSize: 14, fontWeight: '600' as const },
-  labelSm: { fontSize: 12, fontWeight: '600' as const },
+  label: { fontFamily: FONT.semibold, fontSize: 14, fontWeight: '600' as const },
+  labelSm: { fontFamily: FONT.semibold, fontSize: 12, fontWeight: '600' as const },
   // CTAs
-  ctaLg: { fontSize: 17, fontWeight: '600' as const },
-  cta: { fontSize: 15, fontWeight: '600' as const },
-  ctaSm: { fontSize: 13, fontWeight: '600' as const },
+  ctaLg: { fontFamily: FONT.semibold, fontSize: 17, fontWeight: '600' as const },
+  cta: { fontFamily: FONT.semibold, fontSize: 15, fontWeight: '600' as const },
+  ctaSm: { fontFamily: FONT.semibold, fontSize: 13, fontWeight: '600' as const },
   // Caption / tertiary
-  caption: { fontSize: 12, fontWeight: '500' as const },
+  caption: { fontFamily: FONT.medium, fontSize: 12, fontWeight: '500' as const },
   // Badge
-  badge: { fontSize: 10, fontWeight: '700' as const, letterSpacing: 0.5 },
+  badge: { fontFamily: FONT.bold, fontSize: 10, fontWeight: '700' as const, letterSpacing: 0.5 },
 } as const
 
 // ── Liquid-glass tokens ───────────────────────────────────────────────
