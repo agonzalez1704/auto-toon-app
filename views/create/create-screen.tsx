@@ -45,6 +45,7 @@ import { RestorePanel } from './panels/restore-panel'
 import { RelightPanel } from './panels/relight-panel'
 import { DirectorSession } from './director/director-session'
 import { analyzeForCreate, type CreateAnalysis } from '@/lib/api'
+import { parseAspectIntent } from '@/lib/create/aspect'
 import { useImagePipeline } from './lib/use-image-pipeline'
 import { UploadSection } from './components/upload-section'
 import { NameInput } from './components/name-input'
@@ -276,6 +277,13 @@ export default function CreateScreen() {
             <DirectorSession
               imageUrl={store.uploadedImageUrl}
               subject={analysis.subject}
+              onSaid={(text) => {
+                // La forma sale de lo que el cliente dijo. "para Instagram",
+                // "historia", "banner" ya llevan el recorte dentro; pedirle
+                // que además elija una fracción es pedirle que traduzca.
+                const heard = parseAspectIntent(text)
+                if (heard) store.setSeedreamConfig({ ...store.seedreamConfig, aspect_ratio: heard })
+              }}
               onConceptPicked={(concept) => {
                 // La idea elegida se vuelve la escena que se genera, en vez de
                 // la que habríamos escrito nosotros.
@@ -358,14 +366,10 @@ export default function CreateScreen() {
             keyboardShouldPersistTaps="handled"
           >
             <View style={styles.heroHeader}>
-              <Text style={styles.heroEyebrow}>ENHANCE</Text>
-              <Text style={styles.heroTitle}>
-                {store.localImageUri ? 'Looking good.' : 'Snap your product.'}
-              </Text>
+              <Text style={styles.heroEyebrow}>CREAR</Text>
+              <Text style={styles.heroTitle}>¿Qué quieres crear?</Text>
               <Text style={styles.heroSub}>
-                {store.localImageUri
-                  ? 'Name it, pick a goal — studio shot in 8 seconds.'
-                  : 'One photo. Studio-grade result in under 10 seconds.'}
+                Sube una foto. La vemos y te decimos en qué se puede convertir.
               </Text>
             </View>
 
@@ -407,6 +411,8 @@ export default function CreateScreen() {
               </View>
             ) : null}
 
+            {showStandard ? (
+              <>
             <GoalSelector
               selectedGoalId={store.selectedGoalId}
               onPress={() => setGoalModalVisible(true)}
@@ -490,6 +496,14 @@ export default function CreateScreen() {
                 <Text style={styles.balanceHint}>Balance: {balance} credits</Text>
               )}
             </View>
+              </>
+            ) : store.uploadedImageUrl ? (
+              <Pressable style={styles.standardLink} onPress={() => setShowStandard(true)}>
+                <Text style={styles.standardLinkLabel}>
+                  ¿Prefieres algo estándar? Ver las opciones →
+                </Text>
+              </Pressable>
+            ) : null}
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>

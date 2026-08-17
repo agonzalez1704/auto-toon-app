@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native'
-import { Text } from '@/components/text'
+import { Text, TextInput } from '@/components/text'
 import { theme } from '@/constants/theme'
 import { askDirector, type DirectorEntry } from '@/lib/api'
 import { parseSurface, userAction, type DirectorComponent, type Surface } from '@/lib/create/a2ui'
@@ -22,15 +22,25 @@ export function DirectorSession({
   imageUrl,
   subject,
   onConceptPicked,
+  onSaid,
 }: {
   imageUrl: string
   subject: string
   /** El cliente eligió una idea: de aquí en adelante manda la generación. */
   onConceptPicked: (concept: { title: string; visual: string; needsCharacter: boolean }) => void
+  /**
+   * Lo que el cliente escribió o eligió, en crudo.
+   *
+   * La forma sale de aquí, no de un selector: "para Instagram" o "historia"
+   * ya dice el recorte. Un control manual de aspect-ratio le pide al cliente
+   * que traduzca su intención a una fracción.
+   */
+  onSaid?: (text: string) => void
 }) {
   const [surfaces, setSurfaces] = useState<Surface[]>([])
   const [thinking, setThinking] = useState(false)
   const [failed, setFailed] = useState(false)
+  const [draft, setDraft] = useState('')
 
   /**
    * Espeja el transcripto para que `send` arme el siguiente sin usar un
@@ -78,6 +88,19 @@ export function DirectorSession({
     [advance],
   )
 
+  const lastSurfaceId = surfaces.length ? surfaces[surfaces.length - 1].surfaceId : 'turn-0'
+
+  const say = useCallback(
+    (text: string) => {
+      const t = text.trim()
+      if (!t) return
+      setDraft('')
+      onSaid?.(t)
+      send(userAction('client_text', lastSurfaceId, 'client-input', { text: t }))
+    },
+    [lastSurfaceId, onSaid, send],
+  )
+
   const onConcept = useCallback(
     (c: Extract<DirectorComponent, { component: 'Concept' }>, surfaceId: string) => {
       onConceptPicked({ title: c.title, visual: c.visual, needsCharacter: c.needsCharacter })
@@ -94,7 +117,8 @@ export function DirectorSession({
             surface={surface}
             disabled={thinking || i < surfaces.length - 1}
             onConcept={(c) => onConcept(c, surface.surfaceId)}
-            onChoice={(c, option) =>
+            onChoice={(c, option) => {
+              onSaid?.(`${option.id} ${option.label}`)
               send(
                 userAction('choice_selected', surface.surfaceId, c.id, {
                   choiceId: c.id,
@@ -102,7 +126,7 @@ export function DirectorSession({
                   label: option.label,
                 }),
               )
-            }
+            }}
           />
         </View>
       ))}
@@ -113,6 +137,29 @@ export function DirectorSession({
           <Text style={styles.thinkingLabel}>
             {surfaces.length === 0 ? `Viendo ${subject.toLowerCase()}` : 'El director está escribiendo'}
           </Text>
+        </View>
+      ) : null}
+
+      {!thinking && surfaces.length > 0 ? (
+        <View style={styles.composer}>
+          <TextInput
+            value={draft}
+            onChangeText={setDraft}
+            placeholder="Dile algo al director…"
+            placeholderTextColor={theme.colors.textDim}
+            style={styles.input}
+            onSubmitEditing={() => say(draft)}
+            returnKeyType="send"
+          />
+          <Pressable
+            onPress={() => say(draft)}
+            disabled={!draft.trim()}
+            accessibilityRole="button"
+            accessibilityLabel="Enviar"
+            style={[styles.send, !draft.trim() && styles.dim]}
+          >
+            <Text style={styles.sendLabel}>Enviar</Text>
+          </Pressable>
         </View>
       ) : null}
 
@@ -147,4 +194,25 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.surfaceRaised,
   },
   retryLabel: { ...theme.typography.cta, color: theme.colors.text },
+  composer: { flexDirection: 'row', gap: theme.spacing.sm, alignItems: 'center' },
+  input: {
+    flex: 1,
+    minHeight: theme.minTap,
+    paddingHorizontal: theme.spacing.md,
+    borderRadius: theme.radius.md,
+    backgroundColor: theme.colors.surface,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    color: theme.colors.text,
+    ...theme.typography.body,
+  },
+  send: {
+    minHeight: theme.minTap,
+    justifyContent: 'center',
+    paddingHorizontal: theme.spacing.lg,
+    borderRadius: theme.radius.md,
+    backgroundColor: theme.colors.surfaceRaised,
+  },
+  sendLabel: { ...theme.typography.cta, color: theme.colors.text },
+  dim: { opacity: 0.4 },
 })
