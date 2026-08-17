@@ -103,22 +103,6 @@ const FEATURES: Feature[] = [
     iconTintColor: 'rgba(251,191,36,0.16)',
     route: '/assets',
   },
-  {
-    key: 'restore',
-    title: 'Image Restore',
-    description: 'Upscale & restore images to 2K/4K',
-    icon: RestoreIcon,
-    iconTintColor: 'rgba(34,211,238,0.16)',
-    route: '/restore',
-  },
-  {
-    key: 'relight',
-    title: 'AI Relight',
-    description: 'Transform lighting with cinematic presets',
-    icon: RelightIcon,
-    iconTintColor: 'rgba(52,211,153,0.16)',
-    route: '/relight',
-  },
 ]
 
 // ── Screen ─────────────────────────────────────────────────────────

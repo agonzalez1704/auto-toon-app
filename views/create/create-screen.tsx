@@ -7,10 +7,19 @@
  *   - Dependency inversion: children take props/callbacks, no router or store imports
  */
 import { useCallback, useEffect, useState } from 'react'
-import { Alert, KeyboardAvoidingView, Platform, ScrollView, StatusBar, StyleSheet, View } from 'react-native'
+import {
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  View,
+} from 'react-native'
 import { Text } from '@/components/text'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { useRouter } from 'expo-router'
+import { useLocalSearchParams, useRouter } from 'expo-router'
 
 import { theme } from '@/constants/theme'
 import { CarouselPickerModal } from '@/components/carousel-picker-modal'
@@ -32,6 +41,8 @@ import {
 } from '@/stores/use-product-enhancer-store'
 
 import { GOALS } from './data'
+import { RestorePanel } from './panels/restore-panel'
+import { RelightPanel } from './panels/relight-panel'
 import { useImagePipeline } from './lib/use-image-pipeline'
 import { UploadSection } from './components/upload-section'
 import { NameInput } from './components/name-input'
@@ -46,6 +57,25 @@ import { MultiAngleFlow } from './components/multi-angle-flow'
 export default function CreateScreen() {
   const router = useRouter()
   const [goalModalVisible, setGoalModalVisible] = useState(false)
+  /**
+   * Un panel corre aquí dentro, sobre la imagen que ya subiste. Restaurar y
+   * cambiar la luz vivían en rutas propias (`/restore`, `/relight`), que en un
+   * teléfono es la única puerta que existe: quitarlas del menú sin esto habría
+   * borrado las dos funciones.
+   */
+  const [panel, setPanel] = useState<'restore' | 'relight' | null>(null)
+
+  /**
+   * Abierto desde otra pantalla — el visor de imágenes tenía un botón que
+   * navegaba a `/relight`. Esa ruta ya no existe, así que ahora manda aquí con
+   * la imagen y el panel a abrir, y la función se conserva.
+   */
+  const params = useLocalSearchParams<{ panel?: string; imageUrl?: string }>()
+  useEffect(() => {
+    if (params.panel !== 'restore' && params.panel !== 'relight') return
+    if (params.imageUrl) store.setUploadedImageUrl(params.imageUrl)
+    setPanel(params.panel)
+  }, [params.panel, params.imageUrl])
   const [configModalVisible, setConfigModalVisible] = useState(false)
   const [mjParams, setMjParams] = useState<MjParams>(DEFAULT_MJ_PARAMS)
 
@@ -184,6 +214,31 @@ export default function CreateScreen() {
 
   const resultUrls = [store.heroImageUrl, store.vignetteImageUrl].filter(Boolean) as string[]
 
+  // ── Panel (restaurar / cambiar la luz) ──
+  if (panel && store.uploadedImageUrl) {
+    const Panel = panel === 'restore' ? RestorePanel : RelightPanel
+    return (
+      <View style={styles.root}>
+        <StatusBar barStyle="light-content" />
+        <SafeAreaView style={styles.safeArea} edges={['top']}>
+          <View style={styles.content}>
+            <Panel
+              imageUrl={store.uploadedImageUrl}
+              onDone={(url) => {
+                setPanel(null)
+                router.push({
+                  pathname: '/image-viewer',
+                  params: { urls: JSON.stringify([url]), initialIndex: '0', title: store.productName },
+                })
+              }}
+              onCancel={() => setPanel(null)}
+            />
+          </View>
+        </SafeAreaView>
+      </View>
+    )
+  }
+
   // ── Generating phase ──
   if (store.generationPhase === 'generating' || store.generationPhase === 'uploading') {
     return <GeneratingView phase={store.generationPhase} />
@@ -270,6 +325,30 @@ export default function CreateScreen() {
             {!store.localImageUri && (
               <NameInput value={store.productName} onChange={store.setProductName} />
             )}
+
+            {/* Operaciones sobre la imagen tal cual, sin pasar por el
+                formulario del enhancer. Aparecen en cuanto hay algo sobre lo
+                que operar; antes de eso no tendrían sujeto. */}
+            {store.uploadedImageUrl ? (
+              <View style={styles.panelRow}>
+                <Pressable
+                  style={styles.panelBtn}
+                  onPress={() => setPanel('restore')}
+                  accessibilityRole="button"
+                >
+                  <Text style={styles.panelBtnLabel}>Restaurar</Text>
+                  <Text style={styles.panelBtnHint}>Recupera detalle a 2K o 4K</Text>
+                </Pressable>
+                <Pressable
+                  style={styles.panelBtn}
+                  onPress={() => setPanel('relight')}
+                  accessibilityRole="button"
+                >
+                  <Text style={styles.panelBtnLabel}>Cambiar la luz</Text>
+                  <Text style={styles.panelBtnHint}>13 ambientes de iluminación</Text>
+                </Pressable>
+              </View>
+            ) : null}
 
             <GoalSelector
               selectedGoalId={store.selectedGoalId}
@@ -362,6 +441,20 @@ export default function CreateScreen() {
 }
 
 const styles = StyleSheet.create({
+  panelRow: { flexDirection: 'row', gap: theme.spacing.sm, marginTop: theme.spacing.md },
+  panelBtn: {
+    flex: 1,
+    minHeight: theme.minTap,
+    justifyContent: 'center',
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
+    borderRadius: theme.radius.md,
+    backgroundColor: theme.colors.surface,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+  },
+  panelBtnLabel: { ...theme.typography.cta, color: theme.colors.text },
+  panelBtnHint: { ...theme.typography.caption, color: theme.colors.textDim, marginTop: 2 },
   root: { flex: 1, backgroundColor: theme.colors.bg },
   safeArea: { flex: 1 },
   content: {

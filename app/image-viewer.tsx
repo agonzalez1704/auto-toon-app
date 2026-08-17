@@ -433,9 +433,10 @@ export default function ImageViewerScreen() {
             <TouchableOpacity
               style={styles.actionPill}
               onPress={() => {
+                // /relight ya no es una ruta: la función vive dentro de Crear.
                 router.push({
-                  pathname: '/relight',
-                  params: { imageUrl: urls[currentIndex], title },
+                  pathname: '/(tabs)/create',
+                  params: { panel: 'relight', imageUrl: urls[currentIndex] },
                 })
               }}
               activeOpacity={0.8}

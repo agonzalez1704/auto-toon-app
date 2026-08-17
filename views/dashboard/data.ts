@@ -60,24 +60,6 @@ export const BENTO_CARDS: BentoCardConfig[] = [
     accent: 'rgba(167,139,250,0.55)', // violet
     pro: true,
   },
-  {
-    label: 'AI Relight',
-    description: 'Cinematic lighting presets',
-    route: '/relight',
-    preview: require('@/assets/images/previews/backlight_halo_2k.png'),
-    backgroundImage: require('@/assets/images/previews/molten_side_light_2k.png'),
-    gradient: gradients.relight,
-    accent: 'rgba(34,211,238,0.55)', // cyan — info
-  },
-  {
-    label: 'Image Restore',
-    description: 'Upscale to 2K / 4K',
-    route: '/restore',
-    preview: require('@/assets/images/previews/upscale.jpg'),
-    backgroundImage: require('@/assets/images/previews/upscale.jpg'),
-    gradient: gradients.restore,
-    accent: 'rgba(52,211,153,0.55)', // emerald — secondary
-  },
 ]
 
 export interface UtilityLinkConfig {
@@ -86,8 +68,7 @@ export interface UtilityLinkConfig {
 }
 
 export const UTILITY_LINKS: UtilityLinkConfig[] = [
-  { label: 'Assets', route: '/(tabs)/assets' },
-  { label: 'API', route: '/developer' },
+  { label: 'Assets', route: '/assets' },
   { label: 'Pricing', route: '/account/pricing' },
 ]
 
