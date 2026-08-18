@@ -40,13 +40,14 @@ import {
   type GoalId,
 } from '@/stores/use-product-enhancer-store'
 
-import { GOALS } from './data'
+import { GOALS, VISIBLE_MODELS } from './data'
 import { RestorePanel } from './panels/restore-panel'
 import { RelightPanel } from './panels/relight-panel'
 import { DirectorSession } from './director/director-session'
 import { analyzeForCreate, type CreateAnalysis } from '@/lib/api'
 import { parseAspectIntent } from '@/lib/create/aspect'
 import { toSeedreamAspect } from '@/lib/create/seedream-aspect'
+import { conceptToPrompt } from '@/lib/create/direction'
 import { useImagePipeline } from './lib/use-image-pipeline'
 import { UploadSection } from './components/upload-section'
 import { NameInput } from './components/name-input'
@@ -105,6 +106,17 @@ export default function CreateScreen() {
    * anteriores.
    */
   const [pendingConcept, setPendingConcept] = useState(false)
+  /**
+   * La idea elegida, viva hasta que se genera.
+   *
+   * Va como `promptOverride`, que REEMPLAZA el prompt del hero. Metida como
+   * una personalización más, la maquinaria del objetivo seguía mandando: una
+   * foto de flores salió convertida en un frasco de perfume con flores de
+   * fondo, porque "professional-photo" da por hecho que hay un producto.
+   * El override incluye "el sujeto es X, tal como en la imagen de referencia",
+   * que es la frase que impide inventarlo.
+   */
+  const [concept, setConcept] = useState<{ title: string; premise: string; visual: string } | null>(null)
 
   useEffect(() => {
     const url = store.uploadedImageUrl
@@ -208,6 +220,15 @@ export default function CreateScreen() {
         suggestedStyleVariant: store.suggestedStyleVariant,
         styleVariantOverride: store.selectedStyleVariant,
         extractedText: store.extractedText ?? undefined,
+        ...(concept && analysis?.subject
+          ? {
+              promptOverride: conceptToPrompt(concept, analysis.subject),
+              // Un concepto es UNA escena: la segunda imagen del objetivo
+              // pide formas anidadas que nadie llenó y compite con ella.
+              skipSecondImage: true,
+              skipHeroImage: false,
+            }
+          : {}),
       })
 
       if (result.success) {
@@ -305,6 +326,18 @@ export default function CreateScreen() {
                 <Text style={styles.genErrorHint}>Toca para descartar y elegir otra idea.</Text>
               </Pressable>
             ) : null}
+            {/* Qué modelo va a correr y qué cuesta, antes de tocar nada.
+                Estaba escondido tras el formulario, así que la conversación
+                gastaba créditos sin decir con qué ni cuánto. */}
+            <View style={styles.modelBar}>
+              <Text style={styles.modelName}>
+                {VISIBLE_MODELS.find((m) => m.id === store.selectedModel)?.label ?? store.selectedModel}
+              </Text>
+              <Text style={styles.modelCost}>{costLabel}</Text>
+              <Pressable onPress={() => setShowStandard(true)} accessibilityRole="button">
+                <Text style={styles.modelChange}>Cambiar</Text>
+              </Pressable>
+            </View>
             <DirectorSession
               imageUrl={store.uploadedImageUrl}
               subject={analysis.subject}
@@ -320,10 +353,7 @@ export default function CreateScreen() {
                 // viejo, que es exactamente la vuelta que la conversación
                 // existe para evitar: el cliente ya dijo qué quiere.
                 store.setProductName(concept.title)
-                store.setPromptCustomizations({
-                  ...store.promptCustomizations,
-                  composition: concept.visual,
-                })
+                setConcept(concept)
                 // La generación exige un objetivo y el director no habla ese
                 // vocabulario; una foto limpia es el que no impone formato.
                 if (!store.selectedGoalId) store.selectGoal('professional-photo')
@@ -547,6 +577,16 @@ export default function CreateScreen() {
 }
 
 const styles = StyleSheet.create({
+  modelBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.sm,
+    paddingVertical: theme.spacing.sm,
+    marginBottom: theme.spacing.sm,
+  },
+  modelName: { ...theme.typography.labelSm, color: theme.colors.text },
+  modelCost: { ...theme.typography.caption, color: theme.colors.textDim, flex: 1 },
+  modelChange: { ...theme.typography.caption, color: theme.colors.accent },
   genError: {
     padding: theme.spacing.md,
     borderRadius: theme.radius.md,

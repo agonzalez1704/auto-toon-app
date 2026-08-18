@@ -353,6 +353,12 @@ export interface EnhanceResponse {
   // independent of editable form/store state.
   secondImageType?: 'vignette' | 'elements' | 'poster' | '3x3' | 'food' | null
   aspectRatio?: string
+  /**
+   * Reemplaza el prompt del hero. Con esto el concepto ES la escena; sin
+   * esto, la maquinaria del objetivo manda y una foto de flores sale
+   * convertida en un frasco de perfume con flores de fondo.
+   */
+  promptOverride?: string
   labels?: string[]
   creditsRemaining: number
   success: boolean

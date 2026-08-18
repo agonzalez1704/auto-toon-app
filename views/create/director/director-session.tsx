@@ -27,7 +27,7 @@ export function DirectorSession({
   imageUrl: string
   subject: string
   /** El cliente eligió una idea: de aquí en adelante manda la generación. */
-  onConceptPicked: (concept: { title: string; visual: string; needsCharacter: boolean }) => void
+  onConceptPicked: (concept: { title: string; premise: string; visual: string; needsCharacter: boolean }) => void
   /**
    * Lo que el cliente escribió o eligió, en crudo.
    *
@@ -113,7 +113,7 @@ export function DirectorSession({
 
   const onConcept = useCallback(
     (c: Extract<DirectorComponent, { component: 'Concept' }>, surfaceId: string) => {
-      onConceptPicked({ title: c.title, visual: c.visual, needsCharacter: c.needsCharacter })
+      onConceptPicked({ title: c.title, premise: c.premise, visual: c.visual, needsCharacter: c.needsCharacter })
       send(userAction('concept_selected', surfaceId, c.id, { conceptId: c.id }))
     },
     [onConceptPicked, send],

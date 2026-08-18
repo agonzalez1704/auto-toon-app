@@ -28,7 +28,8 @@ assert.ok(
 )
 
 /** Copied byte for byte. Any difference at all is drift. */
-for (const file of ['a2ui.ts', 'next-step.ts', 'aspect.ts']) {
+const VERBATIM = ['a2ui.ts', 'next-step.ts', 'aspect.ts', 'direction.ts']
+for (const file of VERBATIM) {
     const mine = readFileSync(`lib/create/${file}`, 'utf8')
     const theirs = readFileSync(`${WEB}/${file}`, 'utf8')
     assert.equal(
@@ -80,4 +81,4 @@ assert.deepEqual(
     'the inlined ProductCategory union no longer matches lib/category-prompts/types.ts',
 )
 
-console.log(`create-parity: ok (3 files verbatim, capabilities + ${webCats.length} categories)`)
+console.log(`create-parity: ok (${VERBATIM.length} files verbatim, capabilities + ${webCats.length} categories)`)
