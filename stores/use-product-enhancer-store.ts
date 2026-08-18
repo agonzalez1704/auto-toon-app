@@ -483,7 +483,25 @@ export const useProductEnhancerStore = create<ProductEnhancerState>()(
     {
       name: 'product-enhancer-storage',
       storage: createJSONStorage(() => AsyncStorage),
-      version: 1,
+      version: 2,
+      /**
+       * v2 — sanea `seedreamConfig.aspect_ratio`.
+       *
+       * Un ratio fuera del enum de la ruta se quedaba guardado en el
+       * dispositivo y hacía fallar CADA generación con 400, para siempre:
+       * arreglar quien lo escribía no limpia lo ya escrito. Una instalación
+       * envenenada no se puede recuperar sola, así que se recupera aquí.
+       */
+      migrate: (persisted: any, from) => {
+        if (!persisted) return persisted
+        const ALLOWED = ['1:1', '4:3', '3:4', '16:9', '9:16', '3:2', '2:3', '21:9']
+        const ratio = persisted?.seedreamConfig?.aspect_ratio
+        if (ratio && !ALLOWED.includes(ratio)) {
+          console.warn(`[store] aspect_ratio "${ratio}" no es válido para seedream; se usa 3:4`)
+          persisted.seedreamConfig = { ...persisted.seedreamConfig, aspect_ratio: '3:4' }
+        }
+        return persisted
+      },
       partialize: (state) => ({
         productName: state.productName,
         selectedGoalId: state.selectedGoalId,
