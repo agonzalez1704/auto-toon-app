@@ -102,7 +102,12 @@ export default function CreateScreen() {
     if (!url || analysis || analysing) return
     setAnalysing(true)
     analyzeForCreate(url)
-      .then(setAnalysis)
+      .then((a) => {
+        // Sin sujeto el director no tiene de qué hablar y el servidor lo exige,
+        // así que eso es una lectura fallida, no una lectura vacía.
+        if (a?.subject) setAnalysis(a)
+        else setShowStandard(true)
+      })
       // Sin lectura no hay director, pero el formulario sigue sirviendo: la
       // pantalla no se queda sin salida.
       .catch(() => setShowStandard(true))
@@ -268,7 +273,7 @@ export default function CreateScreen() {
   }
 
   // ── Director (la vía principal) ──
-  if (store.uploadedImageUrl && analysis && !showStandard && !panel && store.generationPhase === 'idle') {
+  if (store.uploadedImageUrl && analysis?.subject && !showStandard && !panel && store.generationPhase === 'idle') {
     return (
       <View style={styles.root}>
         <StatusBar barStyle="light-content" />

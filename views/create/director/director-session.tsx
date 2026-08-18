@@ -3,7 +3,7 @@ import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'reac
 import { Text, TextInput } from '@/components/text'
 import { theme } from '@/constants/theme'
 import { askDirector, type DirectorEntry } from '@/lib/api'
-import { parseSurface, userAction, type DirectorComponent, type Surface } from '@/lib/create/a2ui'
+import { userAction, type DirectorComponent, type Surface } from '@/lib/create/a2ui'
 import { SurfaceView } from './surface-view'
 
 /**
@@ -56,8 +56,18 @@ export function DirectorSession({
       setFailed(false)
       try {
         const reply = await askDirector({ imageUrl, subject, transcript })
-        const surface = parseSurface(reply.surface ?? reply.messages, `turn-${transcript.length + 1}`)
-        if (!surface) {
+        // La ruta ya validó y parseó: devuelve la superficie con `components`
+        // aplanado a objeto para poder viajar como JSON. Solo hay que rearmar
+        // el Map. Pasarla por `parseSurface` —que espera mensajes A2UI
+        // crudos— la rechazaba entera y todo turno salía como fallo.
+        const surface = reply.surface
+          ? {
+              surfaceId: reply.surface.surfaceId,
+              order: reply.surface.order,
+              components: new Map(Object.entries(reply.surface.components)) as Surface['components'],
+            }
+          : null
+        if (!surface || !reply.messages) {
           // Falla hablada, no un silencio: la web colapsaba al menú plano y
           // el usuario no sabía que algo se había roto.
           setFailed(true)
@@ -135,7 +145,9 @@ export function DirectorSession({
         <View style={styles.thinking}>
           <ActivityIndicator color={theme.colors.accent} />
           <Text style={styles.thinkingLabel}>
-            {surfaces.length === 0 ? `Viendo ${subject.toLowerCase()}` : 'El director está escribiendo'}
+            {surfaces.length === 0
+              ? `Viendo ${(subject || 'tu imagen').toLowerCase()}`
+              : 'El director está escribiendo'}
           </Text>
         </View>
       ) : null}

@@ -1690,8 +1690,11 @@ export interface CreateAnalysis {
 }
 
 export async function analyzeForCreate(imageUrl: string): Promise<CreateAnalysis> {
-  const { data } = await api.post<CreateAnalysis>('/api/create/analyze', { imageUrl })
-  return data
+  // La ruta responde `{ analysis: {...} }`, envuelto. Desenvolverlo aquí y no
+  // en la pantalla: leerlo mal deja `subject` en undefined, y eso reventaba el
+  // director con "Cannot read property 'toLowerCase' of undefined".
+  const { data } = await api.post<{ analysis: CreateAnalysis }>('/api/create/analyze', { imageUrl })
+  return data.analysis
 }
 
 /** Una entrada del transcripto: lo que dijo el director, o lo que hizo el cliente. */
@@ -1700,8 +1703,11 @@ export type DirectorEntry =
   | { from: 'user'; action: unknown }
 
 export interface DirectorReply {
-  /** Ya parseado por el servidor; el cliente lo vuelve a validar con parseSurface. */
-  surface: unknown | null
+  /**
+   * Ya validada y parseada por el servidor. `components` viaja aplanado a
+   * objeto porque un Map no sobrevive a JSON; el cliente lo rearma.
+   */
+  surface: { surfaceId: string; order: string[]; components: Record<string, unknown> } | null
   /** El JSON crudo que el modelo produjo, para devolverlo en el siguiente turno. */
   messages: unknown | null
 }
