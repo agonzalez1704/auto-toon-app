@@ -96,6 +96,14 @@ export default function CreateScreen() {
   const [analysis, setAnalysis] = useState<CreateAnalysis | null>(null)
   const [analysing, setAnalysing] = useState(false)
   const [showStandard, setShowStandard] = useState(false)
+  /**
+   * Una idea aceptada, esperando a que el store la refleje.
+   *
+   * `handleGenerate` lee del store, y los `set` de Zustand no se ven en el
+   * mismo tick: llamarla de inmediato genera con el nombre y la escena
+   * anteriores.
+   */
+  const [pendingConcept, setPendingConcept] = useState(false)
 
   useEffect(() => {
     const url = store.uploadedImageUrl
@@ -272,6 +280,13 @@ export default function CreateScreen() {
     )
   }
 
+  useEffect(() => {
+    if (!pendingConcept) return
+    if (!store.productName.trim() || !store.selectedGoalId) return
+    setPendingConcept(false)
+    void handleGenerate()
+  }, [pendingConcept, store.productName, store.selectedGoalId, handleGenerate])
+
   // ── Director (la vía principal) ──
   if (store.uploadedImageUrl && analysis?.subject && !showStandard && !panel && store.generationPhase === 'idle') {
     return (
@@ -290,14 +305,18 @@ export default function CreateScreen() {
                 if (heard) store.setSeedreamConfig({ ...store.seedreamConfig, aspect_ratio: heard })
               }}
               onConceptPicked={(concept) => {
-                // La idea elegida se vuelve la escena que se genera, en vez de
-                // la que habríamos escrito nosotros.
+                // Elegir una idea la GENERA. Antes esto abría el formulario
+                // viejo, que es exactamente la vuelta que la conversación
+                // existe para evitar: el cliente ya dijo qué quiere.
                 store.setProductName(concept.title)
                 store.setPromptCustomizations({
                   ...store.promptCustomizations,
                   composition: concept.visual,
                 })
-                setShowStandard(true)
+                // La generación exige un objetivo y el director no habla ese
+                // vocabulario; una foto limpia es el que no impone formato.
+                if (!store.selectedGoalId) store.selectGoal('professional-photo')
+                setPendingConcept(true)
               }}
             />
             <Pressable style={styles.standardLink} onPress={() => setShowStandard(true)}>
