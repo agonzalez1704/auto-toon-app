@@ -46,6 +46,7 @@ import { RelightPanel } from './panels/relight-panel'
 import { DirectorSession } from './director/director-session'
 import { analyzeForCreate, type CreateAnalysis } from '@/lib/api'
 import { parseAspectIntent } from '@/lib/create/aspect'
+import { toSeedreamAspect } from '@/lib/create/seedream-aspect'
 import { useImagePipeline } from './lib/use-image-pipeline'
 import { UploadSection } from './components/upload-section'
 import { NameInput } from './components/name-input'
@@ -294,6 +295,16 @@ export default function CreateScreen() {
         <StatusBar barStyle="light-content" />
         <SafeAreaView style={styles.safeArea} edges={['top']}>
           <View style={styles.content}>
+            {/* Una generación fallida devolvía la fase a `idle`, esta rama
+                volvía a coincidir, y el cliente aterrizaba en el chat sin
+                explicación — la misma falla muda que el director ya evita
+                para sus propios turnos. */}
+            {store.error ? (
+              <Pressable style={styles.genError} onPress={() => store.setError(null)}>
+                <Text style={styles.genErrorText}>{store.error}</Text>
+                <Text style={styles.genErrorHint}>Toca para descartar y elegir otra idea.</Text>
+              </Pressable>
+            ) : null}
             <DirectorSession
               imageUrl={store.uploadedImageUrl}
               subject={analysis.subject}
@@ -302,7 +313,7 @@ export default function CreateScreen() {
                 // "historia", "banner" ya llevan el recorte dentro; pedirle
                 // que además elija una fracción es pedirle que traduzca.
                 const heard = parseAspectIntent(text)
-                if (heard) store.setSeedreamConfig({ ...store.seedreamConfig, aspect_ratio: heard })
+                if (heard) store.setSeedreamConfig({ ...store.seedreamConfig, aspect_ratio: toSeedreamAspect(heard) })
               }}
               onConceptPicked={(concept) => {
                 // Elegir una idea la GENERA. Antes esto abría el formulario
@@ -536,6 +547,16 @@ export default function CreateScreen() {
 }
 
 const styles = StyleSheet.create({
+  genError: {
+    padding: theme.spacing.md,
+    borderRadius: theme.radius.md,
+    backgroundColor: 'rgba(251,113,133,0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(251,113,133,0.32)',
+    marginBottom: theme.spacing.md,
+  },
+  genErrorText: { ...theme.typography.bodySm, color: theme.colors.danger },
+  genErrorHint: { ...theme.typography.caption, color: theme.colors.textDim, marginTop: 2 },
   standardLink: { paddingVertical: theme.spacing.md, alignItems: 'center' },
   standardLinkLabel: { ...theme.typography.bodySm, color: theme.colors.textDim },
   panelRow: { flexDirection: 'row', gap: theme.spacing.sm, marginTop: theme.spacing.md },
