@@ -16,9 +16,9 @@ import type { AppleCreditPack } from '@/lib/iap-apple'
 
 const IS_IOS = Platform.OS === 'ios'
 
-const BRAND = '#8B5CF6'
-const BRAND_CYAN = '#06B6D4'
-const BG = '#193153'
+const BRAND = '#FF3D8A'
+const BRAND_CYAN = '#141414'
+const BG = '#0A0A0A'
 const CARD_BG = 'rgba(255,255,255,0.05)'
 const CARD_BORDER = 'rgba(255,255,255,0.08)'
 const MUTED = 'rgba(255,255,255,0.55)'

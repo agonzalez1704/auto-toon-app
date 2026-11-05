@@ -21,8 +21,8 @@ WebBrowser.maybeCompleteAuthSession()
 const { width: SCREEN_W } = Dimensions.get('window')
 
 // Brand palette
-const AURORA_NAVY = '#193153'
-const AURORA_TEAL = '#06B6D4'
+const AURORA_NAVY = '#0A0A0A'
+const AURORA_TEAL = '#141414'
 const AURORA_MAGENTA = '#FF3D8A'
 const AURORA_PINK = '#FF3D8A'
 const ACCENT = '#D4FF3D'
@@ -246,18 +246,18 @@ const pitchStyles = StyleSheet.create({
   },
   inner: {
     borderRadius: 20.5,
-    backgroundColor: 'rgba(20, 30, 55, 0.95)',
+    backgroundColor: 'rgba(20,20,20, 0.95)',
     padding: 20,
   },
   badgeRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 },
-  badge: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(251,191,36,0.14)', borderRadius: 999, paddingHorizontal: 10, paddingVertical: 5, borderWidth: 1, borderColor: 'rgba(251,191,36,0.25)' },
+  badge: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(212,255,61,0.14)', borderRadius: 999, paddingHorizontal: 10, paddingVertical: 5, borderWidth: 1, borderColor: 'rgba(212,255,61,0.25)' },
   badgeText: { fontSize: 10, color: ACCENT, fontWeight: '800', letterSpacing: 1 },
   eyebrow: { fontSize: 11, color: 'rgba(255,255,255,0.5)', fontWeight: '500' },
   title: { fontSize: 26, fontWeight: '800', color: '#FFFFFF', letterSpacing: -0.6, lineHeight: 30, marginBottom: 10 },
   sub: { fontSize: 13, color: 'rgba(255,255,255,0.65)', lineHeight: 19, marginBottom: 16 },
   bullets: { gap: 10 },
   bullet: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  bulletDot: { width: 20, height: 20, borderRadius: 10, backgroundColor: 'rgba(251,191,36,0.16)', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: 'rgba(251,191,36,0.3)' },
+  bulletDot: { width: 20, height: 20, borderRadius: 10, backgroundColor: 'rgba(212,255,61,0.16)', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: 'rgba(212,255,61,0.3)' },
   bulletText: { fontSize: 13, color: '#FFFFFF', fontWeight: '500', flex: 1 },
 })
 
@@ -440,7 +440,7 @@ export default function SignInScreen() {
     return (
       <View style={styles.root}>
         <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
-        <LinearGradient colors={[AURORA_NAVY, '#0D2E4A', '#1A0F3A']} locations={[0, 0.5, 1]} style={StyleSheet.absoluteFillObject} />
+        <LinearGradient colors={[AURORA_NAVY, '#0A0A0A', '#0A0A0A']} locations={[0, 0.5, 1]} style={StyleSheet.absoluteFillObject} />
         <View style={styles.glowOrb} />
         <SafeAreaView style={styles.safeArea}>
           <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
@@ -460,7 +460,7 @@ export default function SignInScreen() {
                 </View>
                 {error ? <Text style={styles.errorText}>{error}</Text> : null}
                 <TouchableOpacity onPress={handleVerifyCode} activeOpacity={0.7} disabled={loading || !code} style={loading ? { opacity: 0.6 } : undefined}>
-                  <LinearGradient colors={[AURORA_MAGENTA, '#D946EF']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.emailButton}>
+                  <LinearGradient colors={[AURORA_MAGENTA, '#FF3D8A']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.emailButton}>
                     {loading ? <ActivityIndicator color="#FFFFFF" size="small" /> : <Text style={styles.emailButtonText}>Verify & Sign In</Text>}
                   </LinearGradient>
                 </TouchableOpacity>
@@ -478,7 +478,7 @@ export default function SignInScreen() {
   return (
     <View style={styles.root}>
       <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
-      <LinearGradient colors={[AURORA_NAVY, '#0D2E4A', '#1C1240']} locations={[0, 0.5, 1]} style={StyleSheet.absoluteFillObject} />
+      <LinearGradient colors={[AURORA_NAVY, '#0A0A0A', '#141414']} locations={[0, 0.5, 1]} style={StyleSheet.absoluteFillObject} />
       <View style={styles.glowOrb} />
       <View style={[styles.glowOrb, styles.glowOrbAccent]} />
 
@@ -548,7 +548,7 @@ export default function SignInScreen() {
                       <TextInput style={styles.input} placeholder="Password (optional)" placeholderTextColor="rgba(255,255,255,0.3)" value={password} onChangeText={setPassword} secureTextEntry textContentType="password" />
                       {error ? <Text style={styles.errorText}>{error}</Text> : null}
                       <TouchableOpacity onPress={handleEmailSignIn} activeOpacity={0.7} disabled={loading || !email} style={loading ? { opacity: 0.6 } : undefined}>
-                        <LinearGradient colors={[AURORA_MAGENTA, '#D946EF']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.emailButton}>
+                        <LinearGradient colors={[AURORA_MAGENTA, '#FF3D8A']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.emailButton}>
                           {loading ? <ActivityIndicator color="#FFFFFF" size="small" /> : <Text style={styles.emailButtonText}>Sign in / Sign up</Text>}
                         </LinearGradient>
                       </TouchableOpacity>
@@ -639,7 +639,7 @@ const otpStyles = StyleSheet.create({
   hiddenInput: { position: 'absolute', opacity: 0, height: 0, width: 0 },
   boxes: { flexDirection: 'row', justifyContent: 'center', gap: 8 },
   box: { width: 44, height: 52, borderRadius: 12, borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.12)', backgroundColor: 'rgba(255,255,255,0.06)', justifyContent: 'center', alignItems: 'center' },
-  boxFocused: { borderColor: AURORA_MAGENTA, backgroundColor: 'rgba(251,191,36,0.08)' },
+  boxFocused: { borderColor: AURORA_MAGENTA, backgroundColor: 'rgba(212,255,61,0.08)' },
   boxFilled: { borderColor: 'rgba(255,255,255,0.25)', backgroundColor: 'rgba(255,255,255,0.08)' },
   digit: { fontSize: 22, fontWeight: '700', color: '#FFFFFF' },
   digitFilled: { color: '#FFFFFF' },

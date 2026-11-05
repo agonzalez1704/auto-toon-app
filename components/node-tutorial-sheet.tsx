@@ -68,7 +68,7 @@ export function NodeTutorialSheet({ storageKey, title, intro, items, ctaLabel = 
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.headerIcon}>
-              <LinearGradient colors={['#6366F1', '#A855F7']} style={StyleSheet.absoluteFillObject} />
+              <LinearGradient colors={['#A3A3A3', '#A855F7']} style={StyleSheet.absoluteFillObject} />
               <SparkleIcon />
             </View>
             <View style={styles.headerText}>

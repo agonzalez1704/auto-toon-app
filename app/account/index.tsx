@@ -14,8 +14,8 @@ import { useSubscriptionStore } from '@/stores/use-subscription-store'
 import { useCreditsStore } from '@/stores/use-credits-store'
 import { useAIConsentStore } from '@/stores/use-ai-consent-store'
 
-const BRAND = '#8B5CF6'
-const BRAND_CYAN = '#06B6D4'
+const BRAND = '#FF3D8A'
+const BRAND_CYAN = '#141414'
 
 // ─── Icons ──────────────────────────────────────────────────────────────
 
@@ -132,7 +132,7 @@ export default function AccountScreen() {
               onPress={() => router.push('/account/credits')}
               activeOpacity={0.7}
             >
-              <View style={[styles.menuIconWrap, { backgroundColor: 'rgba(251,191,36,0.12)' }]}>
+              <View style={[styles.menuIconWrap, { backgroundColor: 'rgba(212,255,61,0.12)' }]}>
                 <CoinSmallIcon />
               </View>
               <View style={styles.menuTextWrap}>
@@ -214,7 +214,7 @@ function PrivacyRow_Inline() {
   void acceptConsent
   return (
     <TouchableOpacity style={styles.menuItem} onPress={handlePress} activeOpacity={0.7}>
-      <View style={[styles.menuIconWrap, { backgroundColor: 'rgba(251,191,36,0.12)' }]}>
+      <View style={[styles.menuIconWrap, { backgroundColor: 'rgba(212,255,61,0.12)' }]}>
         <ShieldIcon />
       </View>
       <View style={styles.menuTextWrap}>
@@ -233,7 +233,7 @@ function PrivacyRow_Inline() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#193153',
+    backgroundColor: '#0A0A0A',
   },
   safeArea: { flex: 1 },
   scrollContent: {

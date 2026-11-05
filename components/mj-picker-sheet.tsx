@@ -14,7 +14,7 @@ import type { MjKitOption } from '@/lib/mj-photo-kit'
 
 const BG = '#1F3E6F'               // slightly lighter than panel BG for visual layering
 const BG_OVERLAY = 'rgba(8,18,38,0.72)'
-const CYAN = '#06B6D4'
+const CYAN = '#141414'
 const MUTED = 'rgba(255,255,255,0.55)'
 const BORDER = 'rgba(255,255,255,0.08)'
 

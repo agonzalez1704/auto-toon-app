@@ -20,8 +20,8 @@ import Svg, {
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window')
 
 // Brand palette (web brand book — violet/cyan/slate)
-const AURORA_NAVY = '#193153'
-const AURORA_TEAL = '#06B6D4' // theme.palette.cyan
+const AURORA_NAVY = '#0A0A0A'
+const AURORA_TEAL = '#141414' // the redesign is monochrome: the photos bring the colour
 const AURORA_MAGENTA = '#FF3D8A' // theme.palette.violet
 const AURORA_PINK = '#FF3D8A' // theme.palette.violetLight
 
@@ -117,7 +117,7 @@ function GradientCTA({
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={0.85}>
       <LinearGradient
-        colors={[AURORA_MAGENTA, '#D946EF']}
+        colors={[AURORA_MAGENTA, '#FF3D8A']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={[styles.ctaButton, large && styles.ctaLarge]}
@@ -160,9 +160,9 @@ function HeroScreen({
       <LinearGradient
         colors={[
           'transparent',
-          'rgba(25,49,83,0.25)',
-          'rgba(11,87,119,0.55)',
-          'rgba(25,49,83,0.92)',
+          'rgba(10,10,10,0.25)',
+          'rgba(20,20,20,0.55)',
+          'rgba(10,10,10,0.92)',
         ]}
         locations={[0.15, 0.4, 0.65, 1]}
         style={StyleSheet.absoluteFillObject}
@@ -216,10 +216,10 @@ function GalleryScreen({
       {/* Aurora overlay gradient */}
       <LinearGradient
         colors={[
-          'rgba(25,49,83,0.65)',
-          'rgba(11,87,119,0.15)',
-          'rgba(11,87,119,0.15)',
-          'rgba(25,49,83,0.8)',
+          'rgba(10,10,10,0.65)',
+          'rgba(20,20,20,0.15)',
+          'rgba(20,20,20,0.15)',
+          'rgba(10,10,10,0.8)',
         ]}
         locations={[0, 0.25, 0.65, 1]}
         style={StyleSheet.absoluteFillObject}
@@ -468,10 +468,10 @@ function CreditsScreen({
       {/* Aurora gradient overlay */}
       <LinearGradient
         colors={[
-          'rgba(25,49,83,0.94)',
-          'rgba(11,87,119,0.88)',
-          'rgba(91,33,182,0.82)',
-          'rgba(251,191,36,0.65)',
+          'rgba(10,10,10,0.94)',
+          'rgba(20,20,20,0.88)',
+          'rgba(10,10,10,0.82)',
+          'rgba(212,255,61,0.65)',
         ]}
         locations={[0, 0.35, 0.65, 1]}
         style={StyleSheet.absoluteFillObject}
@@ -503,7 +503,7 @@ function CreditsScreen({
               </SvgLinearGradient>
               <SvgLinearGradient id="innerGlow" x1="0" y1="0" x2="0" y2="1">
                 <Stop offset="0" stopColor="#FEF3C7" stopOpacity="0.3" />
-                <Stop offset="1" stopColor="#06B6D4" stopOpacity="0" />
+                <Stop offset="1" stopColor="#141414" stopOpacity="0" />
               </SvgLinearGradient>
             </Defs>
             {/* Shadow */}
@@ -715,7 +715,7 @@ const styles = StyleSheet.create({
     fontSize: 48,
     fontWeight: '900',
     color: '#78350F',
-    textShadowColor: 'rgba(254,243,199,0.4)',
+    textShadowColor: 'rgba(250,250,250,0.4)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
   },
@@ -738,7 +738,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.08)',
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(251,191,36,0.15)',
+    borderColor: 'rgba(212,255,61,0.15)',
     paddingVertical: 6,
     paddingHorizontal: 20,
   },
@@ -752,7 +752,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 8,
-    backgroundColor: 'rgba(251,191,36,0.15)',
+    backgroundColor: 'rgba(212,255,61,0.15)',
     justifyContent: 'center',
     alignItems: 'center',
   },

@@ -23,7 +23,7 @@ import Svg, { Path as SvgPath } from 'react-native-svg'
 import { MidjourneyParamsPanel, DEFAULT_MJ_PARAMS, buildMjFlags, type MjParams } from '@/components/midjourney-params'
 
 const { width: SCREEN_W } = Dimensions.get('window')
-const BG = '#193153'
+const BG = '#0A0A0A'
 const ACCENT = '#D4FF3D'
 const TEAL = '#0B5777'
 const UPSCALE_BLUE = '#3B82F6'
@@ -298,7 +298,7 @@ export default function CampaignScreen() {
                   key={opt.value}
                   style={{
                     paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12,
-                    backgroundColor: active ? 'rgba(251,191,36,0.12)' : CARD_BG,
+                    backgroundColor: active ? 'rgba(212,255,61,0.12)' : CARD_BG,
                     borderWidth: 1, borderColor: active ? ACCENT : CARD_BORDER,
                     alignItems: 'center',
                   }}
@@ -306,7 +306,7 @@ export default function CampaignScreen() {
                   activeOpacity={0.8}
                 >
                   <Text style={{ fontSize: 13, fontWeight: '600', color: active ? ACCENT : 'rgba(255,255,255,0.6)' }}>{opt.label}</Text>
-                  <Text style={{ fontSize: 10, color: active ? 'rgba(251,191,36,0.7)' : 'rgba(255,255,255,0.3)', marginTop: 2 }}>{opt.credits} cr</Text>
+                  <Text style={{ fontSize: 10, color: active ? 'rgba(212,255,61,0.7)' : 'rgba(255,255,255,0.3)', marginTop: 2 }}>{opt.credits} cr</Text>
                 </TouchableOpacity>
               )
             })}
@@ -417,7 +417,7 @@ export default function CampaignScreen() {
                   onPress={handleUpscale}
                   activeOpacity={0.8}
                 >
-                  <LinearGradient colors={[UPSCALE_BLUE, '#6366F1']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFillObject} />
+                  <LinearGradient colors={[UPSCALE_BLUE, '#A3A3A3']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFillObject} />
                   <UpscaleIcon />
                   <Text style={styles.upscaleBtnText}>
                     Upscale {selectedForUpscale.length} to 4K ({upscaleCost} credits)

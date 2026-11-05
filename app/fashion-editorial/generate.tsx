@@ -18,7 +18,7 @@ import { MidjourneyParamsPanel, DEFAULT_MJ_PARAMS, buildMjFlags, type MjParams }
 import { ParticleSphere } from '@/components/particle-sphere'
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window')
-const BG = '#193153'
+const BG = '#0A0A0A'
 const ACCENT = '#D4FF3D'
 const TEAL = '#0B5777'
 const MUTED = 'rgba(255,255,255,0.55)'
@@ -648,7 +648,7 @@ const styles = StyleSheet.create({
   },
   modelOptionSelected: {
     borderColor: ACCENT,
-    backgroundColor: 'rgba(251,191,36,0.08)',
+    backgroundColor: 'rgba(212,255,61,0.08)',
   },
   modelOptionLabel: { flex: 1, fontSize: 11, fontWeight: '600' as const, color: 'rgba(255,255,255,0.5)' },
   modelOptionLabelSelected: { color: '#FFFFFF' },
@@ -668,7 +668,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: CARD_BORDER,
   },
-  aspectPillSelected: { borderColor: ACCENT, backgroundColor: 'rgba(251,191,36,0.08)' },
+  aspectPillSelected: { borderColor: ACCENT, backgroundColor: 'rgba(212,255,61,0.08)' },
   aspectPillText: { fontSize: 12, fontWeight: '600' as const, color: 'rgba(255,255,255,0.5)' },
   aspectPillTextSelected: { color: '#FFFFFF' },
 

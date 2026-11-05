@@ -160,7 +160,7 @@ export function CarouselPickerModal({
                   style={[
                     styles.selectBtn,
                     isSelected && {
-                      backgroundColor: 'rgba(251,191,36,0.12)',
+                      backgroundColor: 'rgba(212,255,61,0.12)',
                       borderWidth: 1,
                       borderColor: item.color ?? '#D4FF3D',
                     },
@@ -209,7 +209,7 @@ export function CarouselPickerModal({
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(25,49,83,0.75)',
+    backgroundColor: 'rgba(10,10,10,0.75)',
   },
   sheet: {
     backgroundColor: '#162844',

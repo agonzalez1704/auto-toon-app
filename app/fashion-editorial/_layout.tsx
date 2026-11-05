@@ -5,7 +5,7 @@ export default function FashionEditorialLayout() {
     <Stack
       screenOptions={{
         headerShown: false,
-        contentStyle: { backgroundColor: '#193153' },
+        contentStyle: { backgroundColor: '#0A0A0A' },
         animation: 'slide_from_right',
       }}
     >

@@ -18,8 +18,8 @@ import Svg, {
 WebBrowser.maybeCompleteAuthSession()
 
 // Brand palette (rebound to web brand book — violet/cyan/slate)
-const AURORA_NAVY = '#193153'
-const AURORA_TEAL = '#06B6D4' // theme.palette.cyan
+const AURORA_NAVY = '#0A0A0A'
+const AURORA_TEAL = '#141414' // theme.palette.cyan
 const AURORA_MAGENTA = '#FF3D8A' // theme.palette.violet
 const AURORA_PINK = '#FF3D8A' // theme.palette.violetLight
 
@@ -192,7 +192,7 @@ export default function SignUpScreen() {
       <View style={styles.root}>
         <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
         <LinearGradient
-          colors={[AURORA_NAVY, '#0D2E4A', '#1A0F3A']}
+          colors={[AURORA_NAVY, '#0A0A0A', '#0A0A0A']}
           locations={[0, 0.5, 1]}
           style={StyleSheet.absoluteFillObject}
         />
@@ -250,7 +250,7 @@ export default function SignUpScreen() {
                   style={loading ? { opacity: 0.6 } : undefined}
                 >
                   <LinearGradient
-                    colors={[AURORA_MAGENTA, '#D946EF']}
+                    colors={[AURORA_MAGENTA, '#FF3D8A']}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
                     style={styles.emailButton}
@@ -289,7 +289,7 @@ export default function SignUpScreen() {
     <View style={styles.root}>
       <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
       <LinearGradient
-        colors={[AURORA_NAVY, '#0D2E4A', '#1C1240']}
+        colors={[AURORA_NAVY, '#0A0A0A', '#141414']}
         locations={[0, 0.5, 1]}
         style={StyleSheet.absoluteFillObject}
       />
@@ -389,7 +389,7 @@ export default function SignUpScreen() {
                 style={loading ? { opacity: 0.6 } : undefined}
               >
                 <LinearGradient
-                  colors={[AURORA_MAGENTA, '#D946EF']}
+                  colors={[AURORA_MAGENTA, '#FF3D8A']}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                   style={styles.emailButton}
@@ -489,7 +489,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.06)',
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(251,191,36,0.12)',
+    borderColor: 'rgba(212,255,61,0.12)',
     padding: 24,
     marginBottom: 24,
   },
@@ -655,7 +655,7 @@ const otpStyles = StyleSheet.create({
   },
   boxFocused: {
     borderColor: AURORA_MAGENTA,
-    backgroundColor: 'rgba(251,191,36,0.08)',
+    backgroundColor: 'rgba(212,255,61,0.08)',
   },
   boxFilled: {
     borderColor: 'rgba(255,255,255,0.25)',

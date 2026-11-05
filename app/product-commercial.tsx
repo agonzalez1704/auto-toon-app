@@ -23,7 +23,7 @@ import Svg, { Path as SvgPath, Rect } from 'react-native-svg'
 
 const { width: SCREEN_W } = Dimensions.get('window')
 
-const AURORA_NAVY = '#193153'
+const AURORA_NAVY = '#0A0A0A'
 const AURORA_MAGENTA = '#D4FF3D'
 
 const MODEL_OPTIONS: { id: CommercialModel; label: string }[] = [
@@ -438,7 +438,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
     padding: 12,
-    backgroundColor: 'rgba(25,49,83,0.85)',
+    backgroundColor: 'rgba(10,10,10,0.85)',
   },
   imageLabelText: { fontSize: 13, fontWeight: '600', color: '#FFFFFF' },
 
@@ -470,8 +470,8 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.08)',
   },
   chipSelected: {
-    backgroundColor: 'rgba(251,191,36,0.18)',
-    borderColor: 'rgba(251,191,36,0.5)',
+    backgroundColor: 'rgba(212,255,61,0.18)',
+    borderColor: 'rgba(212,255,61,0.5)',
   },
   chipLabel: { fontSize: 13, fontWeight: '600', color: 'rgba(255,255,255,0.55)' },
   chipLabelSelected: { color: '#FFFFFF' },
@@ -529,7 +529,7 @@ const styles = StyleSheet.create({
     height: 200,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(251,191,36,0.3)',
+    borderColor: 'rgba(212,255,61,0.3)',
   },
   phaseTimerText: {
     fontSize: 22,

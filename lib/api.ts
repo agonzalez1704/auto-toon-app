@@ -51,13 +51,14 @@ api.interceptors.request.use(async (config: InternalAxiosRequestConfig) => {
 // Response interceptor: normalize errors + handle consent gates
 api.interceptors.response.use(
   (response) => response,
-  (error: AxiosError<{ error?: string; message?: string; code?: string }>) => {
+  (error: AxiosError<{ error?: string; message?: string; code?: string; codigo?: string }>) => {
     const message =
       error.response?.data?.error ||
       error.response?.data?.message ||
       error.message ||
       'Something went wrong'
-    const code = error.response?.data?.code
+    // The studio's newer routes say `codigo` (lib/errores on the web); the older ones `code`.
+    const code = error.response?.data?.code ?? error.response?.data?.codigo
     const url = error.config?.url
     const method = error.config?.method?.toUpperCase()
     if (error.response?.status) {
@@ -73,7 +74,7 @@ api.interceptors.response.use(
     // Server-side consent gates (Apple guideline 5.1.1(i) / 5.1.2(i)).
     // Sync the local store and pop the appropriate modal so the user can
     // recover without the screen showing a generic error.
-    if (error.response?.status === 403 && code === 'AI_CONSENT_REQUIRED') {
+    if (error.response?.status === 403 && (code === 'AI_CONSENT_REQUIRED' || code === 'consentimiento_ia')) {
       import('@/stores/use-ai-consent-store').then(({ useAIConsentStore }) => {
         useAIConsentStore.setState({ accepted: false, showConsentModal: true })
       })

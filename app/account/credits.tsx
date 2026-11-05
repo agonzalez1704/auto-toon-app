@@ -17,7 +17,7 @@ import { CONFIG } from '@/lib/config'
 import { useAppleCreditPurchase } from '@/lib/use-apple-credit-purchase'
 import type { AppleCreditPack } from '@/lib/iap-apple'
 
-const BRAND = '#8B5CF6'
+const BRAND = '#FF3D8A'
 
 function CoinIcon() {
   return (
@@ -242,7 +242,7 @@ export default function CreditsScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#193153',
+    backgroundColor: '#0A0A0A',
   },
   safeArea: { flex: 1 },
   scrollContent: {

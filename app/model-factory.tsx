@@ -15,7 +15,7 @@ const GRID_GAP = 12
 const GRID_COLS = 2
 const CARD_W = (SCREEN_W - 32 - GRID_GAP) / GRID_COLS
 
-const AURORA_NAVY = '#193153'
+const AURORA_NAVY = '#0A0A0A'
 const AURORA_MAGENTA = '#D4FF3D'
 
 function PlusIcon() {
@@ -356,7 +356,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     padding: 10,
-    backgroundColor: 'rgba(25,49,83,0.85)',
+    backgroundColor: 'rgba(10,10,10,0.85)',
   },
   cardName: {
     fontSize: 13,

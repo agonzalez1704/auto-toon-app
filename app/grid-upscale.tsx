@@ -11,7 +11,7 @@ import { upscaleGrid } from '@/lib/api'
 import { queryKeys } from '@/lib/query'
 import { useCreditsStore } from '@/stores/use-credits-store'
 
-const BRAND = '#8B5CF6'
+const BRAND = '#FF3D8A'
 const CREDITS_PER_CELL = 3
 const { width: SCREEN_W } = Dimensions.get('window')
 
@@ -269,7 +269,7 @@ export default function GridUpscaleScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#193153',
+    backgroundColor: '#0A0A0A',
   },
   safeArea: {
     flex: 1,

@@ -455,7 +455,7 @@ export default function ImageViewerScreen() {
               }}
               activeOpacity={0.8}
             >
-              <LinearGradient colors={['#06B6D4', '#3B82F6']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFillObject} />
+              <LinearGradient colors={['#141414', '#3B82F6']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFillObject} />
               <AngleIcon />
               <Text style={styles.actionText}>Multi-Angle</Text>
             </TouchableOpacity>

@@ -115,6 +115,14 @@ const FEATURES: Feature[] = [
     route: '/assets',
   },
   {
+    key: 'director',
+    title: 'Director (anterior)',
+    description: 'El Crear de antes, con la conversación',
+    icon: ModelFactoryIcon,
+    iconTintColor: theme.colors.accentSoft,
+    route: '/director',
+  },
+  {
     key: 'account',
     title: 'Cuenta',
     description: 'Tu perfil, tu saldo y cerrar sesión',

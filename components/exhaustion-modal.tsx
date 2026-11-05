@@ -121,7 +121,7 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(251,191,36,0.4)',
+    borderColor: 'rgba(212,255,61,0.4)',
   },
   secondaryBtnText: { color: BRAND, fontSize: 15, fontWeight: '600' },
   dismissBtn: { alignItems: 'center', paddingVertical: 10 },

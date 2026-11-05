@@ -374,9 +374,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   topButtonActive: {
-    backgroundColor: 'rgba(251,191,36,0.2)',
+    backgroundColor: 'rgba(212,255,61,0.2)',
     borderWidth: 1,
-    borderColor: 'rgba(251,191,36,0.4)',
+    borderColor: 'rgba(212,255,61,0.4)',
   },
   topTitle: {
     flex: 1,

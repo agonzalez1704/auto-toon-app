@@ -19,7 +19,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import Svg, { Path as SvgPath, Defs, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg'
 
 const { width: SCREEN_W } = Dimensions.get('window')
-const BG = '#193153'
+const BG = '#0A0A0A'
 const ACCENT = '#D4FF3D'
 const TEAL = '#0B5777'
 const UPSCALE_BLUE = '#3B82F6'
@@ -387,7 +387,7 @@ export default function MultiAngleScreen() {
                 activeOpacity={0.8}
                 disabled={!sourceUrl}
               >
-                <LinearGradient colors={['#06B6D4', '#3B82F6', BG]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFillObject} />
+                <LinearGradient colors={['#141414', '#3B82F6', BG]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFillObject} />
                 <Text style={styles.generateBtnText}>Generate Camera Angles ({costLabel})</Text>
               </TouchableOpacity>
 
@@ -448,7 +448,7 @@ export default function MultiAngleScreen() {
                   onPress={handleUpscale}
                   activeOpacity={0.8}
                 >
-                  <LinearGradient colors={[UPSCALE_BLUE, '#6366F1']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFillObject} />
+                  <LinearGradient colors={[UPSCALE_BLUE, '#A3A3A3']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFillObject} />
                   <UpscaleIcon />
                   <Text style={styles.upscaleBtnText}>
                     Upscale {selectedForUpscale.length} to 4K ({upscaleCost} credits)
@@ -531,11 +531,11 @@ const styles = StyleSheet.create({
     borderColor: CARD_BORDER,
     alignItems: 'center',
   },
-  chipActive: { borderColor: '#06B6D4', backgroundColor: 'rgba(6,182,212,0.12)' },
+  chipActive: { borderColor: '#141414', backgroundColor: 'rgba(6,182,212,0.12)' },
   modelChip: { flexDirection: 'row', gap: 8 },
   modelChipText: { alignItems: 'center' },
   chipText: { fontSize: 13, fontWeight: '600', color: 'rgba(255,255,255,0.6)' },
-  chipTextActive: { color: '#06B6D4' },
+  chipTextActive: { color: '#141414' },
   chipSub: { fontSize: 10, color: 'rgba(255,255,255,0.3)', marginTop: 2 },
   chipSubActive: { color: 'rgba(6,182,212,0.7)' },
 

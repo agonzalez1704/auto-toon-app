@@ -93,7 +93,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderWidth: 1,
-    borderColor: 'rgba(251,191,36,0.35)',
+    borderColor: 'rgba(212,255,61,0.35)',
     maxWidth: '88%',
   },
   dot: {

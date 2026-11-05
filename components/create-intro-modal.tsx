@@ -9,8 +9,8 @@ import Svg, { Path as SvgPath } from 'react-native-svg'
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 
-const BRAND = '#8B5CF6'
-const BRAND_CYAN = '#06B6D4'
+const BRAND = '#FF3D8A'
+const BRAND_CYAN = '#141414'
 const { width: SCREEN_W } = Dimensions.get('window')
 const IMAGE_SIZE = (SCREEN_W - 80) / 2
 

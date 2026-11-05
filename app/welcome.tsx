@@ -15,15 +15,15 @@ import Svg, {
 const { width: SCREEN_W } = Dimensions.get('window')
 
 // Brand palette (web brand book — violet/cyan/slate)
-const AURORA_NAVY = '#193153'
-const AURORA_TEAL = '#06B6D4' // theme.palette.cyan
+const AURORA_NAVY = '#0A0A0A'
+const AURORA_TEAL = '#141414' // theme.palette.cyan
 const AURORA_MAGENTA = '#FF3D8A' // theme.palette.violet
 const AURORA_PINK = '#FF3D8A' // theme.palette.violetLight
 
 // ─── Confetti Particle ──────────────────────────────────────────────────
 
 // Brand confetti — violet primary + fuchsia secondary + accent supports
-const CONFETTI_COLORS = [AURORA_MAGENTA, '#D946EF', '#E879F9', AURORA_PINK, '#10B981', '#22D3EE']
+const CONFETTI_COLORS = [AURORA_MAGENTA, '#FF3D8A', '#FF3D8A', AURORA_PINK, '#10B981', '#A3A3A3']
 
 function ConfettiParticle({ delay, color, left }: { delay: number; color: string; left: number }) {
   const translateY = useRef(new Animated.Value(-20)).current
@@ -70,11 +70,11 @@ function CreditsBadge() {
       <Defs>
         <SvgLinearGradient id="coinGrad" x1="0" y1="0" x2="1" y2="1">
           <Stop offset="0" stopColor="#FF3D8A" />
-          <Stop offset="1" stopColor="#D946EF" />
+          <Stop offset="1" stopColor="#FF3D8A" />
         </SvgLinearGradient>
         <SvgLinearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
           <Stop offset="0" stopColor={AURORA_MAGENTA} />
-          <Stop offset="1" stopColor="#D946EF" />
+          <Stop offset="1" stopColor="#FF3D8A" />
         </SvgLinearGradient>
       </Defs>
       {/* Outer glow ring */}
@@ -188,7 +188,7 @@ export default function WelcomeScreen() {
   return (
     <View style={styles.root}>
       <LinearGradient
-        colors={[AURORA_NAVY, '#0D2E4A', '#1A0F3A', AURORA_NAVY]}
+        colors={[AURORA_NAVY, '#0A0A0A', '#0A0A0A', AURORA_NAVY]}
         locations={[0, 0.35, 0.65, 1]}
         style={StyleSheet.absoluteFillObject}
       />
@@ -256,7 +256,7 @@ export default function WelcomeScreen() {
             activeOpacity={0.85}
           >
             <LinearGradient
-              colors={[AURORA_MAGENTA, '#D946EF']}
+              colors={[AURORA_MAGENTA, '#FF3D8A']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={StyleSheet.absoluteFillObject}
@@ -333,10 +333,10 @@ const styles = StyleSheet.create({
   // Credits card
   creditsCard: {
     alignItems: 'center',
-    backgroundColor: 'rgba(251,191,36,0.08)',
+    backgroundColor: 'rgba(212,255,61,0.08)',
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(251,191,36,0.2)',
+    borderColor: 'rgba(212,255,61,0.2)',
     paddingVertical: 20,
     paddingHorizontal: 40,
     marginBottom: 20,
@@ -350,7 +350,7 @@ const styles = StyleSheet.create({
   creditsLabel: {
     fontSize: 16,
     fontWeight: '600',
-    color: 'rgba(251,191,36,0.8)',
+    color: 'rgba(212,255,61,0.8)',
     marginTop: 2,
   },
 
