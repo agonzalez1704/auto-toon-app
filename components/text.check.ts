@@ -49,8 +49,8 @@ assert.ok(/fontFamily:\s*familyFor/.test(wrapper), `${OWNER} no longer sets a fo
 const layout = readFileSync('app/_layout.tsx', 'utf8')
 for (const weight of ['400Regular', '500Medium', '600SemiBold', '700Bold']) {
     assert.ok(
-        layout.includes(`InstrumentSans_${weight}`),
-        `app/_layout.tsx does not load InstrumentSans_${weight}, so text asking for it falls back silently`,
+        layout.includes(`Geist_${weight}`),
+        `app/_layout.tsx does not load Geist_${weight}, so text asking for it falls back silently`,
     )
 }
 

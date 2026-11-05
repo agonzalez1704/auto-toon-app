@@ -373,7 +373,7 @@ export default function ImageViewerScreen() {
               }}
               activeOpacity={0.8}
             >
-              <LinearGradient colors={['#FBBF24', '#F59E0B', '#B45309']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFillObject} />
+              <LinearGradient colors={['#D4FF3D', '#C2EE2B', '#B45309']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFillObject} />
               <CameraIcon />
               <Text style={styles.actionText}>Create Photoshoot</Text>
             </TouchableOpacity>
@@ -394,7 +394,7 @@ export default function ImageViewerScreen() {
               }}
               activeOpacity={0.8}
             >
-              <LinearGradient colors={['#FBBF24', '#F59E0B', '#B45309']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFillObject} />
+              <LinearGradient colors={['#D4FF3D', '#C2EE2B', '#B45309']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFillObject} />
               <VideoIcon />
               <Text style={styles.actionText}>Video</Text>
             </TouchableOpacity>
@@ -408,7 +408,7 @@ export default function ImageViewerScreen() {
               }}
               activeOpacity={0.8}
             >
-              <LinearGradient colors={['#FBBF24', '#F59E0B', '#B45309']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFillObject} />
+              <LinearGradient colors={['#D4FF3D', '#C2EE2B', '#B45309']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFillObject} />
               <ClapperIcon />
               <Text style={styles.actionText}>Commercial</Text>
             </TouchableOpacity>
@@ -441,7 +441,7 @@ export default function ImageViewerScreen() {
               }}
               activeOpacity={0.8}
             >
-              <LinearGradient colors={['#F59E0B', '#EF4444']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFillObject} />
+              <LinearGradient colors={['#C2EE2B', '#EF4444']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFillObject} />
               <RelightIcon />
               <Text style={styles.actionText}>Relight</Text>
             </TouchableOpacity>

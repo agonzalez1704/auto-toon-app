@@ -5,7 +5,7 @@ import Svg, { Path as SvgPath } from 'react-native-svg'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useAIConsentStore } from '@/stores/use-ai-consent-store'
 
-const BRAND = '#FBBF24'
+const BRAND = '#D4FF3D'
 
 const PROVIDERS: Array<{ name: string; data: string; purpose: string }> = [
   { name: 'OpenAI (GPT Image 2)',      data: 'Reference photo + prompt', purpose: 'Image generation' },
@@ -143,7 +143,7 @@ export function AIConsentModal() {
               activeOpacity={0.8}
             >
               <LinearGradient
-                colors={['#FBBF24', '#F59E0B', '#B45309']}
+                colors={['#D4FF3D', '#C2EE2B', '#B45309']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={StyleSheet.absoluteFillObject}

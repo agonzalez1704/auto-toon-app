@@ -24,7 +24,7 @@ import { MjPickerSheet } from './mj-picker-sheet'
 // ─── Theme ────────────────────────────────────────────────────────
 
 const CYAN = '#06B6D4'
-const AMBER = '#FBBF24'
+const AMBER = '#D4FF3D'
 const MUTED = 'rgba(255,255,255,0.55)'
 const CARD_BG = 'rgba(255,255,255,0.035)'
 const CARD_BORDER = 'rgba(255,255,255,0.06)'

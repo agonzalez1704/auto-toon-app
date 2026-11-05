@@ -24,7 +24,7 @@ import Svg, { Path as SvgPath, Rect } from 'react-native-svg'
 const { width: SCREEN_W } = Dimensions.get('window')
 
 const AURORA_NAVY = '#193153'
-const AURORA_MAGENTA = '#FBBF24'
+const AURORA_MAGENTA = '#D4FF3D'
 
 const MODEL_OPTIONS: { id: CommercialModel; label: string }[] = [
   { id: 'seedance-2-pro', label: 'Seedance 2.0' },
@@ -382,7 +382,7 @@ export default function ProductCommercialScreen() {
           {/* Generate */}
           <TouchableOpacity style={styles.generateButton} onPress={handleGenerate} activeOpacity={0.8}>
             <LinearGradient
-              colors={['#FBBF24', '#F59E0B', '#B45309']}
+              colors={['#D4FF3D', '#C2EE2B', '#B45309']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={StyleSheet.absoluteFillObject}

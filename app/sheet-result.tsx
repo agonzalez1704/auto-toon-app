@@ -74,7 +74,7 @@ function SparkleIcon() {
     <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
       <SvgPath
         d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8L12 2z"
-        fill="#FBBF24"
+        fill="#D4FF3D"
         stroke="none"
       />
     </Svg>
@@ -187,7 +187,7 @@ export default function SheetResultScreen() {
               disabled={saving}
             >
               <LinearGradient
-                colors={['#FBBF24', '#F59E0B', '#B45309']}
+                colors={['#D4FF3D', '#C2EE2B', '#B45309']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={StyleSheet.absoluteFillObject}

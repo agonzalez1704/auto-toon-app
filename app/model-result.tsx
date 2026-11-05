@@ -18,7 +18,7 @@ import Svg, { Path as SvgPath } from 'react-native-svg'
 const { width: SCREEN_W } = Dimensions.get('window')
 
 const AURORA_NAVY = '#193153'
-const AURORA_MAGENTA = '#FBBF24'
+const AURORA_MAGENTA = '#D4FF3D'
 
 function CloseIcon() {
   return (
@@ -322,7 +322,7 @@ export default function ModelResultScreen() {
             activeOpacity={0.8}
           >
             <LinearGradient
-              colors={['#FBBF24', '#F59E0B', '#B45309']}
+              colors={['#D4FF3D', '#C2EE2B', '#B45309']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={StyleSheet.absoluteFillObject}
@@ -364,7 +364,7 @@ export default function ModelResultScreen() {
                 onPress={confirmSaveToGallery}
               >
                 <LinearGradient
-                  colors={['#FBBF24', '#F59E0B']}
+                  colors={['#D4FF3D', '#C2EE2B']}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
                   style={[StyleSheet.absoluteFillObject, { borderRadius: 12 }]}

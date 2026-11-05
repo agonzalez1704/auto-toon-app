@@ -17,8 +17,8 @@ const { width: SCREEN_W } = Dimensions.get('window')
 // Brand palette (web brand book — violet/cyan/slate)
 const AURORA_NAVY = '#193153'
 const AURORA_TEAL = '#06B6D4' // theme.palette.cyan
-const AURORA_MAGENTA = '#7C3AED' // theme.palette.violet
-const AURORA_PINK = '#A78BFA' // theme.palette.violetLight
+const AURORA_MAGENTA = '#FF3D8A' // theme.palette.violet
+const AURORA_PINK = '#FF3D8A' // theme.palette.violetLight
 
 // ─── Confetti Particle ──────────────────────────────────────────────────
 
@@ -69,7 +69,7 @@ function CreditsBadge() {
     <Svg width={80} height={80} viewBox="0 0 80 80">
       <Defs>
         <SvgLinearGradient id="coinGrad" x1="0" y1="0" x2="1" y2="1">
-          <Stop offset="0" stopColor="#7C3AED" />
+          <Stop offset="0" stopColor="#FF3D8A" />
           <Stop offset="1" stopColor="#D946EF" />
         </SvgLinearGradient>
         <SvgLinearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
@@ -344,7 +344,7 @@ const styles = StyleSheet.create({
   creditsNumber: {
     fontSize: 56,
     fontWeight: '900',
-    color: '#A78BFA',
+    color: '#FF3D8A',
     lineHeight: 64,
   },
   creditsLabel: {

@@ -6,7 +6,7 @@ import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-na
 import { theme } from '@/constants/theme'
 import type { ProductAngleKey } from '@/lib/api'
 
-const ACCENT = '#F59E0B'
+const ACCENT = '#C2EE2B'
 const LABELS: Record<ProductAngleKey, string> = {
   front: 'Frente', back: 'Detrás', left: 'Izq.', right: 'Der.', top: 'Arriba', bottom: 'Abajo',
 }

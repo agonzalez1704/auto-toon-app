@@ -19,7 +19,7 @@ const { width: SCREEN_W } = Dimensions.get('window')
 
 const AURORA_NAVY = '#193153'
 const AURORA_TEAL = '#0B5777'
-const AURORA_MAGENTA = '#FBBF24'
+const AURORA_MAGENTA = '#D4FF3D'
 
 // Credit cost for video (matches backend: 10 credits per 5s, 20 per 10s)
 function getVideoCreditCost(duration: 5 | 10): number {
@@ -673,7 +673,7 @@ export default function VideoGeneratorScreen() {
           >
             {plan && (
               <LinearGradient
-                colors={['#FBBF24', '#F59E0B', '#B45309']}
+                colors={['#D4FF3D', '#C2EE2B', '#B45309']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={StyleSheet.absoluteFillObject}

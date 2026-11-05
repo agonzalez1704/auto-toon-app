@@ -22,8 +22,8 @@ const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window')
 // Brand palette (web brand book — violet/cyan/slate)
 const AURORA_NAVY = '#193153'
 const AURORA_TEAL = '#06B6D4' // theme.palette.cyan
-const AURORA_MAGENTA = '#7C3AED' // theme.palette.violet
-const AURORA_PINK = '#A78BFA' // theme.palette.violetLight
+const AURORA_MAGENTA = '#FF3D8A' // theme.palette.violet
+const AURORA_PINK = '#FF3D8A' // theme.palette.violetLight
 
 const COLUMN_COUNT = 3
 const IMAGE_GAP = 4
@@ -394,7 +394,7 @@ function CoinSvg({ size }: { size: number }) {
   return (
     <Svg width={size} height={size} viewBox="0 0 48 48">
       {/* Outer ring */}
-      <Circle cx="24" cy="24" r="22" fill="#A78BFA" />
+      <Circle cx="24" cy="24" r="22" fill="#FF3D8A" />
       <Circle cx="24" cy="24" r="22" fill="url(#coinGrad)" />
       {/* Inner ring */}
       <Circle cx="24" cy="24" r="18" fill="none" stroke="#FCD34D" strokeWidth="1.5" opacity={0.6} />
@@ -406,7 +406,7 @@ function CoinSvg({ size }: { size: number }) {
       />
       <Defs>
         <SvgLinearGradient id="coinGrad" x1="0" y1="0" x2="0" y2="1">
-          <Stop offset="0" stopColor="#FBBF24" />
+          <Stop offset="0" stopColor="#D4FF3D" />
           <Stop offset="1" stopColor="#D97706" />
         </SvgLinearGradient>
       </Defs>
@@ -497,8 +497,8 @@ function CreditsScreen({
           <Svg width={140} height={140} viewBox="0 0 140 140">
             <Defs>
               <SvgLinearGradient id="bigCoinGrad" x1="0" y1="0" x2="0" y2="1">
-                <Stop offset="0" stopColor="#7C3AED" />
-                <Stop offset="0.5" stopColor="#A78BFA" />
+                <Stop offset="0" stopColor="#FF3D8A" />
+                <Stop offset="0.5" stopColor="#FF3D8A" />
                 <Stop offset="1" stopColor="#D97706" />
               </SvgLinearGradient>
               <SvgLinearGradient id="innerGlow" x1="0" y1="0" x2="0" y2="1">

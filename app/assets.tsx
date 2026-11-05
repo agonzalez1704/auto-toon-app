@@ -12,9 +12,9 @@ import { queryKeys } from '@/lib/query'
 import { theme } from '@/constants/theme'
 import { GlassPill } from '@/components/glass'
 
-const AURORA_NAVY = '#0B0F14' // theme.colors.bg — flat warm-slate
+const AURORA_NAVY = '#0A0A0A' // theme.colors.bg — flat warm-slate
 // Brand-aligned accent (violet, mirrors web brand book)
-const AURORA_MAGENTA = '#7C3AED'
+const AURORA_MAGENTA = '#FF3D8A'
 
 type FilterType = 'all' | 'fashion_editorial' | 'vignette' | 'elements' | 'poster' | '3x3' | 'food' | 'upscaled' | 'restored' | 'video'
 

@@ -23,9 +23,9 @@ const { width: SCREEN_W } = Dimensions.get('window')
 // Brand palette
 const AURORA_NAVY = '#193153'
 const AURORA_TEAL = '#06B6D4'
-const AURORA_MAGENTA = '#7C3AED'
-const AURORA_PINK = '#A78BFA'
-const ACCENT = '#FBBF24'
+const AURORA_MAGENTA = '#FF3D8A'
+const AURORA_PINK = '#FF3D8A'
+const ACCENT = '#D4FF3D'
 
 // Hero showcase assets (bundled editorial samples)
 const HERO_IMAGES = [
@@ -188,7 +188,7 @@ function PayPerUsePitch() {
     <View style={pitchStyles.shadowWrap}>
       <View style={pitchStyles.borderWrap}>
         <LinearGradient
-          colors={[ACCENT, '#F59E0B', AURORA_MAGENTA]}
+          colors={[ACCENT, '#C2EE2B', AURORA_MAGENTA]}
           start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
           style={StyleSheet.absoluteFillObject}
         />

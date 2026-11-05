@@ -28,11 +28,11 @@ export const palette = {
   amber: '#F59E0B',
 
   // Editorial warm-slate scale — neutral, lets content provide the color
-  bg: '#0B0F14',         // app deep bg — near-black warm slate
-  bgRaised: '#131820',   // raised surface (cards, stat blocks)
-  bgElevated: '#1B222D', // modal / sheet
-  bgSubtle: '#0E141B',
-  bgOverlay: '#252D3B',  // pressed / hover states
+  bg: '#0A0A0A',         // app deep bg — the web studio's black (redesign 2026-11)
+  bgRaised: '#141414',   // raised surface (cards, stat blocks)
+  bgElevated: '#1A1A1A', // modal / sheet
+  bgSubtle: '#0F0F0F',
+  bgOverlay: '#1F1F1F',  // pressed / hover states
 
   slate900: '#0F172A',
   slate800: '#193153', // legacy navy — DO NOT use for new screens
@@ -46,38 +46,38 @@ export const palette = {
 
 // ── Semantic colors (dark mode primary) ───────────────────────────────
 export const colors = {
-  bg: palette.bg,             // #0B0F14 — near-black warm slate
-  bgRaised: palette.bgRaised, // #131820
-  bgElevated: palette.bgElevated, // #1B222D
-  bgOverlay: '#252D3B',
-  bgDeep: '#070A0F',
+  bg: palette.bg,             // #0A0A0A
+  bgRaised: palette.bgRaised, // #141414
+  bgElevated: palette.bgElevated, // #1A1A1A
+  bgOverlay: '#1F1F1F',
+  bgDeep: '#050505',
   surface: 'rgba(255,255,255,0.04)',
   surfaceRaised: 'rgba(255,255,255,0.07)',
-  border: 'rgba(255,255,255,0.07)',
-  borderStrong: 'rgba(255,255,255,0.14)',
+  border: '#262626',
+  borderStrong: '#3D3D3D',
 
-  text: '#F8FAFC',
-  textMuted: 'rgba(248,250,252,0.72)', // body copy — bumped from 0.55 for readability
-  textDim: 'rgba(248,250,252,0.48)', // labels, metadata
-  textDisabled: 'rgba(248,250,252,0.28)',
+  text: '#FAFAFA',
+  textMuted: '#A3A3A3', // body copy
+  textDim: '#8A8A8A', // labels, metadata
+  textDisabled: '#3D3D3D',
 
-  // Primary accent (amber — primary CTAs, conversion accent, matches login pitch card)
-  accent: '#FBBF24',
-  accentHot: '#F59E0B',
-  accentSoft: 'rgba(251,191,36,0.14)',
-  accentBorder: 'rgba(251,191,36,0.32)',
+  // Primary accent (the web's green: actions that stay on the screen — «Generar»)
+  accent: '#D4FF3D',
+  accentHot: '#C2EE2B',
+  accentSoft: 'rgba(212,255,61,0.14)',
+  accentBorder: 'rgba(212,255,61,0.32)',
 
-  // Secondary accent (violet — brand mark, signature gradient, secondary actions)
-  accent2: palette.violetLight, // #A78BFA — lighter so it reads against dark slate
-  accent2Soft: 'rgba(167,139,250,0.14)',
-  accent2Border: 'rgba(167,139,250,0.32)',
+  // Secondary accent (the web's pink: what was charged, and actions that go on to another screen)
+  accent2: '#FF3D8A',
+  accent2Soft: 'rgba(255,61,138,0.14)',
+  accent2Border: 'rgba(255,61,138,0.32)',
 
   // Tertiary / informational
   info: '#22D3EE',
   infoSoft: 'rgba(34,211,238,0.12)',
 
-  success: '#34D399',
-  warning: '#FBBF24',
+  success: '#4ADE80',
+  warning: '#D4FF3D',
   danger: '#FB7185',
 } as const
 
@@ -85,27 +85,29 @@ export const colors = {
 // Rule: keep hue distance ≤45° for organic look.
 export const gradients = {
   // Primary brand — violet → fuchsia (23° hue, signature gradient)
-  brand: [palette.violet, palette.fuchsia] as const,
-  brandSoft: ['rgba(124,58,237,0.92)', 'rgba(217,70,239,0.82)'] as const,
+  // The redesign is monochrome: the colour comes from the images; the one accent is the green.
+  brand: ['#D4FF3D', '#B8E62E'] as const,
+  brandSoft: ['rgba(212,255,61,0.92)', 'rgba(184,230,46,0.82)'] as const,
   // Wider brand ramp for hero / splash
-  brandWide: [palette.violetDeep, palette.violet, palette.fuchsia] as const,
+  brandWide: ['#1A1A1A', '#0A0A0A', '#0A0A0A'] as const,
   // Mono violet ramp
   violet: [palette.violet, palette.violetSoft] as const,
   violetDeep: [palette.violetDeep, palette.violet] as const,
   // Mono fuchsia ramp
   fuchsia: [palette.fuchsia, palette.fuchsiaLight] as const,
   // Bento card scrims — neutral dark gradient so user's photo provides color
-  fashion: ['rgba(11,15,20,0.45)', 'rgba(11,15,20,0.95)'] as const,
-  relight: ['rgba(11,15,20,0.45)', 'rgba(11,15,20,0.95)'] as const,
-  enhance: ['rgba(11,15,20,0.45)', 'rgba(11,15,20,0.95)'] as const,
-  restore: ['rgba(11,15,20,0.45)', 'rgba(11,15,20,0.95)'] as const,
+  fashion: ['rgba(10,10,10,0.45)', 'rgba(10,10,10,0.95)'] as const,
+  relight: ['rgba(10,10,10,0.45)', 'rgba(10,10,10,0.95)'] as const,
+  enhance: ['rgba(10,10,10,0.45)', 'rgba(10,10,10,0.95)'] as const,
+  restore: ['rgba(10,10,10,0.45)', 'rgba(10,10,10,0.95)'] as const,
   // Ambient page gradient — kept for back-compat but new screens use flat bg
-  pageVignette: ['#0B0F14', '#0B0F14', '#0B0F14'] as const,
+  pageVignette: ['#0A0A0A', '#0A0A0A', '#0A0A0A'] as const,
   // Amber CTA gradient (primary action — matches login pay-per-use card)
-  amberCta: ['#FBBF24', '#F59E0B'] as const,
-  amberCtaSoft: ['rgba(251,191,36,0.95)', 'rgba(245,158,11,0.95)'] as const,
+  // The primary action's green (names kept: screens import them).
+  amberCta: ['#D4FF3D', '#C2EE2B'] as const,
+  amberCtaSoft: ['rgba(212,255,61,0.95)', 'rgba(194,238,43,0.95)'] as const,
   // Subtle halo behind hero card only
-  amberHalo: ['rgba(251,191,36,0.18)', 'rgba(251,191,36,0)'] as const,
+  amberHalo: ['rgba(212,255,61,0.16)', 'rgba(212,255,61,0)'] as const,
 } as const
 
 // ── 8pt spacing scale ─────────────────────────────────────────────────

@@ -31,7 +31,7 @@ function CreditCardIcon() {
 function CoinSmallIcon() {
   return (
     <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
-      <Circle cx="12" cy="12" r="10" fill="#FBBF24" />
+      <Circle cx="12" cy="12" r="10" fill="#D4FF3D" />
       <SvgPath d="M12 7v10M9 9.5l3-2.5 3 2.5" stroke="#78350F" strokeWidth="1.5" strokeLinecap="round" />
     </Svg>
   )
@@ -171,14 +171,14 @@ function ShieldIcon() {
     <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
       <SvgPath
         d="M12 2l7 4v5c0 5.25-3.5 9.74-7 11-3.5-1.26-7-5.75-7-11V6l7-4z"
-        stroke="#FBBF24"
+        stroke="#D4FF3D"
         strokeWidth={1.8}
         strokeLinejoin="round"
         fill="none"
       />
       <SvgPath
         d="M9 12l2 2 4-4"
-        stroke="#FBBF24"
+        stroke="#D4FF3D"
         strokeWidth={2}
         strokeLinecap="round"
         strokeLinejoin="round"

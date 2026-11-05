@@ -17,11 +17,12 @@ import { Text as RNText, TextInput as RNTextInput, type TextProps, type TextInpu
  * notices until the app looks like two apps.
  */
 
+// Geist, as on the web (the studio's redesign, 2026-11).
 export const FONT = {
-    regular: 'InstrumentSans_400Regular',
-    medium: 'InstrumentSans_500Medium',
-    semibold: 'InstrumentSans_600SemiBold',
-    bold: 'InstrumentSans_700Bold',
+    regular: 'Geist_400Regular',
+    medium: 'Geist_500Medium',
+    semibold: 'Geist_600SemiBold',
+    bold: 'Geist_700Bold',
 } as const
 
 /**

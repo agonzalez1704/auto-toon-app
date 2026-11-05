@@ -25,6 +25,23 @@ export type Module =
     | 'with-model'
     | 'product-enhancer'
     | 'campaign'
+    // Everything below produces a still somewhere outside the hub's own
+    // panels — Midjourney, the editorial tools, Multi-Angle, UGC. The image
+    // lands in the same feed, so the same question applies to it.
+    | 'midjourney'
+    | 'edit-image'
+    | 'restage-scene'
+    | 'match-reference'
+    | 'clean-studio-shot'
+    | 'wardrobe'
+    | 'product-angles'
+    | 'multi-angle'
+    | 'character-sheet'
+    | 'character-board'
+    | 'fashion-model'
+    | 'fashion-shots'
+    | 'storyboard'
+    | 'ugc'
 
 export interface NextStep {
     /** The panel that performs it — the hub runs it inline, never navigates. */
@@ -54,6 +71,20 @@ interface Rung {
  * · A frame you have committed to gets resolution.
  * · A frame that is finished gets movement, which is where a commercial starts.
  */
+/**
+ * The default ladder for a finished still.
+ *
+ * The modules below it produce images through their own tools, but once the
+ * image exists the shoot asks the same three questions in the same order:
+ * light, then resolution, then movement. Writing fourteen near-identical rung
+ * lists would only invite them to drift apart.
+ */
+const IMAGE_LADDER: Rung[] = [
+    { panel: 'relight', fallbackTitle: 'Dale otra luz', fallbackWhy: 'La luz es lo que separa una foto de una ficha de catálogo.' },
+    { panel: 'upscale', fallbackTitle: 'Súbela a 4K', fallbackWhy: 'Si va a salir impresa o en grande, necesita los píxeles.' },
+    { panel: 'video', fallbackTitle: 'Ponla en movimiento', fallbackWhy: 'Una foto se vuelve comercial en cuanto se mueve.' },
+]
+
 const AFTER: Record<Module, Rung[]> = {
     campaign: [
         { panel: 'relight', fallbackTitle: 'Dale otra luz', fallbackWhy: 'Nueve tomas con la misma luz se ven como nueve versiones de una.' },
@@ -85,6 +116,23 @@ const AFTER: Record<Module, Rung[]> = {
         { panel: 'upscale', fallbackTitle: 'Súbela a 4K', fallbackWhy: 'La piel y la tela necesitan resolución para convencer.' },
         { panel: 'video', fallbackTitle: 'Ponla en movimiento', fallbackWhy: 'Un solo gesto convierte un lookbook en anuncio.' },
     ],
+
+    // A still already on a body: the model rung would be offering what it
+    // already has, so these start at light.
+    wardrobe: IMAGE_LADDER,
+    'fashion-model': IMAGE_LADDER,
+    'fashion-shots': IMAGE_LADDER,
+    'clean-studio-shot': IMAGE_LADDER,
+    'character-sheet': IMAGE_LADDER,
+    'character-board': IMAGE_LADDER,
+    ugc: IMAGE_LADDER,
+    'multi-angle': IMAGE_LADDER,
+    'product-angles': IMAGE_LADDER,
+    storyboard: IMAGE_LADDER,
+    midjourney: IMAGE_LADDER,
+    'edit-image': IMAGE_LADDER,
+    'restage-scene': IMAGE_LADDER,
+    'match-reference': IMAGE_LADDER,
 }
 
 /** What the user has already done to this image, so it is not offered twice. */

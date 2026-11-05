@@ -77,6 +77,17 @@ function ModelFactoryIcon() {
   )
 }
 
+// Account: profile, balance and plan, sign out. Its only way in was the old dashboard's avatar.
+function AccountIcon() {
+  return (
+    <Svg width={28} height={28} viewBox="0 0 24 24" fill="none">
+      <Circle cx="12" cy="12" r="9" stroke={theme.colors.accent} strokeWidth={1.8} fill="none" />
+      <Circle cx="12" cy="10" r="3" stroke={theme.colors.accent} strokeWidth={1.8} fill="none" />
+      <SvgPath d="M6.5 18.2a6.5 6.5 0 0 1 11 0" stroke={theme.colors.accent} strokeWidth={1.8} strokeLinecap="round" fill="none" />
+    </Svg>
+  )
+}
+
 interface Feature {
   key: string
   title: string
@@ -92,7 +103,7 @@ const FEATURES: Feature[] = [
     title: 'Model Factory',
     description: 'Create & save AI models of yourself',
     icon: ModelFactoryIcon,
-    iconTintColor: 'rgba(251,191,36,0.16)',
+    iconTintColor: theme.colors.accentSoft,
     route: '/model-factory',
   },
   {
@@ -100,8 +111,16 @@ const FEATURES: Feature[] = [
     title: 'Assets',
     description: 'Browse your generated images & videos',
     icon: AssetsIcon,
-    iconTintColor: 'rgba(251,191,36,0.16)',
+    iconTintColor: theme.colors.accentSoft,
     route: '/assets',
+  },
+  {
+    key: 'account',
+    title: 'Cuenta',
+    description: 'Tu perfil, tu saldo y cerrar sesión',
+    icon: AccountIcon,
+    iconTintColor: theme.colors.accentSoft,
+    route: '/account',
   },
 ]
 

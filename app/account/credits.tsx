@@ -24,7 +24,7 @@ function CoinIcon() {
     <Svg width={48} height={48} viewBox="0 0 48 48">
       <Defs>
         <SvgLinearGradient id="coinG" x1="0" y1="0" x2="0" y2="1">
-          <Stop offset="0" stopColor="#FBBF24" />
+          <Stop offset="0" stopColor="#D4FF3D" />
           <Stop offset="1" stopColor="#D97706" />
         </SvgLinearGradient>
       </Defs>

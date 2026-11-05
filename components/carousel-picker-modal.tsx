@@ -127,7 +127,7 @@ export function CarouselPickerModal({
           renderItem={({ item }) => {
             const isSelected = selectedId === item.id
             const borderColor = isSelected
-              ? item.color ?? '#FBBF24'
+              ? item.color ?? '#D4FF3D'
               : 'rgba(255,255,255,0.08)'
 
             return (
@@ -162,7 +162,7 @@ export function CarouselPickerModal({
                     isSelected && {
                       backgroundColor: 'rgba(251,191,36,0.12)',
                       borderWidth: 1,
-                      borderColor: item.color ?? '#FBBF24',
+                      borderColor: item.color ?? '#D4FF3D',
                     },
                   ]}
                   onPress={() => handleSelect(item.id)}
@@ -173,7 +173,7 @@ export function CarouselPickerModal({
                   ) : (
                     <>
                       <LinearGradient
-                        colors={['#FBBF24', '#F59E0B', '#B45309']}
+                        colors={['#D4FF3D', '#C2EE2B', '#B45309']}
                         start={{ x: 0, y: 0 }}
                         end={{ x: 1, y: 0 }}
                         style={StyleSheet.absoluteFillObject}
@@ -299,7 +299,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.2)',
   },
   dotActive: {
-    backgroundColor: '#FBBF24',
+    backgroundColor: '#D4FF3D',
     width: 18,
   },
 })

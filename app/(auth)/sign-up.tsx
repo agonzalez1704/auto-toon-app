@@ -20,8 +20,8 @@ WebBrowser.maybeCompleteAuthSession()
 // Brand palette (rebound to web brand book — violet/cyan/slate)
 const AURORA_NAVY = '#193153'
 const AURORA_TEAL = '#06B6D4' // theme.palette.cyan
-const AURORA_MAGENTA = '#7C3AED' // theme.palette.violet
-const AURORA_PINK = '#A78BFA' // theme.palette.violetLight
+const AURORA_MAGENTA = '#FF3D8A' // theme.palette.violet
+const AURORA_PINK = '#FF3D8A' // theme.palette.violetLight
 
 // ─── SVG Icons ──────────────────────────────────────────────────────────
 

@@ -118,6 +118,13 @@ export default function CreateScreen() {
    */
   const [concept, setConcept] = useState<{ title: string; premise: string; visual: string } | null>(null)
 
+  // Otra foto, otro producto: lo que se leyó de la anterior y la idea elegida para ella no le sirven.
+  useEffect(() => {
+    setAnalysis(null)
+    setConcept(null)
+    setShowStandard(false)
+  }, [store.uploadedImageUrl])
+
   useEffect(() => {
     const url = store.uploadedImageUrl
     if (!url || analysis || analysing) return
@@ -277,6 +284,15 @@ export default function CreateScreen() {
 
   const resultUrls = [store.heroImageUrl, store.vignetteImageUrl].filter(Boolean) as string[]
 
+  // Before any early return: a hook below one runs on some renders and not others, and opening Restaurar or
+  // Relight with a photo crashed with «Rendered fewer hooks».
+  useEffect(() => {
+    if (!pendingConcept) return
+    if (!store.productName.trim() || !store.selectedGoalId) return
+    setPendingConcept(false)
+    void handleGenerate()
+  }, [pendingConcept, store.productName, store.selectedGoalId, handleGenerate])
+
   // ── Panel (restaurar / cambiar la luz) ──
   if (panel && store.uploadedImageUrl) {
     const Panel = panel === 'restore' ? RestorePanel : RelightPanel
@@ -301,13 +317,6 @@ export default function CreateScreen() {
       </View>
     )
   }
-
-  useEffect(() => {
-    if (!pendingConcept) return
-    if (!store.productName.trim() || !store.selectedGoalId) return
-    setPendingConcept(false)
-    void handleGenerate()
-  }, [pendingConcept, store.productName, store.selectedGoalId, handleGenerate])
 
   // ── Director (la vía principal) ──
   if (store.uploadedImageUrl && analysis?.subject && !showStandard && !panel && store.generationPhase === 'idle') {

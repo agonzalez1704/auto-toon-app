@@ -16,7 +16,7 @@ import Svg, { Path as SvgPath } from 'react-native-svg'
 
 const { width: SCREEN_W } = Dimensions.get('window')
 const BG = '#193153'
-const ACCENT = '#FBBF24'
+const ACCENT = '#D4FF3D'
 const MUTED = 'rgba(255,255,255,0.55)'
 const CARD_BG = 'rgba(255,255,255,0.05)'
 const CARD_BORDER = 'rgba(255,255,255,0.08)'
@@ -354,7 +354,7 @@ export default function ClothingScreen() {
             activeOpacity={0.8}
             disabled={!hasReady}
           >
-            <LinearGradient colors={['#FBBF24', '#F59E0B', '#B45309']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFillObject} />
+            <LinearGradient colors={['#D4FF3D', '#C2EE2B', '#B45309']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFillObject} />
             <Text style={styles.continueBtnText}>Continue to Generate</Text>
             <ArrowRightIcon />
           </TouchableOpacity>

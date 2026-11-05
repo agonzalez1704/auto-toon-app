@@ -16,7 +16,7 @@ const GRID_COLS = 2
 const CARD_W = (SCREEN_W - 32 - GRID_GAP) / GRID_COLS
 
 const AURORA_NAVY = '#193153'
-const AURORA_MAGENTA = '#FBBF24'
+const AURORA_MAGENTA = '#D4FF3D'
 
 function PlusIcon() {
   return (

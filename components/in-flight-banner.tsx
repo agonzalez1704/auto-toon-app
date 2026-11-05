@@ -7,7 +7,7 @@ import { useRouter } from 'expo-router'
 import { useShallow } from 'zustand/react/shallow'
 import { useGenerationTracker } from '@/stores/use-generation-tracker'
 
-const BRAND = '#FBBF24'
+const BRAND = '#D4FF3D'
 
 /**
  * Small top-of-screen pill that surfaces in-flight generations across

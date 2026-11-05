@@ -57,7 +57,7 @@ export function buildMjFlags(params: MjParams): string {
 // ─── Colors ───────────────────────────────────────────────────────
 
 const BG = '#193153'
-const ACCENT = '#FBBF24'
+const ACCENT = '#D4FF3D'
 const CYAN = '#06B6D4'
 const MUTED = 'rgba(255,255,255,0.45)'
 const CARD_BG = 'rgba(255,255,255,0.05)'

@@ -131,7 +131,7 @@ export function MultiAngleFlow() {
 
       {phase === 'select' && (
         <Pressable disabled={!ready || busy} onPress={generate} style={[styles.genBtn, (!ready || busy) && { opacity: 0.5 }]}>
-          {ready && !busy && <LinearGradient colors={['#FBBF24', '#F59E0B', '#B45309']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFillObject} />}
+          {ready && !busy && <LinearGradient colors={['#D4FF3D', '#C2EE2B', '#B45309']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFillObject} />}
           {busy
             ? <View style={styles.row}><ActivityIndicator color="#1A1330" size="small" /><Text style={styles.genText}>Generando frontal…</Text></View>
             : <Text style={styles.genText}>Generar · {selected.length} ángulo{selected.length > 1 ? 's' : ''} · {cost} cr</Text>}
@@ -171,7 +171,7 @@ const styles = StyleSheet.create({
   heroImg: { width: '100%', height: 320, borderRadius: 12, backgroundColor: 'rgba(0,0,0,0.2)' },
   confirmSub: { fontSize: 12, color: theme.colors.textMuted },
   confirmBtn: { flex: 1, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  confirmPrimary: { backgroundColor: '#F59E0B' },
+  confirmPrimary: { backgroundColor: '#C2EE2B' },
   confirmPrimaryText: { color: '#1A1330', fontWeight: '700' },
   confirmGhost: { borderWidth: 1, borderColor: theme.colors.border },
   confirmGhostText: { color: theme.colors.text, fontWeight: '600' },

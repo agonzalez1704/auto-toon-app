@@ -12,7 +12,7 @@ import { LinearGradient } from 'expo-linear-gradient'
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window')
 
-const AURORA_MAGENTA = '#FBBF24'
+const AURORA_MAGENTA = '#D4FF3D'
 
 // ─── Icons ────────────────────────────────────────────────────────────
 
@@ -271,7 +271,7 @@ export default function VideoPlayerScreen() {
               <View style={styles.progressBar}>
                 <View style={[styles.progressFill, { width: `${progress * 100}%` }]}>
                   <LinearGradient
-                    colors={['#FBBF24', '#F59E0B']}
+                    colors={['#D4FF3D', '#C2EE2B']}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
                     style={StyleSheet.absoluteFillObject}

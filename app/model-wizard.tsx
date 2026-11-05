@@ -25,7 +25,7 @@ import { AI_MODELS, getModelCredits, getCostLabel } from '@/lib/ai-models'
 import { useSubscriptionStore } from '@/stores/use-subscription-store'
 
 const AURORA_NAVY = '#193153'
-const AURORA_MAGENTA = '#FBBF24'
+const AURORA_MAGENTA = '#D4FF3D'
 const AURORA_TEAL = '#0B5777'
 
 /**
@@ -645,7 +645,7 @@ export default function ModelWizardScreen() {
                 >
                   {ctaTappable && (
                     <LinearGradient
-                      colors={['#FBBF24', '#F59E0B', '#B45309']}
+                      colors={['#D4FF3D', '#C2EE2B', '#B45309']}
                       start={{ x: 0, y: 0 }}
                       end={{ x: 1, y: 0 }}
                       style={StyleSheet.absoluteFillObject}

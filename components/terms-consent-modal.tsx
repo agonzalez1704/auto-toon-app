@@ -147,7 +147,7 @@ export function TermsConsentModal() {
               activeOpacity={0.8}
             >
               <LinearGradient
-                colors={['#7C3AED', '#06B6D4']}
+                colors={['#FF3D8A', '#06B6D4']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={StyleSheet.absoluteFillObject}

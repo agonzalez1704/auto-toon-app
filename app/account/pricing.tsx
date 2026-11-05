@@ -38,8 +38,8 @@ function CrownIcon() {
     <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
       <SvgPath
         d="M2 20h20L19 8l-5 5-2-7-2 7-5-5-3 12z"
-        fill="#FBBF24"
-        stroke="#F59E0B"
+        fill="#D4FF3D"
+        stroke="#C2EE2B"
         strokeWidth="1"
       />
     </Svg>
@@ -574,7 +574,7 @@ export default function PricingScreen() {
                   {isFeatured && (
                     <View style={styles.popularBadge}>
                       <LinearGradient
-                        colors={[BRAND, '#7C3AED']}
+                        colors={[BRAND, '#FF3D8A']}
                         start={{ x: 0, y: 0 }}
                         end={{ x: 1, y: 0 }}
                         style={StyleSheet.absoluteFillObject}
@@ -622,7 +622,7 @@ export default function PricingScreen() {
                     <View style={[styles.selectButton, isFeatured && styles.selectButtonFeatured]}>
                       {isFeatured && (
                         <LinearGradient
-                          colors={[BRAND, '#7C3AED']}
+                          colors={[BRAND, '#FF3D8A']}
                           start={{ x: 0, y: 0 }}
                           end={{ x: 1, y: 0 }}
                           style={StyleSheet.absoluteFillObject}

@@ -6,7 +6,7 @@ import { useRouter } from 'expo-router'
 import { useCreditsStore } from '@/stores/use-credits-store'
 import { useSubscriptionStore } from '@/stores/use-subscription-store'
 
-const BRAND = '#FBBF24'
+const BRAND = '#D4FF3D'
 
 /**
  * Shown when a credit-plan user tries to generate but the balance is below the
@@ -65,7 +65,7 @@ export function ExhaustionModal() {
           <View style={styles.buttons}>
             <TouchableOpacity style={styles.primaryBtn} onPress={upgrade} activeOpacity={0.85}>
               <LinearGradient
-                colors={['#FBBF24', '#F59E0B', '#B45309']}
+                colors={['#D4FF3D', '#C2EE2B', '#B45309']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={StyleSheet.absoluteFillObject}

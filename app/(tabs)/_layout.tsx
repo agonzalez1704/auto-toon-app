@@ -18,7 +18,7 @@ const Tabs = withLayoutContext<
 >(Navigator)
 
 const ACCENT = theme.colors.accent // amber — primary CTA tint
-const TAB_BG = theme.colors.bg     // flat warm-slate (#0B0F14)
+const TAB_BG = theme.colors.bg     // flat warm-slate (#0A0A0A)
 
 export default function TabLayout() {
   return (
