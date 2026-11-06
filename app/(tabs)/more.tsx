@@ -53,7 +53,7 @@ export default function MasScreen() {
           <View style={styles.perfil}>
             <View style={styles.avatar}>
               {/* Clerk's default avatar is a coloured gradient: only a photo she set goes here. */}
-              {user?.hasImage ? <Image source={{ uri: user.imageUrl }} style={StyleSheet.absoluteFill} contentFit="cover" /> : <Text style={styles.inicial}>{nombre.charAt(0).toUpperCase()}</Text>}
+              {user?.hasImage ? <Image source={{ uri: user.imageUrl }} style={StyleSheet.absoluteFill} contentFit="cover" /> : <Text style={styles.inicial}>{(user?.firstName || correo || nombre).charAt(0).toUpperCase()}</Text>}
             </View>
             <View style={{ flex: 1, gap: 2 }}>
               <Text style={styles.nombre} numberOfLines={1}>
