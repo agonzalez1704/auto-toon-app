@@ -6,7 +6,7 @@ export default function Wardrobe() {
   return (
     <>
       <Stack.Screen
-        options={{ headerShown: true, title: 'Probador', headerStyle: { backgroundColor: theme.colors.bg }, headerTintColor: theme.colors.text, headerShadowVisible: false, headerBackTitle: 'Atrás' }}
+        options={{ title: 'Probador', headerStyle: { backgroundColor: theme.colors.bg }, headerTintColor: theme.colors.text, headerShadowVisible: false, headerBackTitle: 'Atrás' }}
       />
       <WardrobeScreen />
     </>

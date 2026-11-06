@@ -263,6 +263,10 @@ export default function RootLayout() {
                   options={{ headerShown: false, presentation: 'modal' }}
                 />
                 <Stack.Screen name="mesas" options={{ headerShown: false, presentation: 'modal' }} />
+                {/* These show a header; native headers can't be turned on from inside the screen. */}
+                <Stack.Screen name="trabajos" options={{ headerShown: true }} />
+                <Stack.Screen name="wardrobe" options={{ headerShown: true }} />
+                <Stack.Screen name="campanas/[id]" options={{ headerShown: true }} />
                 <Stack.Screen name="visor" options={{ headerShown: false, presentation: 'fullScreenModal', animation: 'fade' }} />
                 <Stack.Screen
                   name="image-viewer"

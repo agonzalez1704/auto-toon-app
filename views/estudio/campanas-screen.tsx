@@ -54,7 +54,7 @@ export function CampanaScreen() {
   return (
     <View style={styles.root}>
       <Stack.Screen
-        options={{ headerShown: true, title: '', headerStyle: { backgroundColor: c.bg }, headerTintColor: c.text, headerShadowVisible: false, headerBackTitle: 'Atrás' }}
+        options={{ title: '', headerStyle: { backgroundColor: c.bg }, headerTintColor: c.text, headerShadowVisible: false, headerBackTitle: 'Atrás' }}
       />
       <Vista id={id} onPick={(x) => router.setParams({ id: x })} />
     </View>

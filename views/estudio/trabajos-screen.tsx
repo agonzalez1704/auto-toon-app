@@ -1,10 +1,11 @@
 import { useState } from 'react'
-import { Alert, FlatList, Image, Pressable, RefreshControl, StyleSheet, View } from 'react-native'
+import { Alert, FlatList, Pressable, RefreshControl, StyleSheet, View } from 'react-native'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { FONT, Text } from '@/components/text'
 import { Accion } from '@/components/accion'
 import { theme } from '@/constants/theme'
-import { cancelarPedido, verTrabajos, type EstadoPieza, type Trabajo } from '@/lib/estudio'
+import { Image } from 'expo-image'
+import { cancelarPedido, miniatura, verTrabajos, type EstadoPieza, type Trabajo } from '@/lib/estudio'
 
 /** The step colours of the web's Trabajos board. */
 const COLOR: Record<EstadoPieza, string> = { ok: '#4ADE80', run: theme.colors.text, q: theme.colors.borderStrong, fail: theme.colors.accent2, cancel: theme.colors.textDim }
@@ -40,7 +41,7 @@ export default function TrabajosScreen() {
     return (
       <Pressable onPress={() => setAbierto(abiertoEste ? null : j.id)} accessibilityRole="button" accessibilityLabel={`${j.name}, ${j.state}`} style={styles.trabajo}>
         <View style={styles.fila}>
-          <View style={styles.miniatura}>{j.src ? <Image source={{ uri: j.src }} style={StyleSheet.absoluteFill} /> : null}</View>
+          <View style={styles.miniatura}>{j.src ? <Image source={{ uri: miniatura(j.src, 56) ?? undefined }} style={StyleSheet.absoluteFill} contentFit="cover" transition={120} /> : null}</View>
           <View style={{ flex: 1, gap: 4 }}>
             <Text style={styles.nombre} numberOfLines={2}>
               {j.name}
