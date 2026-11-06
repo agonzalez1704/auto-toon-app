@@ -49,9 +49,19 @@ export default function TabLayout() {
           }}
         />
         <Tabs.Screen
+          name="biblioteca"
+          options={{
+            title: 'Biblioteca',
+            tabBarIcon: Platform.select({
+              ios: { type: 'sfSymbol', name: 'photo.on.rectangle.angled' },
+              default: { type: 'sfSymbol', name: 'photo.on.rectangle.angled' },
+            }) as any,
+          }}
+        />
+        <Tabs.Screen
           name="wardrobe"
           options={{
-            title: 'Fitting Room',
+            title: 'Probador',
             tabBarIcon: Platform.select({
               ios: { type: 'sfSymbol', name: 'tshirt.fill' },
               default: { type: 'sfSymbol', name: 'tshirt.fill' },
@@ -61,7 +71,7 @@ export default function TabLayout() {
         <Tabs.Screen
           name="more"
           options={{
-            title: 'More',
+            title: 'Más',
             tabBarIcon: Platform.select({
               ios: { type: 'sfSymbol', name: 'ellipsis.circle.fill' },
               default: { type: 'sfSymbol', name: 'ellipsis.circle.fill' },

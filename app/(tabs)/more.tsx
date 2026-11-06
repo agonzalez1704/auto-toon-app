@@ -99,6 +99,14 @@ interface Feature {
 
 const FEATURES: Feature[] = [
   {
+    key: 'trabajos',
+    title: 'Trabajos',
+    description: 'Cada pedido mientras se genera, y lo que costó',
+    icon: RestoreIcon,
+    iconTintColor: theme.colors.accentSoft,
+    route: '/trabajos',
+  },
+  {
     key: 'model-factory',
     title: 'Model Factory',
     description: 'Create & save AI models of yourself',
@@ -150,7 +158,7 @@ export default function MoreScreen() {
     <View style={styles.root}>
       <StatusBar barStyle="light-content" />
       <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <Text style={styles.headerTitle}>More</Text>
+        <Text style={styles.headerTitle}>Más</Text>
 
         <ScrollView
           contentContainerStyle={styles.content}

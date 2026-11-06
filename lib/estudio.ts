@@ -150,3 +150,43 @@ export const mxn = (cents: number) => `$${(cents / 100).toLocaleString('es-MX', 
 /** A piece that came out, one that failed, or one still on its way. */
 export const lista = (p: Pick<Pieza, 'status' | 'resultUrl' | 'videoUrl'>) => (p.status === 'ready' || p.status === 'completed') && !!(p.resultUrl ?? p.videoUrl)
 export const terminada = (p: Pick<Pieza, 'status'>) => p.status === 'ready' || p.status === 'completed' || p.status === 'failed'
+
+// --- Biblioteca and Trabajos (`app/(estudio)/biblioteca/datos.ts`, `app/(estudio)/trabajos/datos.ts` on the web) ---
+export interface PiezaBiblioteca {
+  id: string
+  name: string
+  module: string
+  aspect: Aspecto
+  time: string
+  day: string
+  dayKey: string
+  src: string | null
+  video: string | null
+  poster: string | null
+  priceCents: number | null
+  cobradoCents: number | null
+  isPublic: boolean
+  campaign: boolean
+  cat: 'producto' | 'persona' | 'video' | null
+  antigua: boolean
+}
+export type EstadoPieza = 'q' | 'run' | 'ok' | 'fail' | 'cancel'
+export interface Trabajo {
+  id: string
+  name: string
+  kind: string
+  src: string | null
+  st: EstadoPieza
+  state: string
+  when: string
+  cost: string
+  desc: string
+  steps: EstadoPieza[]
+  detail: { label: string; model: string; st: EstadoPieza; meta: string }[]
+  hold: string
+  charged: string
+  cancelable: boolean
+  readyId: string | null
+}
+export const verBiblioteca = async () => (await api.get<{ piezas: PiezaBiblioteca[] }>('/api/biblioteca')).data.piezas
+export const verTrabajos = async () => (await api.get<{ jobs: Trabajo[]; running: number }>('/api/trabajos')).data
