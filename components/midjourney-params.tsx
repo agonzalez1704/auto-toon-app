@@ -11,13 +11,8 @@
  *   speed              draft | fast | turbo (API param, not prompt flag)
  */
 import { useState } from 'react'
-import {
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from 'react-native'
+import { StyleSheet, TouchableOpacity, View } from 'react-native'
+import { Text, TextInput } from '@/components/text'
 import Svg, { Path as SvgPath } from 'react-native-svg'
 import type { MjPhotoKitSelection } from '@/lib/mj-photo-kit'
 import { MjCameraLook } from './mj-camera-look'
@@ -61,9 +56,9 @@ export function buildMjFlags(params: MjParams): string {
 
 // ─── Colors ───────────────────────────────────────────────────────
 
-const BG = '#193153'
-const ACCENT = '#FBBF24'
-const CYAN = '#06B6D4'
+const BG = '#0A0A0A'
+const ACCENT = '#D4FF3D'
+const CYAN = '#141414'
 const MUTED = 'rgba(255,255,255,0.45)'
 const CARD_BG = 'rgba(255,255,255,0.05)'
 const CARD_BORDER = 'rgba(255,255,255,0.08)'

@@ -1,6 +1,8 @@
 import { useEffect, useRef } from 'react'
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native'
 import { useFonts } from 'expo-font'
+import { Geist_400Regular, Geist_500Medium, Geist_600SemiBold, Geist_700Bold } from '@expo-google-fonts/geist'
+import { GeistMono_400Regular, GeistMono_500Medium } from '@expo-google-fonts/geist-mono'
 import { Stack, useRouter, useSegments } from 'expo-router'
 import * as SplashScreen from 'expo-splash-screen'
 import { ClerkProvider, ClerkLoaded, useAuth } from '@clerk/clerk-expo'
@@ -206,6 +208,14 @@ function AuthGate({ children }: { children: React.ReactNode }) {
 export default function RootLayout() {
   const colorScheme = useColorScheme()
   const [fontsLoaded, fontError] = useFonts({
+    // The app's face. React Native has no cascade, so loading it here only
+    // makes it available — `components/text.tsx` is what actually applies it.
+    Geist_400Regular,
+    Geist_500Medium,
+    Geist_600SemiBold,
+    GeistMono_400Regular,
+    GeistMono_500Medium,
+    Geist_700Bold,
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   })
 
@@ -252,6 +262,13 @@ export default function RootLayout() {
                   name="grid-upscale"
                   options={{ headerShown: false, presentation: 'modal' }}
                 />
+                <Stack.Screen name="mesas" options={{ headerShown: false, presentation: 'modal' }} />
+                <Stack.Screen name="referencias" options={{ headerShown: false, animation: 'slide_from_right' }} />
+                {/* These show a header; native headers can't be turned on from inside the screen. */}
+                <Stack.Screen name="trabajos" options={{ headerShown: true }} />
+                <Stack.Screen name="wardrobe" options={{ headerShown: true }} />
+                <Stack.Screen name="campanas/[id]" options={{ headerShown: true }} />
+                <Stack.Screen name="visor" options={{ headerShown: false, presentation: 'fullScreenModal', animation: 'fade' }} />
                 <Stack.Screen
                   name="image-viewer"
                   options={{ headerShown: false, presentation: 'modal', animation: 'fade' }}

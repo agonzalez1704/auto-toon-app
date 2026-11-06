@@ -1,5 +1,5 @@
 /**
- * Route entry — thin re-export.
- * Implementation lives in views/dashboard/ for testability + reuse.
+ * Crear, as on the board «Main»: the mesa she's on (or a new one), with the product switcher on top that opens
+ * Mesas. `?mesa=<id>` picks one; `?mesa=nueva` starts from a photo.
  */
-export { default } from '@/views/dashboard/dashboard-screen'
+export { default } from '@/views/estudio/mesa-screen'

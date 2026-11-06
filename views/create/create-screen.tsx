@@ -6,19 +6,20 @@
  *   - Open/closed: extend via data.ts (models / aspects / goals)
  *   - Dependency inversion: children take props/callbacks, no router or store imports
  */
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  Pressable,
   ScrollView,
   StatusBar,
   StyleSheet,
-  Text,
   View,
 } from 'react-native'
+import { Text } from '@/components/text'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { useRouter } from 'expo-router'
+import { useLocalSearchParams, useRouter } from 'expo-router'
 
 import { theme } from '@/constants/theme'
 import { CarouselPickerModal } from '@/components/carousel-picker-modal'
@@ -39,7 +40,14 @@ import {
   type GoalId,
 } from '@/stores/use-product-enhancer-store'
 
-import { GOALS } from './data'
+import { GOALS, VISIBLE_MODELS } from './data'
+import { RestorePanel } from './panels/restore-panel'
+import { RelightPanel } from './panels/relight-panel'
+import { DirectorSession } from './director/director-session'
+import { analyzeForCreate, type CreateAnalysis } from '@/lib/api'
+import { parseAspectIntent } from '@/lib/create/aspect'
+import { toSeedreamAspect } from '@/lib/create/seedream-aspect'
+import { conceptToPrompt } from '@/lib/create/direction'
 import { useImagePipeline } from './lib/use-image-pipeline'
 import { UploadSection } from './components/upload-section'
 import { NameInput } from './components/name-input'
@@ -49,14 +57,90 @@ import { ModelToggle } from './components/model-toggle'
 import { GenerateButton } from './components/generate-button'
 import { GeneratingView } from './components/generating-view'
 import { ResultView } from './components/result-view'
+import { MultiAngleFlow } from './components/multi-angle-flow'
 
 export default function CreateScreen() {
   const router = useRouter()
   const [goalModalVisible, setGoalModalVisible] = useState(false)
+  /**
+   * Un panel corre aquí dentro, sobre la imagen que ya subiste. Restaurar y
+   * cambiar la luz vivían en rutas propias (`/restore`, `/relight`), que en un
+   * teléfono es la única puerta que existe: quitarlas del menú sin esto habría
+   * borrado las dos funciones.
+   */
+  const [panel, setPanel] = useState<'restore' | 'relight' | null>(null)
+
+
+
+  /**
+   * Abierto desde otra pantalla — el visor de imágenes tenía un botón que
+   * navegaba a `/relight`. Esa ruta ya no existe, así que ahora manda aquí con
+   * la imagen y el panel a abrir, y la función se conserva.
+   */
+  const params = useLocalSearchParams<{ panel?: string; imageUrl?: string }>()
+  useEffect(() => {
+    if (params.panel !== 'restore' && params.panel !== 'relight') return
+    if (params.imageUrl) store.setUploadedImageUrl(params.imageUrl)
+    setPanel(params.panel)
+  }, [params.panel, params.imageUrl])
   const [configModalVisible, setConfigModalVisible] = useState(false)
   const [mjParams, setMjParams] = useState<MjParams>(DEFAULT_MJ_PARAMS)
 
   const store = useProductEnhancerStore()
+
+  /**
+   * Lo que decidimos que es la imagen, y si el cliente prefiere el formulario.
+   *
+   * El director es la vía principal: se le muestra una lectura y unas ideas, no
+   * una lista de objetivos. El formulario de siempre sigue ahí para quien ya
+   * sabe qué quiere — pero detrás de un toque, no delante.
+   */
+  const [analysis, setAnalysis] = useState<CreateAnalysis | null>(null)
+  const [analysing, setAnalysing] = useState(false)
+  const [showStandard, setShowStandard] = useState(false)
+  /**
+   * Una idea aceptada, esperando a que el store la refleje.
+   *
+   * `handleGenerate` lee del store, y los `set` de Zustand no se ven en el
+   * mismo tick: llamarla de inmediato genera con el nombre y la escena
+   * anteriores.
+   */
+  const [pendingConcept, setPendingConcept] = useState(false)
+  /**
+   * La idea elegida, viva hasta que se genera.
+   *
+   * Va como `promptOverride`, que REEMPLAZA el prompt del hero. Metida como
+   * una personalización más, la maquinaria del objetivo seguía mandando: una
+   * foto de flores salió convertida en un frasco de perfume con flores de
+   * fondo, porque "professional-photo" da por hecho que hay un producto.
+   * El override incluye "el sujeto es X, tal como en la imagen de referencia",
+   * que es la frase que impide inventarlo.
+   */
+  const [concept, setConcept] = useState<{ title: string; premise: string; visual: string } | null>(null)
+
+  // Otra foto, otro producto: lo que se leyó de la anterior y la idea elegida para ella no le sirven.
+  useEffect(() => {
+    setAnalysis(null)
+    setConcept(null)
+    setShowStandard(false)
+  }, [store.uploadedImageUrl])
+
+  useEffect(() => {
+    const url = store.uploadedImageUrl
+    if (!url || analysis || analysing) return
+    setAnalysing(true)
+    analyzeForCreate(url)
+      .then((a) => {
+        // Sin sujeto el director no tiene de qué hablar y el servidor lo exige,
+        // así que eso es una lectura fallida, no una lectura vacía.
+        if (a?.subject) setAnalysis(a)
+        else setShowStandard(true)
+      })
+      // Sin lectura no hay director, pero el formulario sigue sirviendo: la
+      // pantalla no se queda sin salida.
+      .catch(() => setShowStandard(true))
+      .finally(() => setAnalysing(false))
+  }, [store.uploadedImageUrl, analysis, analysing])
   const { balance, fetchCredits, setShowExhaustionModal } = useCreditsStore()
   const isPayPerUse = useSubscriptionStore((s) => s.plan) === 'PAYPERUSE'
   const { isPicking, pickFromGallery, takePhoto } = useImagePipeline()
@@ -143,6 +227,15 @@ export default function CreateScreen() {
         suggestedStyleVariant: store.suggestedStyleVariant,
         styleVariantOverride: store.selectedStyleVariant,
         extractedText: store.extractedText ?? undefined,
+        ...(concept && analysis?.subject
+          ? {
+              promptOverride: conceptToPrompt(concept, analysis.subject),
+              // Un concepto es UNA escena: la segunda imagen del objetivo
+              // pide formas anidadas que nadie llenó y compite con ella.
+              skipSecondImage: true,
+              skipHeroImage: false,
+            }
+          : {}),
       })
 
       if (result.success) {
@@ -169,7 +262,121 @@ export default function CreateScreen() {
     }
   }, [canGenerate, store, balance, creditCost, isPayPerUse, fetchCredits, setShowExhaustionModal, mjParams])
 
+  // Poster gate: generation is only reachable after the user opens the config
+  // sheet (language, copy, style) and taps the sheet's confirm CTA.
+  const isPoster = store.selectedGoalId === 'printable-poster'
+
+  // Auto-open the poster config sheet when the poster goal becomes active
+  // (picked manually or auto-suggested by analysis) and an image is present.
+  // Fires on goal change only, so dismissing it doesn't immediately reopen.
+  // The user reviews + confirms inside the sheet before generation is allowed.
+  const hasImageForPoster = !!(store.localImageUri || store.uploadedImageUrl)
+  useEffect(() => {
+    if (isPoster && hasImageForPoster && !store.posterConfirmed) setConfigModalVisible(true)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [store.selectedGoalId, hasImageForPoster])
+
+  const handlePosterGenerate = useCallback(() => {
+    store.setPosterConfirmed(true)
+    setConfigModalVisible(false)
+    handleGenerate()
+  }, [store, handleGenerate])
+
   const resultUrls = [store.heroImageUrl, store.vignetteImageUrl].filter(Boolean) as string[]
+
+  // Before any early return: a hook below one runs on some renders and not others, and opening Restaurar or
+  // Relight with a photo crashed with «Rendered fewer hooks».
+  useEffect(() => {
+    if (!pendingConcept) return
+    if (!store.productName.trim() || !store.selectedGoalId) return
+    setPendingConcept(false)
+    void handleGenerate()
+  }, [pendingConcept, store.productName, store.selectedGoalId, handleGenerate])
+
+  // ── Panel (restaurar / cambiar la luz) ──
+  if (panel && store.uploadedImageUrl) {
+    const Panel = panel === 'restore' ? RestorePanel : RelightPanel
+    return (
+      <View style={styles.root}>
+        <StatusBar barStyle="light-content" />
+        <SafeAreaView style={styles.safeArea} edges={['top']}>
+          <View style={styles.content}>
+            <Panel
+              imageUrl={store.uploadedImageUrl}
+              onDone={(url) => {
+                setPanel(null)
+                router.push({
+                  pathname: '/image-viewer',
+                  params: { urls: JSON.stringify([url]), initialIndex: '0', title: store.productName },
+                })
+              }}
+              onCancel={() => setPanel(null)}
+            />
+          </View>
+        </SafeAreaView>
+      </View>
+    )
+  }
+
+  // ── Director (la vía principal) ──
+  if (store.uploadedImageUrl && analysis?.subject && !showStandard && !panel && store.generationPhase === 'idle') {
+    return (
+      <View style={styles.root}>
+        <StatusBar barStyle="light-content" />
+        <SafeAreaView style={styles.safeArea} edges={['top']}>
+          <View style={styles.content}>
+            {/* Una generación fallida devolvía la fase a `idle`, esta rama
+                volvía a coincidir, y el cliente aterrizaba en el chat sin
+                explicación — la misma falla muda que el director ya evita
+                para sus propios turnos. */}
+            {store.error ? (
+              <Pressable style={styles.genError} onPress={() => store.setError(null)}>
+                <Text style={styles.genErrorText}>{store.error}</Text>
+                <Text style={styles.genErrorHint}>Toca para descartar y elegir otra idea.</Text>
+              </Pressable>
+            ) : null}
+            {/* Qué modelo va a correr y qué cuesta, antes de tocar nada.
+                Estaba escondido tras el formulario, así que la conversación
+                gastaba créditos sin decir con qué ni cuánto. */}
+            <View style={styles.modelBar}>
+              <Text style={styles.modelName}>
+                {VISIBLE_MODELS.find((m) => m.id === store.selectedModel)?.label ?? store.selectedModel}
+              </Text>
+              <Text style={styles.modelCost}>{costLabel}</Text>
+              <Pressable onPress={() => setShowStandard(true)} accessibilityRole="button">
+                <Text style={styles.modelChange}>Cambiar</Text>
+              </Pressable>
+            </View>
+            <DirectorSession
+              imageUrl={store.uploadedImageUrl}
+              subject={analysis.subject}
+              onSaid={(text) => {
+                // La forma sale de lo que el cliente dijo. "para Instagram",
+                // "historia", "banner" ya llevan el recorte dentro; pedirle
+                // que además elija una fracción es pedirle que traduzca.
+                const heard = parseAspectIntent(text)
+                if (heard) store.setSeedreamConfig({ ...store.seedreamConfig, aspect_ratio: toSeedreamAspect(heard) })
+              }}
+              onConceptPicked={(concept) => {
+                // Elegir una idea la GENERA. Antes esto abría el formulario
+                // viejo, que es exactamente la vuelta que la conversación
+                // existe para evitar: el cliente ya dijo qué quiere.
+                store.setProductName(concept.title)
+                setConcept(concept)
+                // La generación exige un objetivo y el director no habla ese
+                // vocabulario; una foto limpia es el que no impone formato.
+                if (!store.selectedGoalId) store.selectGoal('professional-photo')
+                setPendingConcept(true)
+              }}
+            />
+            <Pressable style={styles.standardLink} onPress={() => setShowStandard(true)}>
+              <Text style={styles.standardLinkLabel}>¿Prefieres algo estándar? Ver las opciones →</Text>
+            </Pressable>
+          </View>
+        </SafeAreaView>
+      </View>
+    )
+  }
 
   // ── Generating phase ──
   if (store.generationPhase === 'generating' || store.generationPhase === 'uploading') {
@@ -233,14 +440,10 @@ export default function CreateScreen() {
             keyboardShouldPersistTaps="handled"
           >
             <View style={styles.heroHeader}>
-              <Text style={styles.heroEyebrow}>ENHANCE</Text>
-              <Text style={styles.heroTitle}>
-                {store.localImageUri ? 'Looking good.' : 'Snap your product.'}
-              </Text>
+              <Text style={styles.heroEyebrow}>CREAR</Text>
+              <Text style={styles.heroTitle}>¿Qué quieres crear?</Text>
               <Text style={styles.heroSub}>
-                {store.localImageUri
-                  ? 'Name it, pick a goal — studio shot in 8 seconds.'
-                  : 'One photo. Studio-grade result in under 10 seconds.'}
+                Sube una foto. La vemos y te decimos en qué se puede convertir.
               </Text>
             </View>
 
@@ -258,6 +461,32 @@ export default function CreateScreen() {
               <NameInput value={store.productName} onChange={store.setProductName} />
             )}
 
+            {/* Operaciones sobre la imagen tal cual, sin pasar por el
+                formulario del enhancer. Aparecen en cuanto hay algo sobre lo
+                que operar; antes de eso no tendrían sujeto. */}
+            {store.uploadedImageUrl ? (
+              <View style={styles.panelRow}>
+                <Pressable
+                  style={styles.panelBtn}
+                  onPress={() => setPanel('restore')}
+                  accessibilityRole="button"
+                >
+                  <Text style={styles.panelBtnLabel}>Restaurar</Text>
+                  <Text style={styles.panelBtnHint}>Recupera detalle a 2K o 4K</Text>
+                </Pressable>
+                <Pressable
+                  style={styles.panelBtn}
+                  onPress={() => setPanel('relight')}
+                  accessibilityRole="button"
+                >
+                  <Text style={styles.panelBtnLabel}>Cambiar la luz</Text>
+                  <Text style={styles.panelBtnHint}>13 ambientes de iluminación</Text>
+                </Pressable>
+              </View>
+            ) : null}
+
+            {showStandard ? (
+              <>
             <GoalSelector
               selectedGoalId={store.selectedGoalId}
               onPress={() => setGoalModalVisible(true)}
@@ -269,6 +498,9 @@ export default function CreateScreen() {
               visible={configModalVisible}
               goalId={store.selectedGoalId}
               onClose={() => setConfigModalVisible(false)}
+              onConfirmGenerate={isPoster ? handlePosterGenerate : undefined}
+              confirmLabel={`Generate poster (${costLabel})`}
+              confirming={store.isGenerating}
             />
 
             <CarouselPickerModal
@@ -295,6 +527,10 @@ export default function CreateScreen() {
                 onSelectAspect={(value) => store.setSeedreamConfig({ aspect_ratio: value })}
               />
 
+              {store.selectedGoalId === 'multi-angle' ? (
+                <MultiAngleFlow />
+              ) : (
+              <>
               {store.selectedModel === 'MIDJOURNEY_V7' && (
                 <MidjourneyParamsPanel
                   params={mjParams}
@@ -308,10 +544,13 @@ export default function CreateScreen() {
                 isGenerating={store.isGenerating}
                 costLabel={costLabel}
                 insufficientCredits={hasInsufficientCredits}
+                label={isPoster && !hasInsufficientCredits ? 'Configure poster' : undefined}
                 onPress={
                   hasInsufficientCredits
                     ? () => router.push('/account/credits')
-                    : handleGenerate
+                    : isPoster
+                      ? () => setConfigModalVisible(true)
+                      : handleGenerate
                 }
               />
               {hasInsufficientCredits && !store.isGenerating && (
@@ -324,11 +563,21 @@ export default function CreateScreen() {
                   Missing: {missing.join(', ')}
                 </Text>
               )}
+              </>
+              )}
 
               {!isPayPerUse && balance !== null && (
                 <Text style={styles.balanceHint}>Balance: {balance} credits</Text>
               )}
             </View>
+              </>
+            ) : store.uploadedImageUrl ? (
+              <Pressable style={styles.standardLink} onPress={() => setShowStandard(true)}>
+                <Text style={styles.standardLinkLabel}>
+                  ¿Prefieres algo estándar? Ver las opciones →
+                </Text>
+              </Pressable>
+            ) : null}
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
@@ -337,6 +586,42 @@ export default function CreateScreen() {
 }
 
 const styles = StyleSheet.create({
+  modelBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.sm,
+    paddingVertical: theme.spacing.sm,
+    marginBottom: theme.spacing.sm,
+  },
+  modelName: { ...theme.typography.labelSm, color: theme.colors.text },
+  modelCost: { ...theme.typography.caption, color: theme.colors.textDim, flex: 1 },
+  modelChange: { ...theme.typography.caption, color: theme.colors.accent },
+  genError: {
+    padding: theme.spacing.md,
+    borderRadius: theme.radius.md,
+    backgroundColor: 'rgba(251,113,133,0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(251,113,133,0.32)',
+    marginBottom: theme.spacing.md,
+  },
+  genErrorText: { ...theme.typography.bodySm, color: theme.colors.danger },
+  genErrorHint: { ...theme.typography.caption, color: theme.colors.textDim, marginTop: 2 },
+  standardLink: { paddingVertical: theme.spacing.md, alignItems: 'center' },
+  standardLinkLabel: { ...theme.typography.bodySm, color: theme.colors.textDim },
+  panelRow: { flexDirection: 'row', gap: theme.spacing.sm, marginTop: theme.spacing.md },
+  panelBtn: {
+    flex: 1,
+    minHeight: theme.minTap,
+    justifyContent: 'center',
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
+    borderRadius: theme.radius.md,
+    backgroundColor: theme.colors.surface,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+  },
+  panelBtnLabel: { ...theme.typography.cta, color: theme.colors.text },
+  panelBtnHint: { ...theme.typography.caption, color: theme.colors.textDim, marginTop: 2 },
   root: { flex: 1, backgroundColor: theme.colors.bg },
   safeArea: { flex: 1 },
   content: {

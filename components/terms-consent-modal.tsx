@@ -1,19 +1,11 @@
 import { useState } from 'react'
-import {
-  Modal,
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  ScrollView,
-  Linking,
-  ActivityIndicator,
-} from 'react-native'
+import { Modal, View, TouchableOpacity, StyleSheet, ScrollView, Linking, ActivityIndicator } from 'react-native'
+import { Text } from '@/components/text'
 import Svg, { Path as SvgPath } from 'react-native-svg'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useTermsConsentStore } from '@/stores/use-terms-consent-store'
 
-const BRAND = '#8B5CF6'
+const BRAND = '#FF3D8A'
 
 export function TermsConsentModal() {
   const { showConsentModal, acceptTerms, setShowConsentModal } = useTermsConsentStore()
@@ -155,7 +147,7 @@ export function TermsConsentModal() {
               activeOpacity={0.8}
             >
               <LinearGradient
-                colors={['#7C3AED', '#06B6D4']}
+                colors={['#FF3D8A', '#141414']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={StyleSheet.absoluteFillObject}

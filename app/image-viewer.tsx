@@ -1,24 +1,14 @@
 import { useState, useCallback, useRef } from 'react'
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  ActivityIndicator,
-  Alert,
-  Dimensions,
-  StatusBar,
-  FlatList,
-  Share,
-  Platform,
-  ActionSheetIOS,
-  ScrollView,
-} from 'react-native'
+import { View, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, Dimensions, StatusBar, FlatList, Share, Platform, ActionSheetIOS, ScrollView } from 'react-native'
+import { Text } from '@/components/text'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Image } from 'expo-image'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import * as FileSystem from 'expo-file-system/legacy'
 import * as MediaLibrary from 'expo-media-library'
+import * as ImagePicker from 'expo-image-picker'
+import { uploadImage } from '@/lib/upload'
+import { refineProductLogo, type ProductAngleKey } from '@/lib/api'
 import Svg, { Path as SvgPath, Rect, Circle } from 'react-native-svg'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useVideoStore } from '@/stores/use-video-store'
@@ -189,9 +179,13 @@ export default function ImageViewerScreen() {
     hideVideo?: string
     assetType?: string // fashion_editorial | upscale_batch | vignette | elements | poster | etc.
     modelId?: string // When viewing a saved model — shows "Create Photoshoot" CTA
+    angleSetId?: string // Multi-Angle context — enables "Save all" + "Logo HD"
+    angleKeys?: string // JSON ProductAngleKey[] parallel to urls
   }>()
 
-  const urls: string[] = params.urls ? JSON.parse(params.urls) : []
+  const [urls, setUrls] = useState<string[]>(params.urls ? JSON.parse(params.urls) : [])
+  const angleSetId = params.angleSetId || ''
+  const angleKeys: string[] = params.angleKeys ? JSON.parse(params.angleKeys) : []
   const initialIndex = parseInt(params.initialIndex || '0', 10)
   const title = params.title || ''
   const hideVideo = params.hideVideo === '1'
@@ -223,6 +217,42 @@ export default function ImageViewerScreen() {
     }
   }, [])
 
+  const saveAll = useCallback(async () => {
+    setIsSaving(true)
+    try {
+      const { status } = await MediaLibrary.requestPermissionsAsync()
+      if (status !== 'granted') { Alert.alert('Permission Required', 'Allow photo library access to save images.'); return }
+      for (let i = 0; i < urls.length; i++) {
+        const fileUri = `${FileSystem.cacheDirectory}angle_${Date.now()}_${i}.jpg`
+        await FileSystem.downloadAsync(urls[i], fileUri)
+        await MediaLibrary.saveToLibraryAsync(fileUri)
+      }
+      Alert.alert('Saved', `${urls.length} images saved to your photo library.`)
+    } catch {
+      Alert.alert('Error', 'Failed to save images.')
+    } finally {
+      setIsSaving(false)
+    }
+  }, [urls])
+
+  const refineCurrentLogo = useCallback(async () => {
+    const angleKey = angleKeys[currentIndex] as ProductAngleKey | undefined
+    if (!angleSetId || !angleKey) return
+    const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 1 })
+    if (res.canceled || !res.assets[0]) return
+    setIsSaving(true)
+    try {
+      const logoUrl = await uploadImage(res.assets[0].uri)
+      const newUrl = await refineProductLogo({ angleSetId, angleKey, logoImageUrl: logoUrl })
+      setUrls((p) => p.map((u, i) => (i === currentIndex ? newUrl : u)))
+      Alert.alert('Listo', 'El logo se refinó en HD.')
+    } catch (err) {
+      Alert.alert('Error', err instanceof Error ? err.message : 'No se pudo refinar el logo.')
+    } finally {
+      setIsSaving(false)
+    }
+  }, [angleSetId, angleKeys, currentIndex])
+
   const shareImage = useCallback(async (url: string) => {
     try {
       if (Platform.OS === 'ios') {
@@ -239,25 +269,31 @@ export default function ImageViewerScreen() {
     const url = urls[currentIndex]
     if (!url) return
 
+    const isAngles = !!angleSetId
     if (Platform.OS === 'ios') {
+      const options = ['Save to Photos', ...(isAngles ? ['Save all', 'Logo HD'] : []), 'Share', 'Cancel']
       ActionSheetIOS.showActionSheetWithOptions(
-        {
-          options: ['Save to Photos', 'Share', 'Cancel'],
-          cancelButtonIndex: 2,
-        },
+        { options, cancelButtonIndex: options.length - 1 },
         (buttonIndex) => {
-          if (buttonIndex === 0) saveImage(url)
-          else if (buttonIndex === 1) shareImage(url)
+          const label = options[buttonIndex]
+          if (label === 'Save to Photos') saveImage(url)
+          else if (label === 'Save all') saveAll()
+          else if (label === 'Logo HD') refineCurrentLogo()
+          else if (label === 'Share') shareImage(url)
         }
       )
     } else {
       Alert.alert('Image Options', undefined, [
         { text: 'Save to Photos', onPress: () => saveImage(url) },
+        ...(isAngles ? [
+          { text: 'Save all', onPress: () => saveAll() },
+          { text: 'Logo HD', onPress: () => refineCurrentLogo() },
+        ] : []),
         { text: 'Share', onPress: () => shareImage(url) },
-        { text: 'Cancel', style: 'cancel' },
+        { text: 'Cancel', style: 'cancel' as const },
       ])
     }
-  }, [urls, currentIndex, saveImage, shareImage])
+  }, [urls, currentIndex, saveImage, shareImage, angleSetId, saveAll, refineCurrentLogo])
 
   const onViewableItemsChanged = useCallback(
     ({ viewableItems }: { viewableItems: Array<{ index: number | null }> }) => {
@@ -337,7 +373,7 @@ export default function ImageViewerScreen() {
               }}
               activeOpacity={0.8}
             >
-              <LinearGradient colors={['#FBBF24', '#F59E0B', '#B45309']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFillObject} />
+              <LinearGradient colors={['#D4FF3D', '#C2EE2B', '#B45309']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFillObject} />
               <CameraIcon />
               <Text style={styles.actionText}>Create Photoshoot</Text>
             </TouchableOpacity>
@@ -358,7 +394,7 @@ export default function ImageViewerScreen() {
               }}
               activeOpacity={0.8}
             >
-              <LinearGradient colors={['#FBBF24', '#F59E0B', '#B45309']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFillObject} />
+              <LinearGradient colors={['#D4FF3D', '#C2EE2B', '#B45309']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFillObject} />
               <VideoIcon />
               <Text style={styles.actionText}>Video</Text>
             </TouchableOpacity>
@@ -372,7 +408,7 @@ export default function ImageViewerScreen() {
               }}
               activeOpacity={0.8}
             >
-              <LinearGradient colors={['#FBBF24', '#F59E0B', '#B45309']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFillObject} />
+              <LinearGradient colors={['#D4FF3D', '#C2EE2B', '#B45309']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFillObject} />
               <ClapperIcon />
               <Text style={styles.actionText}>Commercial</Text>
             </TouchableOpacity>
@@ -397,14 +433,15 @@ export default function ImageViewerScreen() {
             <TouchableOpacity
               style={styles.actionPill}
               onPress={() => {
+                // /relight ya no es una ruta: la función vive dentro de Crear.
                 router.push({
-                  pathname: '/relight',
-                  params: { imageUrl: urls[currentIndex], title },
+                  pathname: '/(tabs)',
+                  params: { panel: 'relight', imageUrl: urls[currentIndex] },
                 })
               }}
               activeOpacity={0.8}
             >
-              <LinearGradient colors={['#F59E0B', '#EF4444']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFillObject} />
+              <LinearGradient colors={['#C2EE2B', '#EF4444']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFillObject} />
               <RelightIcon />
               <Text style={styles.actionText}>Relight</Text>
             </TouchableOpacity>
@@ -418,7 +455,7 @@ export default function ImageViewerScreen() {
               }}
               activeOpacity={0.8}
             >
-              <LinearGradient colors={['#06B6D4', '#3B82F6']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFillObject} />
+              <LinearGradient colors={['#141414', '#3B82F6']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFillObject} />
               <AngleIcon />
               <Text style={styles.actionText}>Multi-Angle</Text>
             </TouchableOpacity>

@@ -51,13 +51,14 @@ api.interceptors.request.use(async (config: InternalAxiosRequestConfig) => {
 // Response interceptor: normalize errors + handle consent gates
 api.interceptors.response.use(
   (response) => response,
-  (error: AxiosError<{ error?: string; message?: string; code?: string }>) => {
+  (error: AxiosError<{ error?: string; message?: string; code?: string; codigo?: string }>) => {
     const message =
       error.response?.data?.error ||
       error.response?.data?.message ||
       error.message ||
       'Something went wrong'
-    const code = error.response?.data?.code
+    // The studio's newer routes say `codigo` (lib/errores on the web); the older ones `code`.
+    const code = error.response?.data?.code ?? error.response?.data?.codigo
     const url = error.config?.url
     const method = error.config?.method?.toUpperCase()
     if (error.response?.status) {
@@ -73,7 +74,7 @@ api.interceptors.response.use(
     // Server-side consent gates (Apple guideline 5.1.1(i) / 5.1.2(i)).
     // Sync the local store and pop the appropriate modal so the user can
     // recover without the screen showing a generic error.
-    if (error.response?.status === 403 && code === 'AI_CONSENT_REQUIRED') {
+    if (error.response?.status === 403 && (code === 'AI_CONSENT_REQUIRED' || code === 'consentimiento_ia')) {
       import('@/stores/use-ai-consent-store').then(({ useAIConsentStore }) => {
         useAIConsentStore.setState({ accepted: false, showConsentModal: true })
       })
@@ -292,6 +293,30 @@ export async function analyzeProduct(imageUrl: string) {
   return data.result
 }
 
+/**
+ * Regenerate poster copy (headline + tagline + extended text) for a given
+ * language. Used by the poster config sheet when the user switches the poster
+ * language so the previewed copy is real localized text, not a machine
+ * translation baked into the image by the render model.
+ */
+export interface TaglineResult {
+  headline?: string
+  tagline?: string
+  text?: string
+}
+export async function generateTagline(
+  productName: string,
+  headline: string | undefined,
+  language: 'es' | 'en',
+): Promise<TaglineResult> {
+  const { data } = await api.post<TaglineResult>(
+    '/api/generate-tagline',
+    { productName, headline, language },
+    { timeout: 60_000 },
+  )
+  return data
+}
+
 // Enhance product
 export interface EnhanceRequest {
   imageUrl: string
@@ -329,6 +354,12 @@ export interface EnhanceResponse {
   // independent of editable form/store state.
   secondImageType?: 'vignette' | 'elements' | 'poster' | '3x3' | 'food' | null
   aspectRatio?: string
+  /**
+   * Reemplaza el prompt del hero. Con esto el concepto ES la escena; sin
+   * esto, la maquinaria del objetivo manda y una foto de flores sale
+   * convertida en un frasco de perfume con flores de fondo.
+   */
+  promptOverride?: string
   labels?: string[]
   creditsRemaining: number
   success: boolean
@@ -362,7 +393,7 @@ export interface Asset {
   vignetteImageUrl: string | null
   originalImageUrl?: string | null // original image for restore before/after
   upscaledUrls: string[]
-  secondImageType: 'vignette' | 'elements' | 'poster' | '3x3' | 'food' | 'none' | 'upscale_batch' | 'restore' | 'fashion_editorial'
+  secondImageType: 'vignette' | 'elements' | 'poster' | '3x3' | 'food' | 'none' | 'upscale_batch' | 'restore' | 'fashion_editorial' | 'wardrobe_look' | 'product_angles' | 'video'
   createdAt: string
 }
 export async function getAssets() {
@@ -1530,4 +1561,171 @@ export async function generateWardrobeLook(
 export async function getWardrobeLooks() {
   const { data } = await api.get<{ looks: WardrobeLook[] }>('/api/wardrobe/looks')
   return data.looks
+}
+
+// ─── Multi-Angle (product angles) ───────────────────────────────────────
+// Decoupled, polled like wardrobe. Two phases: start renders the hero and
+// pauses (awaiting_confirmation); confirm renders the remaining angles.
+
+export type ProductAngleKey = 'front' | 'back' | 'left' | 'right' | 'top' | 'bottom'
+
+export interface ProductAngleSet {
+  id: string
+  productName: string | null
+  aspectRatio: string
+  selectedAngles: ProductAngleKey[]
+  heroImageUrl: string | null
+  angleKeys: ProductAngleKey[]
+  angleUrls: string[]
+  status: 'generating_hero' | 'awaiting_confirmation' | 'generating_angles' | 'ready' | 'failed' | 'cancelled'
+  errorMessage: string | null
+  createdAt: string
+}
+
+async function getAngleSet(angleSetId: string): Promise<ProductAngleSet | undefined> {
+  const { data } = await api.get<{ sets: ProductAngleSet[] }>('/api/product-angles')
+  return data.sets.find((s) => s.id === angleSetId)
+}
+
+const angleSleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
+// Poll fast for the first 10s (snappy first image), then back off.
+const anglePollInterval = (elapsedMs: number) => (elapsedMs < 10_000 ? 1000 : 2500)
+
+export interface ProductAnglesResult {
+  heroUrl: string | null
+  angleUrls: string[]
+  allUrls: string[]
+  allKeys: ProductAngleKey[]
+}
+
+/** Poll until the hero lands (awaiting_confirmation). Used by start AND resume. */
+async function pollProductHero(angleSetId: string): Promise<{ angleSetId: string; heroUrl: string }> {
+  const started = Date.now()
+  const deadline = started + 6 * 60 * 1000
+  while (Date.now() < deadline) {
+    await angleSleep(anglePollInterval(Date.now() - started))
+    let set: ProductAngleSet | undefined
+    try { set = await getAngleSet(angleSetId) } catch { continue }
+    if (!set) continue
+    if (set.status === 'awaiting_confirmation' && set.heroImageUrl) return { angleSetId, heroUrl: set.heroImageUrl }
+    if (set.status === 'failed') throw new ApiError(set.errorMessage || 'Generation failed', 502)
+  }
+  throw new ApiError('Hero is taking longer than expected.', 504)
+}
+
+/** Poll the remaining angles to completion. Used by confirm AND resume. */
+async function pollProductAngles(
+  angleSetId: string,
+  onAngle?: (key: ProductAngleKey, url: string) => void,
+): Promise<ProductAnglesResult> {
+  let seen = 0
+  const started = Date.now()
+  const deadline = started + 8 * 60 * 1000
+  while (Date.now() < deadline) {
+    await angleSleep(anglePollInterval(Date.now() - started))
+    let set: ProductAngleSet | undefined
+    try { set = await getAngleSet(angleSetId) } catch { continue }
+    if (!set) continue
+    while (seen < set.angleKeys.length) {
+      const k = set.angleKeys[seen]
+      if (k !== 'front') onAngle?.(k, set.angleUrls[seen])
+      seen++
+    }
+    if (set.status === 'ready') {
+      const all = set.angleUrls
+      const hero = set.heroImageUrl
+      return { heroUrl: hero, angleUrls: all.filter((u) => u !== hero), allUrls: all, allKeys: set.angleKeys }
+    }
+    if (set.status === 'failed') throw new ApiError(set.errorMessage || 'Generation failed', 502)
+  }
+  throw new ApiError('Generation is taking longer than expected.', 504)
+}
+
+/** Phase 1: start, poll until the hero is ready. Returns the hero for confirmation. */
+export async function startProductAngles(input: {
+  sourceImageUrl: string
+  productName?: string
+  aspectRatio?: string
+  selectedAngles: ProductAngleKey[]
+}): Promise<{ angleSetId: string; heroUrl: string }> {
+  const { data } = await api.post<{ angleSetId: string }>('/api/product-angles/generate', input, { timeout: 60_000 })
+  return pollProductHero(data.angleSetId)
+}
+
+/** Resume polling an existing set's hero (after a reload/navigation). */
+export const awaitProductHero = (angleSetId: string) => pollProductHero(angleSetId)
+
+/** Phase 2: confirm (or cancel). If confirmed, poll until ready and return all urls. */
+export async function confirmProductAngles(
+  angleSetId: string,
+  confirmed: boolean,
+  onAngle?: (key: ProductAngleKey, url: string) => void,
+): Promise<ProductAnglesResult> {
+  await api.post('/api/product-angles/confirm', { angleSetId, confirmed }, { timeout: 60_000 })
+  if (!confirmed) return { heroUrl: null, angleUrls: [], allUrls: [], allKeys: [] }
+  return pollProductAngles(angleSetId, onAngle)
+}
+
+/** Resume polling an existing set's angles (after a reload/navigation). */
+export const awaitProductAngles = (angleSetId: string, onAngle?: (key: ProductAngleKey, url: string) => void) =>
+  pollProductAngles(angleSetId, onAngle)
+
+export async function refineProductLogo(input: {
+  angleSetId: string
+  angleKey: ProductAngleKey
+  logoImageUrl: string
+}): Promise<string> {
+  const { data } = await api.post<{ url: string }>('/api/product-angles/refine-logo', input, { timeout: 120_000 })
+  return data.url
+}
+
+export async function getProductAngleSets() {
+  const { data } = await api.get<{ sets: ProductAngleSet[] }>('/api/product-angles')
+  return data.sets
+}
+
+
+// ── Crear: análisis y director conversacional ────────────────────────────
+// Mismo servidor y mismo protocolo que la web. El parser de A2UI vive en
+// `lib/create/a2ui.ts`, copiado tal cual; aquí solo viaja el JSON.
+
+export interface CreateAnalysis {
+  kind: 'product' | 'garment' | 'person' | 'scene' | 'unknown'
+  subject: string
+  category: string | null
+  confidence: number
+}
+
+export async function analyzeForCreate(imageUrl: string): Promise<CreateAnalysis> {
+  // La ruta responde `{ analysis: {...} }`, envuelto. Desenvolverlo aquí y no
+  // en la pantalla: leerlo mal deja `subject` en undefined, y eso reventaba el
+  // director con "Cannot read property 'toLowerCase' of undefined".
+  const { data } = await api.post<{ analysis: CreateAnalysis }>('/api/create/analyze', { imageUrl })
+  return data.analysis
+}
+
+/** Una entrada del transcripto: lo que dijo el director, o lo que hizo el cliente. */
+export type DirectorEntry =
+  | { from: 'director'; messages: unknown }
+  | { from: 'user'; action: unknown }
+
+export interface DirectorReply {
+  /**
+   * Ya validada y parseada por el servidor. `components` viaja aplanado a
+   * objeto porque un Map no sobrevive a JSON; el cliente lo rearma.
+   */
+  surface: { surfaceId: string; order: string[]; components: Record<string, unknown> } | null
+  /** El JSON crudo que el modelo produjo, para devolverlo en el siguiente turno. */
+  messages: unknown | null
+}
+
+export async function askDirector(params: {
+  imageUrl: string
+  subject: string
+  transcript: DirectorEntry[]
+}): Promise<DirectorReply> {
+  const { data } = await api.post<DirectorReply>('/api/create/agent', params, {
+    timeout: 90_000,
+  })
+  return data
 }

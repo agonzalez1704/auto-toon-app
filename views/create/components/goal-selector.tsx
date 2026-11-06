@@ -1,4 +1,5 @@
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { StyleSheet, TouchableOpacity, View } from 'react-native'
+import { Text } from '@/components/text'
 import { theme } from '@/constants/theme'
 import type { GoalId } from '@/stores/use-product-enhancer-store'
 import { GOALS, GOAL_ICONS } from '../data'

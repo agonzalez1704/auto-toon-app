@@ -6,23 +6,15 @@
  * aria/accessibility labels, safe-area aware.
  */
 import { useCallback, useMemo } from 'react'
-import {
-  FlatList,
-  Modal,
-  Platform,
-  Pressable,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native'
+import { FlatList, Modal, Platform, Pressable, StyleSheet, TouchableOpacity, View } from 'react-native'
+import { Text } from '@/components/text'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import * as Haptics from 'expo-haptics'
 import type { MjKitOption } from '@/lib/mj-photo-kit'
 
 const BG = '#1F3E6F'               // slightly lighter than panel BG for visual layering
 const BG_OVERLAY = 'rgba(8,18,38,0.72)'
-const CYAN = '#06B6D4'
+const CYAN = '#141414'
 const MUTED = 'rgba(255,255,255,0.55)'
 const BORDER = 'rgba(255,255,255,0.08)'
 

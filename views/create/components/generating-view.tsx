@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { StatusBar, StyleSheet, Text, View } from 'react-native'
+import { StatusBar, StyleSheet, View } from 'react-native'
+import { Text } from '@/components/text'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { ParticleSphere } from '@/components/particle-sphere'
 import { theme } from '@/constants/theme'

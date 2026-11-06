@@ -1,15 +1,6 @@
 import { useCallback, useState } from 'react'
-import {
-  ActivityIndicator,
-  Alert,
-  Image,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native'
+import { ActivityIndicator, Alert, Image, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native'
+import { Text } from '@/components/text'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { LinearGradient } from 'expo-linear-gradient'
 import * as ImagePicker from 'expo-image-picker'
@@ -359,7 +350,7 @@ export default function WardrobeScreen() {
           <Animated.View entering={FadeInUp.duration(300)} style={[styles.footer, { paddingBottom: tabBarHeight + 12 }]}>
             <Pressable style={({ pressed }) => [styles.generateBtn, !canGenerate && !generating && styles.generateBtnDisabled, pressed && canGenerate && styles.generatePressed]} disabled={!canGenerate} onPress={generate}>
               {(canGenerate || generating) && (
-                <LinearGradient colors={['#FBBF24', '#F59E0B', '#B45309']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFillObject} />
+                <LinearGradient colors={['#D4FF3D', '#C2EE2B', '#B45309']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFillObject} />
               )}
               {generating ? (
                 <View style={styles.row}><ActivityIndicator color="#1A1330" size="small" /><Text style={styles.generateText}>Generating…</Text></View>
@@ -387,11 +378,11 @@ const styles = StyleSheet.create({
 
   emptyCard: { borderRadius: 16, borderWidth: 1, borderColor: theme.colors.border, padding: 18, alignItems: 'center', gap: 12 },
   emptyText: { fontSize: 13, color: theme.colors.textMuted, textAlign: 'center' },
-  primaryBtnSm: { backgroundColor: '#F59E0B', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12 },
+  primaryBtnSm: { backgroundColor: '#C2EE2B', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12 },
   primaryBtnSmText: { color: '#fff', fontWeight: '700', fontSize: 13 },
 
   modelCard: { width: 96, borderRadius: 14, overflow: 'hidden', borderWidth: 2, borderColor: theme.colors.border, backgroundColor: theme.colors.surface },
-  modelCardActive: { borderColor: '#F59E0B' },
+  modelCardActive: { borderColor: '#C2EE2B' },
   modelImg: { width: '100%', aspectRatio: 3 / 4 },
   modelName: { fontSize: 11, color: theme.colors.textMuted, padding: 6 },
   modelNew: { alignItems: 'center', justifyContent: 'center', aspectRatio: undefined, height: 128, borderStyle: 'dashed' },
@@ -404,8 +395,8 @@ const styles = StyleSheet.create({
 
 
   savedThumb: { width: 64, height: 64, borderRadius: 10, overflow: 'hidden', borderWidth: 2, borderColor: theme.colors.border },
-  savedThumbActive: { borderColor: '#F59E0B' },
-  selectedThumb: { width: 188, height: 250, borderRadius: 12, overflow: 'hidden', borderWidth: 2, borderColor: '#F59E0B', backgroundColor: 'rgba(255,255,255,0.03)' },
+  savedThumbActive: { borderColor: '#C2EE2B' },
+  selectedThumb: { width: 188, height: 250, borderRadius: 12, overflow: 'hidden', borderWidth: 2, borderColor: '#C2EE2B', backgroundColor: 'rgba(255,255,255,0.03)' },
   thumbRemove: { position: 'absolute', top: 3, right: 3, width: 20, height: 20, borderRadius: 10, backgroundColor: 'rgba(0,0,0,0.6)', alignItems: 'center', justifyContent: 'center' },
   thumbRemoveText: { color: '#fff', fontSize: 14, lineHeight: 16, fontWeight: '700' },
 
@@ -420,7 +411,7 @@ const styles = StyleSheet.create({
   angleHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 12 },
   angleRow: { flexDirection: 'row', gap: 8, paddingVertical: 2 },
   angleChip: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 999, borderWidth: 1, borderColor: theme.colors.border },
-  angleChipActive: { borderColor: '#F59E0B', backgroundColor: 'rgba(245,158,11,0.15)' },
+  angleChipActive: { borderColor: '#C2EE2B', backgroundColor: 'rgba(245,158,11,0.15)' },
   angleChipText: { color: theme.colors.textMuted, fontWeight: '600' },
   angleChipTextActive: { color: theme.colors.text },
   costHint: { fontSize: 12, color: theme.colors.textDim },

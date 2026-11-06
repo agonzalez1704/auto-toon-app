@@ -18,7 +18,7 @@ const Tabs = withLayoutContext<
 >(Navigator)
 
 const ACCENT = theme.colors.accent // amber — primary CTA tint
-const TAB_BG = theme.colors.bg     // flat warm-slate (#0B0F14)
+const TAB_BG = theme.colors.bg     // flat warm-slate (#0A0A0A)
 
 export default function TabLayout() {
   return (
@@ -41,41 +41,36 @@ export default function TabLayout() {
         <Tabs.Screen
           name="index"
           options={{
-            title: 'Dashboard',
-            tabBarIcon: Platform.select({
-              ios: { type: 'sfSymbol', name: 'square.grid.2x2.fill' },
-              default: { type: 'sfSymbol', name: 'square.grid.2x2.fill' },
-            }) as any,
+            title: 'Crear',
+            tabBarIcon: { type: 'sfSymbol', name: 'wand.and.stars' } as any,
           }}
         />
         <Tabs.Screen
-          name="create"
+          name="campanas"
           options={{
-            title: 'Enhance',
-            tabBarIcon: Platform.select({
-              ios: { type: 'sfSymbol', name: 'wand.and.stars' },
-              default: { type: 'sfSymbol', name: 'wand.and.stars' },
-            }) as any,
+            title: 'Campañas',
+            tabBarIcon: { type: 'sfSymbol', name: 'square.stack.3d.up' } as any,
           }}
         />
         <Tabs.Screen
-          name="wardrobe"
+          name="biblioteca"
           options={{
-            title: 'Fitting Room',
-            tabBarIcon: Platform.select({
-              ios: { type: 'sfSymbol', name: 'tshirt.fill' },
-              default: { type: 'sfSymbol', name: 'tshirt.fill' },
-            }) as any,
+            title: 'Biblioteca',
+            tabBarIcon: { type: 'sfSymbol', name: 'square.grid.2x2' } as any,
+          }}
+        />
+        <Tabs.Screen
+          name="saldo"
+          options={{
+            title: 'Saldo',
+            tabBarIcon: { type: 'sfSymbol', name: 'creditcard' } as any,
           }}
         />
         <Tabs.Screen
           name="more"
           options={{
-            title: 'More',
-            tabBarIcon: Platform.select({
-              ios: { type: 'sfSymbol', name: 'ellipsis.circle.fill' },
-              default: { type: 'sfSymbol', name: 'ellipsis.circle.fill' },
-            }) as any,
+            title: 'Más',
+            tabBarIcon: { type: 'sfSymbol', name: 'ellipsis.circle' } as any,
           }}
         />
       </Tabs>

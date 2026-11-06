@@ -1,4 +1,5 @@
-import { ActivityIndicator, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
+import { ActivityIndicator, StyleSheet, TouchableOpacity, View } from 'react-native'
+import { Text, TextInput } from '@/components/text'
 import { Image } from 'expo-image'
 import { LinearGradient } from 'expo-linear-gradient'
 import { theme } from '@/constants/theme'
@@ -55,7 +56,7 @@ export function UploadSection({
 
           <View style={styles.nameOverlay} pointerEvents="box-none">
             <LinearGradient
-              colors={['transparent', 'rgba(25,49,83,0.85)']}
+              colors={['transparent', 'rgba(10,10,10,0.85)']}
               style={StyleSheet.absoluteFillObject}
             />
             <View style={styles.nameRow}>
@@ -137,7 +138,7 @@ const styles = StyleSheet.create({
   previewImage: { width: '100%', height: '100%' },
   analyzeOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(25,49,83,0.7)',
+    backgroundColor: 'rgba(10,10,10,0.7)',
     justifyContent: 'center',
     alignItems: 'center',
   },

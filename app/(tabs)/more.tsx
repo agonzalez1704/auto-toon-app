@@ -1,245 +1,162 @@
-import { useCallback } from 'react'
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  StatusBar,
-  ScrollView,
-} from 'react-native'
+import { Alert, Pressable, ScrollView, StatusBar, StyleSheet, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRouter } from 'expo-router'
-import Svg, { Path as SvgPath, Circle, Rect } from 'react-native-svg'
+import { Image } from 'expo-image'
+import * as WebBrowser from 'expo-web-browser'
+import { useAuth, useUser } from '@clerk/clerk-expo'
+import { useQuery } from '@tanstack/react-query'
+import Svg, { Circle, Path } from 'react-native-svg'
+import { FONT, Text } from '@/components/text'
 import { theme } from '@/constants/theme'
+import { CONFIG } from '@/lib/config'
+import { verTrabajos } from '@/lib/estudio'
+import { useAIConsentStore } from '@/stores/use-ai-consent-store'
 
-// ── Icons ──────────────────────────────────────────────────────────
-
-function RestoreIcon() {
-  return (
-    <Svg width={28} height={28} viewBox="0 0 24 24" fill="none">
-      <SvgPath
-        d="M3.5 12a8.5 8.5 0 1 1 1.7 5.1"
-        stroke={theme.colors.info}
-        strokeWidth={1.8}
-        strokeLinecap="round"
-        fill="none"
-      />
-      <SvgPath
-        d="M3.5 17.5V12H9"
-        stroke={theme.colors.info}
-        strokeWidth={1.8}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        fill="none"
-      />
-    </Svg>
-  )
-}
-
-function RelightIcon() {
-  return (
-    <Svg width={28} height={28} viewBox="0 0 24 24" fill="none">
-      <Circle cx="12" cy="12" r="4" stroke={theme.colors.success} strokeWidth={1.8} fill="none" />
-      <SvgPath
-        d="M12 2v3M12 19v3M2 12h3M19 12h3M4.93 4.93l2.12 2.12M16.95 16.95l2.12 2.12M4.93 19.07l2.12-2.12M16.95 7.05l2.12-2.12"
-        stroke={theme.colors.success}
-        strokeWidth={1.8}
-        strokeLinecap="round"
-        fill="none"
-      />
-    </Svg>
-  )
-}
-
-function AssetsIcon() {
-  return (
-    <Svg width={28} height={28} viewBox="0 0 24 24" fill="none">
-      <Rect x="3" y="6" width="14" height="14" rx="2" stroke={theme.colors.accent} strokeWidth={1.8} fill="none" />
-      <SvgPath
-        d="M7 4h13a1 1 0 0 1 1 1v13"
-        stroke={theme.colors.accent}
-        strokeWidth={1.8}
-        strokeLinecap="round"
-        fill="none"
-      />
-    </Svg>
-  )
-}
-
-// ── Feature definitions ────────────────────────────────────────────
-
-function ModelFactoryIcon() {
-  return (
-    <Svg width={28} height={28} viewBox="0 0 24 24" fill="none">
-      <Circle cx="12" cy="8.5" r="3.2" stroke={theme.colors.accent} strokeWidth={1.8} fill="none" />
-      <SvgPath
-        d="M5.5 20a6.5 6.5 0 0 1 13 0"
-        stroke={theme.colors.accent}
-        strokeWidth={1.8}
-        strokeLinecap="round"
-        fill="none"
-      />
-    </Svg>
-  )
-}
-
-interface Feature {
-  key: string
-  title: string
-  description: string
-  icon: () => React.JSX.Element
-  iconTintColor: string
-  route?: string
-}
-
-const FEATURES: Feature[] = [
-  {
-    key: 'model-factory',
-    title: 'Model Factory',
-    description: 'Create & save AI models of yourself',
-    icon: ModelFactoryIcon,
-    iconTintColor: 'rgba(251,191,36,0.16)',
-    route: '/model-factory',
-  },
-  {
-    key: 'assets',
-    title: 'Assets',
-    description: 'Browse your generated images & videos',
-    icon: AssetsIcon,
-    iconTintColor: 'rgba(251,191,36,0.16)',
-    route: '/assets',
-  },
-  {
-    key: 'restore',
-    title: 'Image Restore',
-    description: 'Upscale & restore images to 2K/4K',
-    icon: RestoreIcon,
-    iconTintColor: 'rgba(34,211,238,0.16)',
-    route: '/restore',
-  },
-  {
-    key: 'relight',
-    title: 'AI Relight',
-    description: 'Transform lighting with cinematic presets',
-    icon: RelightIcon,
-    iconTintColor: 'rgba(52,211,153,0.16)',
-    route: '/relight',
-  },
-]
-
-// ── Screen ─────────────────────────────────────────────────────────
-
-export default function MoreScreen() {
+/**
+ * Más: what doesn't get a tab, in the studio's look (no board draws it; it borrows Mesas' cards and the
+ * Visor's mono labels). The studio's other screens first, then the account — profile, AI permission, the
+ * legal pages and signing out. The old Director, Assets and Model Factory entries are gone: Crear,
+ * Biblioteca and Personas replace them.
+ */
+export default function MasScreen() {
   const router = useRouter()
+  const { user } = useUser()
+  const { signOut } = useAuth()
+  const { accepted, revoke, setShowConsentModal } = useAIConsentStore()
+  const trabajos = useQuery({ queryKey: ['trabajos'], queryFn: verTrabajos })
+  const enCurso = trabajos.data?.running ?? 0
 
-  const handlePress = useCallback(
-    (feature: Feature) => {
-      if (feature.route) {
-        router.push(feature.route as any)
-      }
-    },
-    [router]
-  )
+  const nombre = user?.fullName || user?.firstName || 'Tu cuenta'
+  const correo = user?.primaryEmailAddress?.emailAddress
+  const legal = (path: string) => WebBrowser.openBrowserAsync(`${CONFIG.API_BASE_URL.replace(/\/api\/?$/, '')}${path}`)
+
+  const permiso = () =>
+    accepted
+      ? Alert.alert('¿Quitar el permiso de IA?', 'No podrás generar hasta que lo vuelvas a dar.', [
+          { text: 'Dejarlo', style: 'cancel' },
+          { text: 'Quitar', style: 'destructive', onPress: () => void revoke().catch(() => {}) },
+        ])
+      : setShowConsentModal(true)
+  const salir = () =>
+    Alert.alert('¿Cerrar sesión?', 'Tus mesas y tu saldo te esperan cuando vuelvas a entrar.', [
+      { text: 'Seguir aquí', style: 'cancel' },
+      { text: 'Cerrar sesión', style: 'destructive', onPress: () => void signOut() },
+    ])
 
   return (
     <View style={styles.root}>
       <StatusBar barStyle="light-content" />
-      <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <Text style={styles.headerTitle}>More</Text>
+      <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+        <ScrollView contentContainerStyle={styles.contenido} showsVerticalScrollIndicator={false}>
+          <Text style={styles.titulo}>Más</Text>
 
-        <ScrollView
-          contentContainerStyle={styles.content}
-          showsVerticalScrollIndicator={false}
-        >
-          {FEATURES.map((feature) => {
-            const Icon = feature.icon
-            return (
-              <TouchableOpacity
-                key={feature.key}
-                onPress={() => handlePress(feature)}
-                activeOpacity={0.7}
-                accessibilityLabel={feature.title}
-                accessibilityHint={feature.description}
-                accessibilityRole="button"
-                style={styles.card}
-              >
-                <View style={[styles.iconContainer, { backgroundColor: feature.iconTintColor }]}>
-                  <Icon />
-                </View>
-                <View style={styles.cardText}>
-                  <Text style={styles.cardTitle}>{feature.title}</Text>
-                  <Text style={styles.cardDescription}>{feature.description}</Text>
-                </View>
-                <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
-                  <SvgPath
-                    d="M9 18l6-6-6-6"
-                    stroke={theme.colors.textDim}
-                    strokeWidth={2}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </Svg>
-              </TouchableOpacity>
-            )
-          })}
+          <View style={styles.perfil}>
+            <View style={styles.avatar}>
+              {/* Clerk's default avatar is a coloured gradient: only a photo she set goes here. */}
+              {user?.hasImage ? <Image source={{ uri: user.imageUrl }} style={StyleSheet.absoluteFill} contentFit="cover" /> : <Text style={styles.inicial}>{(user?.firstName || correo || nombre).charAt(0).toUpperCase()}</Text>}
+            </View>
+            <View style={{ flex: 1, gap: 2 }}>
+              <Text style={styles.nombre} numberOfLines={1}>
+                {nombre}
+              </Text>
+              {correo ? (
+                <Text style={styles.correo} numberOfLines={1}>
+                  {correo}
+                </Text>
+              ) : null}
+            </View>
+          </View>
+
+          <Text style={styles.rotulo}>Estudio</Text>
+          <View style={styles.grupo}>
+            <Fila
+              icono="trabajos"
+              titulo="Trabajos"
+              meta={enCurso ? `${enCurso} en curso` : 'Cada pedido mientras se genera, y lo que costó'}
+              punto={enCurso > 0}
+              onPress={() => router.push('/trabajos')}
+            />
+            <Separador />
+            <Fila icono="personas" titulo="Personas" meta="Tus modelos, con su identidad fija" onPress={() => router.push('/model-factory')} />
+            <Separador />
+            <Fila icono="probador" titulo="Probador" meta="Tu ropa en tus personas" onPress={() => router.push('/wardrobe')} />
+          </View>
+
+          <Text style={styles.rotulo}>Cuenta</Text>
+          <View style={styles.grupo}>
+            <Fila icono="ia" titulo="Procesamiento con IA" meta={accepted ? 'Permitido · toca para quitarlo' : 'Sin permiso · toca para darlo'} onPress={permiso} />
+            <Separador />
+            <Fila icono="legal" titulo="Términos" meta="Lo que aceptaste al entrar" onPress={() => void legal('/terms')} />
+            <Separador />
+            <Fila icono="legal" titulo="Aviso de privacidad" meta="Qué guardamos y para qué" onPress={() => void legal('/privacy')} />
+            <Separador />
+            <Fila icono="salir" titulo="Cerrar sesión" onPress={salir} sinFlecha />
+          </View>
         </ScrollView>
       </SafeAreaView>
     </View>
   )
 }
 
-// ── Styles ─────────────────────────────────────────────────────────
+/** Stroke icons on the 24 grid. */
+const ICONOS = {
+  trabajos: { d: 'M12 7.5V12l3 2', circulo: { cx: 12, cy: 12, r: 8.5 } },
+  personas: { d: 'M5.5 20a6.5 6.5 0 0 1 13 0', circulo: { cx: 12, cy: 8.5, r: 3.2 } },
+  probador: { d: 'M12 6.5a1.75 1.75 0 1 1 1.75 1.75c-.97 0-1.75.78-1.75 1.75v.5M12 10.5 3.5 16.5a1 1 0 0 0 .58 1.82h15.84a1 1 0 0 0 .58-1.82L12 10.5Z' },
+  ia: { d: 'M12 3 19 7v5c0 4.5-3 8.2-7 9-4-.8-7-4.5-7-9V7l7-4ZM9 12l2 2 4-4' },
+  legal: { d: 'M7 3h7l5 5v13H7V3ZM14 3v5h5M10 13h6M10 17h6' },
+  salir: { d: 'M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 17l-5-5 5-5M5 12h11' },
+} as const satisfies Record<string, { d: string; circulo?: { cx: number; cy: number; r: number } }>
 
+function Fila({ icono, titulo, meta, onPress, punto, sinFlecha }: { icono: keyof typeof ICONOS; titulo: string; meta?: string; onPress: () => void; punto?: boolean; sinFlecha?: boolean }) {
+  const i: { d: string; circulo?: { cx: number; cy: number; r: number } } = ICONOS[icono]
+  return (
+    <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={titulo} accessibilityHint={meta} style={({ pressed }) => [styles.fila, pressed && { backgroundColor: c.bgElevated }]}>
+      <View style={styles.icono}>
+        <Svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke={c.text} strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
+          {i.circulo ? <Circle {...i.circulo} /> : null}
+          <Path d={i.d} />
+        </Svg>
+      </View>
+      <View style={{ flex: 1, gap: 3 }}>
+        <Text style={styles.filaTitulo}>{titulo}</Text>
+        {meta ? (
+          <View style={styles.metaFila}>
+            {punto ? <View style={styles.punto} /> : null}
+            <Text style={styles.meta} numberOfLines={2}>
+              {meta}
+            </Text>
+          </View>
+        ) : null}
+      </View>
+      {sinFlecha ? null : (
+        <Svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke={c.textDim} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+          <Path d="m9 6 6 6-6 6" />
+        </Svg>
+      )}
+    </Pressable>
+  )
+}
+
+const Separador = () => <View style={styles.separador} />
+
+const c = theme.colors
 const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    backgroundColor: theme.colors.bg,
-  },
-  safeArea: {
-    flex: 1,
-  },
-  headerTitle: {
-    ...theme.typography.pageTitle,
-    color: theme.colors.text,
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
-  },
-  content: {
-    padding: theme.spacing.lg,
-    gap: theme.spacing.md,
-  },
-  card: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.lg,
-    gap: theme.spacing.lg,
-    minHeight: 84,
-    backgroundColor: theme.colors.bgRaised,
-    borderRadius: theme.radius.lg,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-  },
-  iconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: theme.radius.md,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  cardText: {
-    flex: 1,
-    gap: 2,
-  },
-  cardTitle: {
-    ...theme.typography.label,
-    fontSize: 16,
-    fontWeight: '700',
-    color: theme.colors.text,
-  },
-  cardDescription: {
-    fontSize: 13,
-    fontWeight: '400',
-    color: theme.colors.textDim,
-  },
+  root: { flex: 1, backgroundColor: c.bg },
+  contenido: { paddingHorizontal: 16, paddingTop: 16, paddingBottom: 120, gap: 10 },
+  titulo: { fontSize: 24, fontWeight: '600', letterSpacing: -0.48, color: c.text, marginBottom: 6 },
+  perfil: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 76, padding: 12, borderRadius: 16, borderWidth: 1, borderColor: c.border, backgroundColor: c.bgRaised },
+  avatar: { width: 48, height: 48, borderRadius: 24, overflow: 'hidden', backgroundColor: c.bgOverlay, alignItems: 'center', justifyContent: 'center' },
+  inicial: { fontSize: 18, fontWeight: '600', color: c.text },
+  nombre: { fontSize: 15, fontWeight: '600', color: c.text },
+  correo: { fontFamily: FONT.mono, fontSize: 11.5, color: c.textDim },
+  rotulo: { fontFamily: FONT.mono, fontSize: 10.5, letterSpacing: 0.63, textTransform: 'uppercase', color: c.textDim, marginTop: 14, marginLeft: 4 },
+  grupo: { borderRadius: 16, borderWidth: 1, borderColor: c.border, backgroundColor: c.bgRaised, overflow: 'hidden' },
+  fila: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 64, paddingVertical: 12, paddingHorizontal: 12 },
+  icono: { width: 40, height: 40, borderRadius: 12, backgroundColor: c.bgOverlay, alignItems: 'center', justifyContent: 'center' },
+  filaTitulo: { fontSize: 15, fontWeight: '600', color: c.text },
+  metaFila: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  punto: { width: 7, height: 7, borderRadius: 4, backgroundColor: c.accent },
+  meta: { flex: 1, fontSize: 12.5, lineHeight: 17, color: c.textMuted },
+  separador: { height: StyleSheet.hairlineWidth, backgroundColor: c.border, marginLeft: 64 },
 })

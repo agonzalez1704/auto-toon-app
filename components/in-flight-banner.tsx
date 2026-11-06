@@ -1,12 +1,13 @@
 import { useEffect, useRef } from 'react'
-import { Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { Animated, StyleSheet, TouchableOpacity, View } from 'react-native'
+import { Text } from '@/components/text'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import Svg, { Circle, Path as SvgPath } from 'react-native-svg'
 import { useRouter } from 'expo-router'
 import { useShallow } from 'zustand/react/shallow'
 import { useGenerationTracker } from '@/stores/use-generation-tracker'
 
-const BRAND = '#FBBF24'
+const BRAND = '#D4FF3D'
 
 /**
  * Small top-of-screen pill that surfaces in-flight generations across
@@ -92,7 +93,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderWidth: 1,
-    borderColor: 'rgba(251,191,36,0.35)',
+    borderColor: 'rgba(212,255,61,0.35)',
     maxWidth: '88%',
   },
   dot: {

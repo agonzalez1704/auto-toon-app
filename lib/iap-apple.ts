@@ -34,3 +34,26 @@ export function getAppleCreditPackByPackageId(
 ): AppleCreditPack | undefined {
   return APPLE_CREDIT_PACKS.find(p => p.packageId === packageId)
 }
+
+/**
+ * Balance (the studio's saldo, plan D15 on the web) bought with Apple: consumables that credit MXN to the same
+ * ledger the job queue spends. Mirror of `lib/iap/saldo.ts` APPLE_SALDO on the backend; created in App Store
+ * Connect with these ids.
+ */
+export interface AppleSaldoPack {
+  productId: string
+  cents: number
+}
+
+export const APPLE_SALDO_PACKS: readonly AppleSaldoPack[] = [
+  { productId: 'com.autotoon.saldo.100', cents: 10_000 },
+  { productId: 'com.autotoon.saldo.250', cents: 25_000 },
+  { productId: 'com.autotoon.saldo.500', cents: 50_000 },
+] as const
+
+export function getAppleSaldoPack(productId: string): AppleSaldoPack | undefined {
+  return APPLE_SALDO_PACKS.find(p => p.productId === productId)
+}
+
+/** Everything the app sells through StoreKit: one listener handles both, by product. */
+export const APPLE_SKUS = [...APPLE_CREDIT_SKUS, ...APPLE_SALDO_PACKS.map(p => p.productId)]

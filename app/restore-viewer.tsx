@@ -1,17 +1,6 @@
 import { useCallback, useState } from 'react'
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  StatusBar,
-  Dimensions,
-  Alert,
-  ActivityIndicator,
-  Share,
-  Platform,
-  ActionSheetIOS,
-} from 'react-native'
+import { View, TouchableOpacity, StyleSheet, StatusBar, Dimensions, Alert, ActivityIndicator, Share, Platform, ActionSheetIOS } from 'react-native'
+import { Text } from '@/components/text'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import * as FileSystem from 'expo-file-system/legacy'
@@ -164,7 +153,7 @@ export default function RestoreViewerScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#193153',
+    backgroundColor: '#0A0A0A',
   },
   safeArea: {
     flex: 1,

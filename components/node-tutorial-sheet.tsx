@@ -1,21 +1,13 @@
 import { Image } from 'expo-image'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useEffect, useRef } from 'react'
-import {
-  Animated,
-  Dimensions,
-  Modal,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native'
+import { Animated, Dimensions, Modal, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native'
+import { Text } from '@/components/text'
 import Svg, { Path as SvgPath } from 'react-native-svg'
 import { useTutorialSeen } from '@/lib/hooks/use-tutorial-seen'
 
 const { width: SCREEN_W } = Dimensions.get('window')
-const ACCENT = '#FBBF24'
+const ACCENT = '#D4FF3D'
 const BG = '#0F1B2E'
 
 export interface TutorialItem {
@@ -76,7 +68,7 @@ export function NodeTutorialSheet({ storageKey, title, intro, items, ctaLabel = 
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.headerIcon}>
-              <LinearGradient colors={['#6366F1', '#A855F7']} style={StyleSheet.absoluteFillObject} />
+              <LinearGradient colors={['#A3A3A3', '#A855F7']} style={StyleSheet.absoluteFillObject} />
               <SparkleIcon />
             </View>
             <View style={styles.headerText}>
@@ -119,7 +111,7 @@ export function NodeTutorialSheet({ storageKey, title, intro, items, ctaLabel = 
           {/* CTA */}
           <View style={styles.footer}>
             <TouchableOpacity style={styles.cta} onPress={dismiss} activeOpacity={0.85}>
-              <LinearGradient colors={['#FBBF24', '#F59E0B']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFillObject} />
+              <LinearGradient colors={['#D4FF3D', '#C2EE2B']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFillObject} />
               <Text style={styles.ctaText}>{ctaLabel}</Text>
             </TouchableOpacity>
           </View>

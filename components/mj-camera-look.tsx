@@ -6,14 +6,8 @@
  * all at once. Advanced controls live behind "Customize" for power users.
  */
 import { useMemo, useState } from 'react'
-import {
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native'
+import { Platform, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native'
+import { Text } from '@/components/text'
 import * as Haptics from 'expo-haptics'
 import { LinearGradient } from 'expo-linear-gradient'
 import {
@@ -29,8 +23,8 @@ import { MjPickerSheet } from './mj-picker-sheet'
 
 // ─── Theme ────────────────────────────────────────────────────────
 
-const CYAN = '#06B6D4'
-const AMBER = '#FBBF24'
+const CYAN = '#141414'
+const AMBER = '#D4FF3D'
 const MUTED = 'rgba(255,255,255,0.55)'
 const CARD_BG = 'rgba(255,255,255,0.035)'
 const CARD_BORDER = 'rgba(255,255,255,0.06)'
@@ -344,7 +338,7 @@ const styles = StyleSheet.create({
     width: SMALL_CARD_W,
     height: CARD_H,
     borderRadius: 16,
-    backgroundColor: 'rgba(251,191,36,0.06)',
+    backgroundColor: 'rgba(212,255,61,0.06)',
     borderWidth: 2,
     borderColor: CHIP_BORDER,
     padding: 12,

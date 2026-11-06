@@ -1,14 +1,6 @@
 import { useRef, useEffect } from 'react'
-import {
-  Animated,
-  Platform,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native'
+import { Animated, Platform, ScrollView, StatusBar, StyleSheet, TouchableOpacity, View } from 'react-native'
+import { Text } from '@/components/text'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Image } from 'expo-image'
 import { useRouter } from 'expo-router'
@@ -21,9 +13,11 @@ import Svg, {
 import { useSubscriptionStore } from '@/stores/use-subscription-store'
 import { useCreditsStore } from '@/stores/use-credits-store'
 import { useAIConsentStore } from '@/stores/use-ai-consent-store'
+import { useQuery } from '@tanstack/react-query'
+import { mxn, verSaldo } from '@/lib/estudio'
 
-const BRAND = '#8B5CF6'
-const BRAND_CYAN = '#06B6D4'
+const BRAND = '#FF3D8A'
+const BRAND_CYAN = '#141414'
 
 // ─── Icons ──────────────────────────────────────────────────────────────
 
@@ -39,7 +33,7 @@ function CreditCardIcon() {
 function CoinSmallIcon() {
   return (
     <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
-      <Circle cx="12" cy="12" r="10" fill="#FBBF24" />
+      <Circle cx="12" cy="12" r="10" fill="#D4FF3D" />
       <SvgPath d="M12 7v10M9 9.5l3-2.5 3 2.5" stroke="#78350F" strokeWidth="1.5" strokeLinecap="round" />
     </Svg>
   )
@@ -72,6 +66,7 @@ export default function AccountScreen() {
   const { signOut } = useAuth()
   const { plan } = useSubscriptionStore()
   const { balance } = useCreditsStore()
+  const saldo = useQuery({ queryKey: ['saldo'], queryFn: verSaldo })
 
   const fadeAnim = useRef(new Animated.Value(0)).current
   useEffect(() => {
@@ -118,6 +113,19 @@ export default function AccountScreen() {
 
           {/* Menu Items */}
           <View style={styles.menuGroup}>
+            <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/saldo')} activeOpacity={0.7}>
+              <View style={[styles.menuIconWrap, { backgroundColor: 'rgba(212,255,61,0.12)' }]}>
+                <CoinSmallIcon />
+              </View>
+              <View style={styles.menuTextWrap}>
+                <Text style={styles.menuLabel}>Saldo</Text>
+                <Text style={styles.menuValue}>{saldo.data ? `${mxn(saldo.data.saldoCents)} disponibles` : '...'}</Text>
+              </View>
+              <ChevronRight />
+            </TouchableOpacity>
+
+            <View style={styles.menuDivider} />
+
             <TouchableOpacity
               style={styles.menuItem}
               onPress={() => router.push('/account/pricing')}
@@ -127,8 +135,8 @@ export default function AccountScreen() {
                 <CreditCardIcon />
               </View>
               <View style={styles.menuTextWrap}>
-                <Text style={styles.menuLabel}>Subscription</Text>
-                <Text style={styles.menuValue}>{planLabel} Plan</Text>
+                <Text style={styles.menuLabel}>Suscripción</Text>
+                <Text style={styles.menuValue}>Plan {planLabel}</Text>
               </View>
               <ChevronRight />
             </TouchableOpacity>
@@ -140,13 +148,13 @@ export default function AccountScreen() {
               onPress={() => router.push('/account/credits')}
               activeOpacity={0.7}
             >
-              <View style={[styles.menuIconWrap, { backgroundColor: 'rgba(251,191,36,0.12)' }]}>
+              <View style={[styles.menuIconWrap, { backgroundColor: 'rgba(212,255,61,0.12)' }]}>
                 <CoinSmallIcon />
               </View>
               <View style={styles.menuTextWrap}>
-                <Text style={styles.menuLabel}>Credits</Text>
+                <Text style={styles.menuLabel}>Créditos (Director)</Text>
                 <Text style={styles.menuValue}>
-                  {balance !== null ? `${balance} available` : '...'}
+                  {balance !== null ? `${balance} disponibles` : '...'}
                 </Text>
               </View>
               <ChevronRight />
@@ -164,7 +172,7 @@ export default function AccountScreen() {
             activeOpacity={0.7}
           >
             <LogoutIcon />
-            <Text style={styles.signOutText}>Sign Out</Text>
+            <Text style={styles.signOutText}>Cerrar sesión</Text>
           </TouchableOpacity>
         </Animated.ScrollView>
       </SafeAreaView>
@@ -179,14 +187,14 @@ function ShieldIcon() {
     <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
       <SvgPath
         d="M12 2l7 4v5c0 5.25-3.5 9.74-7 11-3.5-1.26-7-5.75-7-11V6l7-4z"
-        stroke="#FBBF24"
+        stroke="#D4FF3D"
         strokeWidth={1.8}
         strokeLinejoin="round"
         fill="none"
       />
       <SvgPath
         d="M9 12l2 2 4-4"
-        stroke="#FBBF24"
+        stroke="#D4FF3D"
         strokeWidth={2}
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -222,7 +230,7 @@ function PrivacyRow_Inline() {
   void acceptConsent
   return (
     <TouchableOpacity style={styles.menuItem} onPress={handlePress} activeOpacity={0.7}>
-      <View style={[styles.menuIconWrap, { backgroundColor: 'rgba(251,191,36,0.12)' }]}>
+      <View style={[styles.menuIconWrap, { backgroundColor: 'rgba(212,255,61,0.12)' }]}>
         <ShieldIcon />
       </View>
       <View style={styles.menuTextWrap}>
@@ -241,7 +249,7 @@ function PrivacyRow_Inline() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#193153',
+    backgroundColor: '#0A0A0A',
   },
   safeArea: { flex: 1 },
   scrollContent: {

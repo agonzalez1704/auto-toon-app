@@ -1,15 +1,6 @@
 import { useRef, useEffect, useState } from 'react'
-import {
-  Animated,
-  Platform,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-  Alert,
-} from 'react-native'
+import { Animated, Platform, ScrollView, StatusBar, StyleSheet, TouchableOpacity, View, Alert } from 'react-native'
+import { Text } from '@/components/text'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { LinearGradient } from 'expo-linear-gradient'
 import * as WebBrowser from 'expo-web-browser'
@@ -25,9 +16,9 @@ import type { AppleCreditPack } from '@/lib/iap-apple'
 
 const IS_IOS = Platform.OS === 'ios'
 
-const BRAND = '#8B5CF6'
-const BRAND_CYAN = '#06B6D4'
-const BG = '#193153'
+const BRAND = '#FF3D8A'
+const BRAND_CYAN = '#141414'
+const BG = '#0A0A0A'
 const CARD_BG = 'rgba(255,255,255,0.05)'
 const CARD_BORDER = 'rgba(255,255,255,0.08)'
 const MUTED = 'rgba(255,255,255,0.55)'
@@ -47,8 +38,8 @@ function CrownIcon() {
     <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
       <SvgPath
         d="M2 20h20L19 8l-5 5-2-7-2 7-5-5-3 12z"
-        fill="#FBBF24"
-        stroke="#F59E0B"
+        fill="#D4FF3D"
+        stroke="#C2EE2B"
         strokeWidth="1"
       />
     </Svg>
@@ -583,7 +574,7 @@ export default function PricingScreen() {
                   {isFeatured && (
                     <View style={styles.popularBadge}>
                       <LinearGradient
-                        colors={[BRAND, '#7C3AED']}
+                        colors={[BRAND, '#FF3D8A']}
                         start={{ x: 0, y: 0 }}
                         end={{ x: 1, y: 0 }}
                         style={StyleSheet.absoluteFillObject}
@@ -631,7 +622,7 @@ export default function PricingScreen() {
                     <View style={[styles.selectButton, isFeatured && styles.selectButtonFeatured]}>
                       {isFeatured && (
                         <LinearGradient
-                          colors={[BRAND, '#7C3AED']}
+                          colors={[BRAND, '#FF3D8A']}
                           start={{ x: 0, y: 0 }}
                           end={{ x: 1, y: 0 }}
                           style={StyleSheet.absoluteFillObject}

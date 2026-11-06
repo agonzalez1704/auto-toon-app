@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 'react-native'
+import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native'
+import { Text, TextInput } from '@/components/text'
 import Svg, { Path as SvgPath } from 'react-native-svg'
 import { theme } from '@/constants/theme'
 
@@ -12,7 +13,7 @@ import { theme } from '@/constants/theme'
  * Mirrors the web GarmentInput. The screen owns the actual upload/scrape
  * logic; this component just renders the affordances and reports intent.
  */
-const ACCENT = '#F59E0B'
+const ACCENT = '#C2EE2B'
 
 function Icon({ d, color = theme.colors.text }: { d: string; color?: string }) {
   return (

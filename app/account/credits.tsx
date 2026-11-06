@@ -1,15 +1,6 @@
 import { useRef, useEffect } from 'react'
-import {
-  Animated,
-  Platform,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-  Alert,
-} from 'react-native'
+import { Animated, Platform, ScrollView, StatusBar, StyleSheet, TouchableOpacity, View, Alert } from 'react-native'
+import { Text } from '@/components/text'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { LinearGradient } from 'expo-linear-gradient'
 import * as WebBrowser from 'expo-web-browser'
@@ -26,14 +17,14 @@ import { CONFIG } from '@/lib/config'
 import { useAppleCreditPurchase } from '@/lib/use-apple-credit-purchase'
 import type { AppleCreditPack } from '@/lib/iap-apple'
 
-const BRAND = '#8B5CF6'
+const BRAND = '#FF3D8A'
 
 function CoinIcon() {
   return (
     <Svg width={48} height={48} viewBox="0 0 48 48">
       <Defs>
         <SvgLinearGradient id="coinG" x1="0" y1="0" x2="0" y2="1">
-          <Stop offset="0" stopColor="#FBBF24" />
+          <Stop offset="0" stopColor="#D4FF3D" />
           <Stop offset="1" stopColor="#D97706" />
         </SvgLinearGradient>
       </Defs>
@@ -251,7 +242,7 @@ export default function CreditsScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#193153',
+    backgroundColor: '#0A0A0A',
   },
   safeArea: { flex: 1 },
   scrollContent: {

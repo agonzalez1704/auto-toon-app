@@ -1,16 +1,6 @@
 import { useCallback } from 'react'
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  StatusBar,
-  Dimensions,
-  Alert,
-  ActivityIndicator,
-  Platform,
-  ActionSheetIOS,
-} from 'react-native'
+import { View, TouchableOpacity, StyleSheet, StatusBar, Dimensions, Alert, ActivityIndicator, Platform, ActionSheetIOS } from 'react-native'
+import { Text } from '@/components/text'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Image } from 'expo-image'
 import { useRouter } from 'expo-router'
@@ -21,8 +11,8 @@ import { useFashionEditorialStore } from '@/stores/use-fashion-editorial-store'
 import { analyzeHairstyle } from '@/lib/api'
 
 const { width: SCREEN_W } = Dimensions.get('window')
-const BG = '#193153'
-const ACCENT = '#FBBF24'
+const BG = '#0A0A0A'
+const ACCENT = '#D4FF3D'
 const MUTED = 'rgba(255,255,255,0.55)'
 const CARD_BG = 'rgba(255,255,255,0.05)'
 const CARD_BORDER = 'rgba(255,255,255,0.08)'
@@ -171,7 +161,7 @@ const styles = StyleSheet.create({
   overlayText: { fontSize: 14, fontWeight: '600', color: '#FFFFFF' },
   analysisBox: { marginTop: 16, padding: 14, borderRadius: 14, backgroundColor: CARD_BG, borderWidth: 1, borderColor: CARD_BORDER, width: '100%' },
   modeBadge: { alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, backgroundColor: 'rgba(139,92,246,0.2)', marginBottom: 8 },
-  modeBadgeText: { fontSize: 11, fontWeight: '700', color: '#A78BFA' },
+  modeBadgeText: { fontSize: 11, fontWeight: '700', color: '#FF3D8A' },
   analysisText: { fontSize: 13, color: 'rgba(255,255,255,0.65)', lineHeight: 18 },
   errorText: { fontSize: 14, color: '#EF4444', marginTop: 16 },
   actions: { flexDirection: 'row', gap: 12, marginTop: 20 },

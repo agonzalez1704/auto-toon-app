@@ -13,26 +13,14 @@ import { LinearGradient } from 'expo-linear-gradient'
 import * as MediaLibrary from 'expo-media-library'
 import { useRouter } from 'expo-router'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import {
-  ActionSheetIOS,
-  ActivityIndicator,
-  Alert,
-  Dimensions,
-  Platform,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from 'react-native'
+import { ActionSheetIOS, ActivityIndicator, Alert, Dimensions, Platform, ScrollView, StatusBar, StyleSheet, TouchableOpacity, View } from 'react-native'
+import { Text, TextInput } from '@/components/text'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Svg, { Path as SvgPath } from 'react-native-svg'
 
 const { width: SCREEN_W } = Dimensions.get('window')
-const BG = '#193153'
-const ACCENT = '#FBBF24'
+const BG = '#0A0A0A'
+const ACCENT = '#D4FF3D'
 const TEAL = '#0B5777'
 const MUTED = 'rgba(255,255,255,0.55)'
 const CARD_BG = 'rgba(255,255,255,0.05)'
@@ -500,7 +488,7 @@ export default function ShowcaseScreen() {
                   <Text style={styles.actionBtnText}>Regenerate</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.actionBtnSave} onPress={handleSave} activeOpacity={0.8}>
-                  <LinearGradient colors={['#FBBF24', '#F59E0B']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFillObject} />
+                  <LinearGradient colors={['#D4FF3D', '#C2EE2B']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFillObject} />
                   <SaveIcon />
                   <Text style={styles.actionBtnSaveText}>Save All</Text>
                 </TouchableOpacity>

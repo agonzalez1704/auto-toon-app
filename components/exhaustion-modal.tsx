@@ -1,17 +1,12 @@
-import {
-  Modal,
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-} from 'react-native'
+import { Modal, View, TouchableOpacity, StyleSheet } from 'react-native'
+import { Text } from '@/components/text'
 import Svg, { Path as SvgPath } from 'react-native-svg'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useRouter } from 'expo-router'
 import { useCreditsStore } from '@/stores/use-credits-store'
 import { useSubscriptionStore } from '@/stores/use-subscription-store'
 
-const BRAND = '#FBBF24'
+const BRAND = '#D4FF3D'
 
 /**
  * Shown when a credit-plan user tries to generate but the balance is below the
@@ -70,7 +65,7 @@ export function ExhaustionModal() {
           <View style={styles.buttons}>
             <TouchableOpacity style={styles.primaryBtn} onPress={upgrade} activeOpacity={0.85}>
               <LinearGradient
-                colors={['#FBBF24', '#F59E0B', '#B45309']}
+                colors={['#D4FF3D', '#C2EE2B', '#B45309']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={StyleSheet.absoluteFillObject}
@@ -126,7 +121,7 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(251,191,36,0.4)',
+    borderColor: 'rgba(212,255,61,0.4)',
   },
   secondaryBtnText: { color: BRAND, fontSize: 15, fontWeight: '600' },
   dismissBtn: { alignItems: 'center', paddingVertical: 10 },

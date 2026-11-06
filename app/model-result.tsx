@@ -10,28 +10,15 @@ import { LinearGradient } from 'expo-linear-gradient'
 import * as MediaLibrary from 'expo-media-library'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import {
-  ActionSheetIOS,
-  ActivityIndicator,
-  Alert,
-  Dimensions,
-  KeyboardAvoidingView,
-  Platform,
-  Share,
-  StatusBar,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from 'react-native'
+import { ActionSheetIOS, ActivityIndicator, Alert, Dimensions, KeyboardAvoidingView, Platform, Share, StatusBar, StyleSheet, TouchableOpacity, View } from 'react-native'
+import { Text, TextInput } from '@/components/text'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Svg, { Path as SvgPath } from 'react-native-svg'
 
 const { width: SCREEN_W } = Dimensions.get('window')
 
-const AURORA_NAVY = '#193153'
-const AURORA_MAGENTA = '#FBBF24'
+const AURORA_NAVY = '#0A0A0A'
+const AURORA_MAGENTA = '#D4FF3D'
 
 function CloseIcon() {
   return (
@@ -335,7 +322,7 @@ export default function ModelResultScreen() {
             activeOpacity={0.8}
           >
             <LinearGradient
-              colors={['#FBBF24', '#F59E0B', '#B45309']}
+              colors={['#D4FF3D', '#C2EE2B', '#B45309']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={StyleSheet.absoluteFillObject}
@@ -377,7 +364,7 @@ export default function ModelResultScreen() {
                 onPress={confirmSaveToGallery}
               >
                 <LinearGradient
-                  colors={['#FBBF24', '#F59E0B']}
+                  colors={['#D4FF3D', '#C2EE2B']}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
                   style={[StyleSheet.absoluteFillObject, { borderRadius: 12 }]}
@@ -482,7 +469,7 @@ const styles = StyleSheet.create({
   // Save dialog
   dialogOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(25,49,83,0.85)',
+    backgroundColor: 'rgba(10,10,10,0.85)',
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 32,
@@ -493,7 +480,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 24,
     borderWidth: 1,
-    borderColor: 'rgba(251,191,36,0.15)',
+    borderColor: 'rgba(212,255,61,0.15)',
   },
   dialogTitle: {
     fontSize: 18,
@@ -511,7 +498,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.06)',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: 'rgba(251,191,36,0.15)',
+    borderColor: 'rgba(212,255,61,0.15)',
     paddingHorizontal: 14,
     paddingVertical: 12,
     fontSize: 15,
@@ -546,7 +533,7 @@ const styles = StyleSheet.create({
   // Saving overlay
   savingOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(25,49,83,0.8)',
+    backgroundColor: 'rgba(10,10,10,0.8)',
     justifyContent: 'center',
     alignItems: 'center',
     gap: 12,

@@ -1,16 +1,6 @@
 import { useState, useCallback, useEffect, useMemo } from 'react'
-import {
-  View,
-  Text,
-  FlatList,
-  ScrollView,
-  TouchableOpacity,
-  StyleSheet,
-  ActivityIndicator,
-  Alert,
-  RefreshControl,
-  StatusBar,
-} from 'react-native'
+import { View, FlatList, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, RefreshControl, StatusBar } from 'react-native'
+import { Text } from '@/components/text'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Image } from 'expo-image'
 import { LinearGradient } from 'expo-linear-gradient'
@@ -22,9 +12,9 @@ import { queryKeys } from '@/lib/query'
 import { theme } from '@/constants/theme'
 import { GlassPill } from '@/components/glass'
 
-const AURORA_NAVY = '#0B0F14' // theme.colors.bg — flat warm-slate
+const AURORA_NAVY = '#0A0A0A' // theme.colors.bg — flat warm-slate
 // Brand-aligned accent (violet, mirrors web brand book)
-const AURORA_MAGENTA = '#7C3AED'
+const AURORA_MAGENTA = '#FF3D8A'
 
 type FilterType = 'all' | 'fashion_editorial' | 'vignette' | 'elements' | 'poster' | '3x3' | 'food' | 'upscaled' | 'restored' | 'video'
 
@@ -138,6 +128,9 @@ export default function AssetsScreen() {
 
     // Add assets
     for (const asset of assets) {
+      // Videos come from getUserVideos (with playable videoUrl); skip the
+      // video assets the /api/assets feed now also returns to avoid duplicates.
+      if (asset.secondImageType === 'video') continue
       if (asset.secondImageType === 'upscale_batch' && asset.upscaledUrls?.length > 0) {
         for (let i = 0; i < asset.upscaledUrls.length; i++) {
           items.push({
@@ -529,7 +522,7 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: 'rgba(251,191,36,0.6)',
+    backgroundColor: 'rgba(212,255,61,0.6)',
     justifyContent: 'center',
     alignItems: 'center',
     paddingLeft: 2,

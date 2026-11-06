@@ -24,17 +24,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Platform } from 'react-native'
 import { useIAP, fetchProducts as fetchProductsStandalone, type Product, type Purchase } from 'expo-iap'
-import {
-  APPLE_CREDIT_PACKS,
-  APPLE_CREDIT_SKUS,
-  getAppleCreditPack,
-  getAppleCreditPackByPackageId,
-  type AppleCreditPack,
-} from './iap-apple'
+import { APPLE_CREDIT_PACKS, getAppleCreditPack, getAppleCreditPackByPackageId, type AppleCreditPack, APPLE_SKUS, getAppleSaldoPack, type AppleSaldoPack } from './iap-apple'
 import { verifyAppleIAP } from './api'
+import { acreditarSaldoApple } from './estudio'
 
 export interface UseAppleCreditPurchaseOptions {
   onSuccess?: (result: { balance: number; pack: AppleCreditPack }) => void
+  /** A balance purchase credited: the new balance in MXN cents. */
+  onSaldo?: (result: { saldoCents: number; pack: AppleSaldoPack }) => void
   onError?: (message: string) => void
 }
 
@@ -57,6 +54,8 @@ export interface UseAppleCreditPurchaseApi {
   lastFetchError: string | null
   /** Trigger a purchase by packageId (micro|small|medium|large). */
   purchase: (packageId: AppleCreditPack['packageId']) => Promise<void>
+  /** Buy balance (a com.autotoon.saldo.* product). */
+  comprarSaldo: (productId: string) => Promise<void>
   /** Restore unfinished consumable transactions (network drop / reinstall recovery).
    *  Returns the number of transactions whose credits were granted on this call. */
   restore: () => Promise<number>
@@ -77,6 +76,22 @@ export function useAppleCreditPurchase(
 
   const handlePurchaseSuccess = useCallback(
     async (purchase: Purchase) => {
+      const saldo = getAppleSaldoPack(purchase.productId)
+      if (saldo) {
+        const transactionId = purchase.transactionId ?? purchase.id
+        try {
+          if (!transactionId) throw new Error('Apple no devolvió la transacción; no se puede verificar.')
+          const r = await acreditarSaldoApple({ transactionId, productId: purchase.productId })
+          // Finished only once the balance is credited: if this fails, StoreKit replays it and the server credits it once.
+          await finishTransactionRef.current?.({ purchase, isConsumable: true })
+          optionsRef.current.onSaldo?.({ saldoCents: r.saldoCents, pack: saldo })
+        } catch (err: unknown) {
+          optionsRef.current.onError?.(err instanceof Error ? err.message : 'No pudimos acreditar tu recarga')
+        } finally {
+          setIsPurchasing(false)
+        }
+        return
+      }
       const pack = getAppleCreditPack(purchase.productId)
       if (!pack) {
         optionsRef.current.onError?.(
@@ -154,7 +169,7 @@ export function useAppleCreditPurchase(
       // rather than relying solely on the hook's reactive `products` state
       // (which intermittently stays empty after the StoreKit query resolves).
       // Populate from both sources so whichever fills first wins.
-      const result = await fetchProductsStandalone({ skus: [...APPLE_CREDIT_SKUS], type: 'in-app' })
+      const result = await fetchProductsStandalone({ skus: [...APPLE_SKUS], type: 'in-app' })
       const list = (Array.isArray(result) ? result : []) as Product[]
       if (list.length > 0) {
         setProductsById((prev) => {
@@ -163,11 +178,11 @@ export function useAppleCreditPurchase(
           return next
         })
       } else {
-        console.warn('[iap] fetchProducts returned 0 products for', APPLE_CREDIT_SKUS)
+        console.warn('[iap] fetchProducts returned 0 products for', APPLE_SKUS)
       }
       // Also trigger the hook's fetch so its internal store is primed for
       // requestPurchase.
-      await fetchProducts({ skus: [...APPLE_CREDIT_SKUS], type: 'in-app' }).catch(() => {})
+      await fetchProducts({ skus: [...APPLE_SKUS], type: 'in-app' }).catch(() => {})
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err)
       console.warn('[iap] fetchProducts failed:', msg)
@@ -204,7 +219,7 @@ export function useAppleCreditPurchase(
       // otherwise it throws "SKU not found".
       if (!productsByid[pack.productId]) {
         try {
-          const result = await fetchProductsStandalone({ skus: [...APPLE_CREDIT_SKUS], type: 'in-app' })
+          const result = await fetchProductsStandalone({ skus: [...APPLE_SKUS], type: 'in-app' })
           const list = (Array.isArray(result) ? result : []) as Product[]
           if (list.length > 0) {
             setProductsById((prev) => {
@@ -213,7 +228,7 @@ export function useAppleCreditPurchase(
               return next
             })
           }
-          await fetchProducts({ skus: [...APPLE_CREDIT_SKUS], type: 'in-app' }).catch(() => {})
+          await fetchProducts({ skus: [...APPLE_SKUS], type: 'in-app' }).catch(() => {})
         } catch {
           // Ignore — proceed with the SKU directly.
         }
@@ -240,6 +255,26 @@ export function useAppleCreditPurchase(
       }
     },
     [connected, requestPurchase, fetchProducts, productsByid],
+  )
+
+  const comprarSaldo = useCallback(
+    async (productId: string) => {
+      if (!isIos) throw new Error('La recarga con Apple sólo existe en iPhone.')
+      if (!getAppleSaldoPack(productId)) throw new Error(`Recarga desconocida: ${productId}`)
+      if (!connected) {
+        optionsRef.current.onError?.('La tienda de Apple aún no responde; intenta en un momento.')
+        return
+      }
+      setIsPurchasing(true)
+      try {
+        await requestPurchase({ request: { apple: { sku: productId }, ios: { sku: productId } }, type: 'in-app' })
+      } catch (err: unknown) {
+        setIsPurchasing(false)
+        const message = err instanceof Error ? err.message : 'No se pudo comprar'
+        if (!/cancel/i.test(message)) optionsRef.current.onError?.(message)
+      }
+    },
+    [connected, requestPurchase],
   )
 
   const [isRestoring, setIsRestoring] = useState(false)
@@ -281,10 +316,22 @@ export function useAppleCreditPurchase(
       const pending = returned.length > 0 ? returned : (availablePurchases ?? [])
       let granted = 0
       for (const purchase of pending) {
-        const pack = getAppleCreditPack(purchase.productId)
-        if (!pack) continue
         const txId = purchase.transactionId ?? purchase.id
         if (!txId) continue
+        const saldo = getAppleSaldoPack(purchase.productId)
+        if (saldo) {
+          try {
+            const r = await acreditarSaldoApple({ transactionId: txId, productId: purchase.productId })
+            await finishTransactionRef.current?.({ purchase, isConsumable: true })
+            if (!r.yaEstaba) granted++
+            optionsRef.current.onSaldo?.({ saldoCents: r.saldoCents, pack: saldo })
+          } catch (err) {
+            console.warn('[iap] restore: balance credit failed for', txId, err)
+          }
+          continue
+        }
+        const pack = getAppleCreditPack(purchase.productId)
+        if (!pack) continue
         try {
           const result = await verifyAppleIAP({
             transactionId: txId,
@@ -315,6 +362,7 @@ export function useAppleCreditPurchase(
     isRestoring,
     lastFetchError,
     purchase,
+    comprarSaldo,
     restore,
     retryFetch: doFetch,
   }

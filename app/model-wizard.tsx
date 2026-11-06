@@ -1,15 +1,6 @@
 import { useCallback, useRef, useState, useEffect } from 'react'
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  StatusBar,
-  ScrollView,
-  Alert,
-  ActivityIndicator,
-  Platform,
-} from 'react-native'
+import { View, TouchableOpacity, StyleSheet, StatusBar, ScrollView, Alert, ActivityIndicator, Platform } from 'react-native'
+import { Text } from '@/components/text'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Image } from 'expo-image'
 import { LinearGradient } from 'expo-linear-gradient'
@@ -33,8 +24,8 @@ import { ParticleSphere } from '@/components/particle-sphere'
 import { AI_MODELS, getModelCredits, getCostLabel } from '@/lib/ai-models'
 import { useSubscriptionStore } from '@/stores/use-subscription-store'
 
-const AURORA_NAVY = '#193153'
-const AURORA_MAGENTA = '#FBBF24'
+const AURORA_NAVY = '#0A0A0A'
+const AURORA_MAGENTA = '#D4FF3D'
 const AURORA_TEAL = '#0B5777'
 
 /**
@@ -654,7 +645,7 @@ export default function ModelWizardScreen() {
                 >
                   {ctaTappable && (
                     <LinearGradient
-                      colors={['#FBBF24', '#F59E0B', '#B45309']}
+                      colors={['#D4FF3D', '#C2EE2B', '#B45309']}
                       start={{ x: 0, y: 0 }}
                       end={{ x: 1, y: 0 }}
                       style={StyleSheet.absoluteFillObject}
@@ -797,7 +788,7 @@ const styles = StyleSheet.create({
   },
   uploadOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(25,49,83,0.7)',
+    backgroundColor: 'rgba(10,10,10,0.7)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -814,7 +805,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: 'rgba(25,49,83,0.8)',
+    backgroundColor: 'rgba(10,10,10,0.8)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -852,7 +843,7 @@ const styles = StyleSheet.create({
   },
   modeCardSelected: {
     borderColor: AURORA_MAGENTA,
-    backgroundColor: 'rgba(251,191,36,0.1)',
+    backgroundColor: 'rgba(212,255,61,0.1)',
   },
   modeRadio: {
     width: 20,

@@ -1,16 +1,6 @@
 import { useCallback, useRef, useState, useEffect } from 'react'
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  StatusBar,
-  Dimensions,
-  TextInput,
-  Animated,
-  ScrollView,
-  ActivityIndicator,
-} from 'react-native'
+import { View, TouchableOpacity, StyleSheet, StatusBar, Dimensions, Animated, ScrollView, ActivityIndicator } from 'react-native'
+import { Text, TextInput } from '@/components/text'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Image } from 'expo-image'
 import { useRouter } from 'expo-router'
@@ -28,8 +18,8 @@ import { MidjourneyParamsPanel, DEFAULT_MJ_PARAMS, buildMjFlags, type MjParams }
 import { ParticleSphere } from '@/components/particle-sphere'
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window')
-const BG = '#193153'
-const ACCENT = '#FBBF24'
+const BG = '#0A0A0A'
+const ACCENT = '#D4FF3D'
 const TEAL = '#0B5777'
 const MUTED = 'rgba(255,255,255,0.55)'
 const CARD_BG = 'rgba(255,255,255,0.05)'
@@ -472,7 +462,7 @@ export default function GenerateScreen() {
             onPress={() => router.push('/fashion-editorial/campaign')}
             activeOpacity={0.8}
           >
-            <LinearGradient colors={['#FBBF24', '#F59E0B', '#B45309']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFillObject} />
+            <LinearGradient colors={['#D4FF3D', '#C2EE2B', '#B45309']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFillObject} />
             <Text style={styles.campaignBtnText}>Campaign Variations</Text>
             <ArrowRightIcon />
           </TouchableOpacity>
@@ -598,7 +588,7 @@ export default function GenerateScreen() {
             activeOpacity={0.8}
             disabled={!store.canGenerateHero()}
           >
-            <LinearGradient colors={['#FBBF24', '#F59E0B', '#B45309']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFillObject} />
+            <LinearGradient colors={['#D4FF3D', '#C2EE2B', '#B45309']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFillObject} />
             <Text style={styles.generateBtnText}>Generate ({costLabel})</Text>
           </TouchableOpacity>
         </ScrollView>
@@ -658,7 +648,7 @@ const styles = StyleSheet.create({
   },
   modelOptionSelected: {
     borderColor: ACCENT,
-    backgroundColor: 'rgba(251,191,36,0.08)',
+    backgroundColor: 'rgba(212,255,61,0.08)',
   },
   modelOptionLabel: { flex: 1, fontSize: 11, fontWeight: '600' as const, color: 'rgba(255,255,255,0.5)' },
   modelOptionLabelSelected: { color: '#FFFFFF' },
@@ -678,7 +668,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: CARD_BORDER,
   },
-  aspectPillSelected: { borderColor: ACCENT, backgroundColor: 'rgba(251,191,36,0.08)' },
+  aspectPillSelected: { borderColor: ACCENT, backgroundColor: 'rgba(212,255,61,0.08)' },
   aspectPillText: { fontSize: 12, fontWeight: '600' as const, color: 'rgba(255,255,255,0.5)' },
   aspectPillTextSelected: { color: '#FFFFFF' },
 
