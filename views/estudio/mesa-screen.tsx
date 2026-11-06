@@ -1017,7 +1017,7 @@ const styles = StyleSheet.create({
 
   encabezado: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 16, paddingHorizontal: 16, paddingBottom: 12 },
   atras: { width: 44, height: 44, marginLeft: -12, alignItems: 'center', justifyContent: 'center' },
-  h1: { flex: 1, fontSize: 24, fontWeight: '600', letterSpacing: -0.48, color: c.text },
+  h1: { flex: 1, fontFamily: FONT.display, fontSize: 34, lineHeight: 36, textTransform: 'uppercase', color: c.text },
   mes: { paddingVertical: 8, paddingHorizontal: 12, borderRadius: 999, backgroundColor: c.bgRaised, borderWidth: 1, borderColor: c.border },
   mesTexto: { fontSize: 13, color: c.textMuted },
   mesValor: { fontFamily: FONT.mono, color: c.text },

@@ -22,8 +22,8 @@ const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window')
 // Brand palette (web brand book — violet/cyan/slate)
 const AURORA_NAVY = '#0A0A0A'
 const AURORA_TEAL = '#141414' // the redesign is monochrome: the photos bring the colour
-const AURORA_MAGENTA = '#FF3D8A' // theme.palette.violet
-const AURORA_PINK = '#FF3D8A' // theme.palette.violetLight
+const AURORA_MAGENTA = '#FF3D8A' 
+const AURORA_PINK = '#FF3D8A'
 
 const COLUMN_COUNT = 3
 const IMAGE_GAP = 4

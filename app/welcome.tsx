@@ -16,9 +16,9 @@ const { width: SCREEN_W } = Dimensions.get('window')
 
 // Brand palette (web brand book — violet/cyan/slate)
 const AURORA_NAVY = '#0A0A0A'
-const AURORA_TEAL = '#141414' // theme.palette.cyan
-const AURORA_MAGENTA = '#FF3D8A' // theme.palette.violet
-const AURORA_PINK = '#FF3D8A' // theme.palette.violetLight
+const AURORA_TEAL = '#141414' 
+const AURORA_MAGENTA = '#FF3D8A' 
+const AURORA_PINK = '#FF3D8A'
 
 // ─── Confetti Particle ──────────────────────────────────────────────────
 

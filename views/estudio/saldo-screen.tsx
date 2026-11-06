@@ -18,7 +18,8 @@ import { useAppleCreditPurchase } from '@/lib/use-apple-credit-purchase'
 
 const c = theme.colors
 const PINK = c.accent2
-const GREEN = '#4ADE80'
+// What came back or was paid in is white: the green «ready» is gone (dos calmos, uno fuerte).
+const GREEN = theme.colors.text
 const MESES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
 // [label, state color, amount color, struck through, thumbnail opacity] — the web's table (ajustes-view).
 const ESTADO: Record<EstadoMovimiento, [string, string, string, boolean, number]> = {
@@ -203,7 +204,7 @@ export default function SaldoScreen() {
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: c.bg },
   encabezado: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 16, paddingHorizontal: 16, paddingBottom: 8 },
-  titulo: { fontSize: 24, fontWeight: '600', letterSpacing: -0.48, color: c.text },
+  titulo: { fontFamily: FONT.display, fontSize: 34, lineHeight: 36, textTransform: 'uppercase', color: c.text },
   mes: { flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 36, paddingHorizontal: 12, borderRadius: 999, borderWidth: 1, borderColor: PINK, backgroundColor: c.bgRaised },
   mesTexto: { fontSize: 13, color: c.text },
   lista: { paddingTop: 8, paddingHorizontal: 16 },
@@ -213,7 +214,7 @@ const styles = StyleSheet.create({
   cardArriba: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' },
   disponible: { fontSize: 13, color: c.textMuted },
   apartado: { fontFamily: FONT.mono, fontSize: 12, color: c.textDim },
-  monto: { fontFamily: FONT.monoMedium, fontSize: 34, letterSpacing: -0.68, lineHeight: 38, color: c.text },
+  monto: { fontFamily: FONT.display, fontSize: 64, lineHeight: 66, color: c.text },
   mxn: { fontFamily: FONT.mono, fontSize: 14, letterSpacing: 0, color: c.textDim },
   alcanza: { fontSize: 12.5, color: c.textMuted },
   error: { fontSize: 12.5, color: PINK },

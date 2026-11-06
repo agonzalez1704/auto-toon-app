@@ -147,7 +147,7 @@ function puertasDe(rev: Revision | undefined) {
     const porque = k === 'destinatario' && listo.destinatario.publico ? `${g.porque} · ${listo.destinatario.publico}` : g.porque
     if (g.ok === null) return { nombre, porque, marca: '?', fondo: '#1F1F1F', tinta: '#A3A3A3', opacity: 1 }
     return g.ok
-      ? { nombre, porque, marca: '✓', fondo: '#12201A', tinta: '#4ADE80', opacity: despues ? 0.4 : 1 }
+      ? { nombre, porque, marca: '✓', fondo: theme.colors.bgElevated, tinta: theme.colors.text, opacity: despues ? 0.4 : 1 }
       : { nombre, porque, marca: '✕', fondo: '#2A1320', tinta: ROSA, opacity: despues ? 0.4 : 1 }
   })
   // A failed identity has nothing to fix in the prompt: that piece goes back to the photobook.
