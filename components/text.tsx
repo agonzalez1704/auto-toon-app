@@ -55,7 +55,8 @@ export function Text({ style, ...rest }: TextProps) {
  */
 export type TextInput = RNTextInput
 
-export function TextInput({ style, ...rest }: TextInputProps) {
+// React 19 hands `ref` to a function component as a prop; `...rest` passes it on to the native input.
+export function TextInput({ style, ...rest }: TextInputProps & { ref?: React.Ref<RNTextInput> }) {
     const flat = Array.isArray(style) ? Object.assign({}, ...style.filter(Boolean)) : style
     const weight = (flat as { fontWeight?: string | number } | undefined)?.fontWeight
     return <RNTextInput {...rest} style={[{ fontFamily: familyFor(weight) }, style]} />
