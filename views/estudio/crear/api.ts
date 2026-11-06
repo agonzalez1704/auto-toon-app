@@ -1,7 +1,8 @@
 import * as FileSystem from 'expo-file-system/legacy'
 import * as MediaLibrary from 'expo-media-library'
 import api from '@/lib/api'
-import type { Apartado, Aspecto, Cotizacion, Pieza } from '@/lib/estudio'
+import type { Apartado, Aspecto, Cotizacion, Pieza, Propuesta } from '@/lib/estudio'
+import type { Familia, Fondo } from './modos'
 
 /**
  * The parts of the queue and the mesa that Crear needs beyond lib/estudio: any job kind (a photobook, a relight,
@@ -26,6 +27,11 @@ export interface Linea {
   producto?: string
   marca?: string
   variants?: { category: string; ids: string[]; slots?: Record<string, string>; escenas?: Record<string, string> }
+  calidad?: 'borrador' | 'final'
+  /** «E-commerce»: one catalogue shot per id, on a studio background. */
+  catalogo?: { familia: Familia; tomas: string[]; fondo: Fondo }
+  /** «Cuadrícula»: the nine scenes of one 3×3 image, as Claude wrote them. */
+  cuadricula?: { escenas: { nombre: string; escena: string }[] }
   mesaId?: string
   labels?: string[]
 }
@@ -37,6 +43,20 @@ export const pedirLinea = async (c: Cuerpo) => (await api.post<Apartado>('/api/j
 /** A piece as `GET /api/jobs?hold=` reports it: no label or aspect (the mesa has those), but the charge it rides on. */
 export type PiezaVigilada = Pieza & { hold?: { status: string; capturedCents: number | null } | null }
 export const verHold = async (holdId: string) => (await api.get<{ pieces: PiezaVigilada[] }>('/api/jobs', { params: { hold: holdId } })).data.pieces
+
+/** «E-commerce»'s shots per family and its backgrounds, as GET /api/crear/config lists them (names only, never prompt text). */
+export interface Catalogo {
+  tomas: Record<Familia, { id: string; nombre: string; desc: string }[]>
+  fondos: { id: Fondo; nombre: string; desc: string; muestra: string }[]
+}
+
+/** «Cuadrícula»: the nine scenes Claude writes for this product; `evitar`, the ones already seen. */
+export async function pedirEscenas(o: { imageUrl: string; imageUrls: string[]; producto: string | null; categoria: string | null; evitar: string[] }) {
+  // Claude reads the photos and writes: it can take a while.
+  return (await api.post<{ propuestas: Propuesta[] }>('/api/crear/propuestas', { ...o, cuantas: 9 }, { timeout: 180_000 })).data.propuestas
+}
+/** The grid's picked cells (0-8, left to right, top to bottom) go to alta; the server deletes the grid. Answers like POST /api/jobs. */
+export const pasarAAlta = async (o: { id: string; celdas: number[]; aspect: '1:1' | '4:5' }) => (await api.post<Apartado>('/api/crear/cuadricula', o)).data
 
 export const guardarHoja = async (id: string, c: { photobook?: { id: string; url: string } | null; marca?: string | null }) =>
   (await api.patch<{ ok: true }>(`/api/mesas/${encodeURIComponent(id)}`, c)).data

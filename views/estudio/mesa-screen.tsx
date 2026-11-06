@@ -29,13 +29,18 @@ import {
 import { cotizarLinea, descargar, guardarHoja, pedirLinea, textoDe, verHold, type Cuerpo, type Linea, type Luz } from './crear/api'
 import { Botella, BotonGenerar, Chip, Flecha, Pulso } from './crear/partes'
 import { corriendo, LUCES, Resultados, type PiezaMesa } from './crear/resultados'
+import { Cuadricula, useCuadricula } from './crear/cuadricula'
+import { Ecommerce, useEcommerce } from './crear/ecommerce'
+import { Pestanas, type Comun } from './crear/llegando'
+import { CATALOGO, CUADRICULA, familiaDe } from './crear/modos'
 import { useMesaAbierta } from '@/stores/use-mesa-abierta'
 
 /**
  * Crear (boards «Main» and «Resultados»): the mesa on the table — its product, photobook, the ideas made for it
  * with the price in the button — and, once something is asked, what arrives. It is the Crear tab (`/?mesa=`) and
  * `/mesa/[id]`: no id opens the mesa marked `actual`, `nueva` starts one from a photo. The server writes every
- * prompt from what is sent (refs, the idea's scene, the category); the app only picks.
+ * prompt from what is sent (refs, the idea's scene, the category); the app only picks. Its tabs switch to
+ * «E-commerce» and «Cuadrícula» (boards 10–12, ./crear/ecommerce and ./crear/cuadricula): same mesa, own order.
  */
 
 const c = theme.colors
@@ -43,6 +48,13 @@ const HOJA = 'Photobook'
 const ASPECTOS: Aspecto[] = ['1:1', '3:4', '9:16', '16:9']
 /** The face plus three angles ride together (the web's MAX_FOTOS = 4). */
 const MAX_ANGULOS = 3
+type Modo = 'escena' | 'ecommerce' | 'cuadricula'
+/** Main's tabs, as the web words them; the two catalogue modes need the product first. */
+const MODOS: { id: Modo; label: string; sub: string }[] = [
+  { id: 'escena', label: 'Escena', sub: 'Una foto con lugar e idea.' },
+  { id: 'ecommerce', label: 'E-commerce', sub: 'Fondo blanco, para tu tienda.' },
+  { id: 'cuadricula', label: 'Cuadrícula', sub: 'Nueve escenas en una imagen; las que elijas salen en alta.' },
+]
 
 const plural = (n: number, uno: string, varios: string) => `${n} ${n === 1 ? uno : varios}`
 /** A relight or an edit over a piece that already exists. */
@@ -66,7 +78,7 @@ interface Analisis {
   url?: string
   name?: string | null
   slots?: Record<string, string>
-  lectura?: { ficha: string; fichaDe: string; hoja: { url: string; coincide: boolean; porque: string } | null }
+  lectura?: { ficha: string; fichaDe: string; editada?: boolean; hoja: { url: string; coincide: boolean; porque: string } | null }
 }
 interface Opcion {
   id: string
@@ -123,6 +135,7 @@ function Crear({ m, enTab, onVolver }: { m: MesaAbierta | null; enTab: boolean; 
   const qc = useQueryClient()
   const config = useQuery({ queryKey: ['crear-config'], queryFn: configCrear, staleTime: 10 * 60_000 })
   const [vista, setVista] = useState<'form' | 'results'>('form')
+  const [modo, setModo] = useState<Modo>('escena')
   const [subiendo, setSubiendo] = useState<'foto' | 'angulo' | null>(null)
   const [preview, setPreview] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -197,13 +210,16 @@ function Crear({ m, enTab, onVolver }: { m: MesaAbierta | null; enTab: boolean; 
   // --- the pieces: the mesa's, with every request of this visit (and the mesa's last one) watched until done ---
   const piezasMesa = m?.piezas ?? []
   const ultimaTanda = [...piezasMesa].reverse().find((p) => p.label && !esEdicion(p.label) && enResultados(p.label))?.holdId
-  const vigilar = [...new Set([...holds, ...(ultimaTanda ? [ultimaTanda] : [])])]
+  // A grid or catalogue piece of an earlier visit still on its way is watched too: its mode shows it arriving.
+  const enModo = piezasMesa.filter((p) => p.holdId && p.label && (p.label.startsWith(CUADRICULA) || p.label.startsWith(CATALOGO)) && !terminada(p)).map((p) => p.holdId!)
+  const vigilar = [...new Set([...holds, ...(ultimaTanda ? [ultimaTanda] : []), ...enModo])]
   const vistas = useQueries({
     queries: vigilar.map((h) => ({
       queryKey: ['pedido-mesa', h],
       queryFn: () => verHold(h),
       // Looking is also what moves the pieces along on the server (D13): keep looking while any is on its way.
-      refetchInterval: (q: { state: { data?: Pieza[] } }) => (q.state.data?.length && q.state.data.every(terminada) ? false : 2500),
+      // A hold with no pieces left (a grid whose cells were asked is deleted) has nothing to wait for.
+      refetchInterval: (q: { state: { data?: Pieza[] } }) => (q.state.data?.every(terminada) ? false : 2500),
     })),
   })
   const vivas = new Map(vistas.flatMap((q) => q.data ?? []).map((p) => [p.id, p]))
@@ -331,6 +347,42 @@ function Crear({ m, enTab, onVolver }: { m: MesaAbierta | null; enTab: boolean; 
     const nueva = marca.trim()
     if (!m || nueva === (m.marca ?? '')) return
     guardarHoja(m.id, { marca: nueva || null }).catch((e) => setError(textoDe(e, 'No pudimos guardar lo que identifica tu producto.')))
+  }
+
+  const confirmarPhotobook = () => {
+    if (!hojaPrecio.data) return
+    Alert.alert('¿Hacer un photobook nuevo?', `Nueve vistas de tu producto en una hoja. Se apartan ${mxn(hojaPrecio.data.totalCents)} de tu saldo; sólo se cobra si llega.`, [
+      { text: 'Cancelar', style: 'cancel' },
+      { text: 'Hacerlo', onPress: hacerPhotobook },
+    ])
+  }
+
+  // --- the modes: «E-commerce» and «Cuadrícula» keep their state here, so a tab change loses nothing ---
+  const modoActivo: Modo = m?.photoUrl ? modo : 'escena'
+  const familia = familiaDe(catId, analysis?.name, m?.name, ficha)
+  const eco = useEcommerce({ activa: modoActivo === 'ecommerce', mesaId: m?.id ?? null, propias, familia, ficha, piezas, mandar, enviando })
+  const cua = useCuadricula({
+    activa: modoActivo === 'cuadricula',
+    mesaId: m?.id ?? null,
+    imagen: m?.photoUrl ?? null,
+    angulos: m?.refs ?? [],
+    producto: analysis?.name ?? null,
+    categoria: analizada ? (cat?.name ?? null) : null,
+    propias,
+    ficha,
+    piezas,
+    mandar,
+    enviando,
+  })
+  // «Así lo ve el modelo», corrected by the person: it rides with every product shot (the web's lectura `corregir`).
+  const corregirFicha = (texto: string) => {
+    if (!m || !lect || !ficha) return
+    const nuevo = { ...analysis, lectura: { ...lect, ficha: texto.replace(/\s+/g, ' ').trim().slice(0, 1200), editada: true } }
+    qc.setQueryData<MesaAbierta>(['mesa', m.id], (old) => (old ? { ...old, analysis: nuevo } : old))
+    guardarMesa(m.id, { analysis: nuevo }).catch((e) => {
+      setError(textoDe(e, 'No pudimos guardar tu corrección.'))
+      qc.invalidateQueries({ queryKey: ['mesa', m.id] })
+    })
   }
 
   // --- the product's photos ---
@@ -519,6 +571,18 @@ function Crear({ m, enTab, onVolver }: { m: MesaAbierta | null; enTab: boolean; 
   }
 
   // ---------- 1 · Crear ----------
+  const comun: Comun = {
+    foto: m?.photoUrl ?? null,
+    nombre: analysis?.name ?? m?.name ?? 'Tu producto',
+    categoria: cat?.name ?? '…',
+    fotos: propias.length,
+    piezas,
+    now,
+    error,
+    enviando,
+    onVer: verPiezas,
+    onReintentar: (p) => void reintentar(p),
+  }
   const foto = preview ?? m?.photoUrl ?? null
   const nombre = !foto ? 'Sube tu producto' : subiendo === 'foto' ? 'Subiendo…' : !analizada ? 'Mirando la foto…' : (analysis?.name ?? m?.name ?? 'Tu producto')
   const leyendo = (!!m?.photoUrl || subiendo === 'foto') && (subiendo === 'foto' || !analizada || pensando)
@@ -542,7 +606,7 @@ function Crear({ m, enTab, onVolver }: { m: MesaAbierta | null; enTab: boolean; 
     <Marco>
       <ScrollView contentContainerStyle={{ paddingBottom: 24 }} keyboardShouldPersistTaps="handled" automaticallyAdjustKeyboardInsets>
         <Encabezado onVolver={onVolver} />
-        <View style={styles.cuerpo}>
+        <View style={[styles.cuerpo, modoActivo !== 'escena' && { gap: 20 }]}>
           {/* The mesa on the table; Mesas opens over it. */}
           <Pressable onPress={() => router.push({ pathname: '/mesas', params: m ? { actual: m.id } : {} })} accessibilityRole="button" accessibilityLabel="Cambiar de mesa de trabajo" style={styles.mesa}>
             <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
@@ -557,303 +621,354 @@ function Crear({ m, enTab, onVolver }: { m: MesaAbierta | null; enTab: boolean; 
             </Svg>
           </Pressable>
 
-          {/* Tu producto */}
-          <View style={{ gap: 8 }}>
-            <View style={styles.producto}>
-              <Pressable onPress={subirFoto} accessibilityRole="button" accessibilityLabel={foto ? 'Cambiar la foto del producto' : 'Sube la foto del producto'} style={styles.foto}>
-                {foto ? <Image source={{ uri: foto }} style={StyleSheet.absoluteFill} /> : <Botella width={36} height={58} color="#C7C7C7" />}
-                {subiendo === 'foto' ? (
-                  <View style={styles.velo}>
-                    <ActivityIndicator color={c.text} />
+          <Pestanas modos={MODOS.map((x) => ({ ...x, listo: x.id === 'escena' || !!m?.photoUrl }))} activo={modoActivo} onCambiar={setModo} />
+
+          {modoActivo === 'ecommerce' ? (
+            <Ecommerce
+              q={eco}
+              o={comun}
+              familiaLabel={familia === 'calzado' ? 'para calzado' : `para ${(cat?.name ?? 'tu producto').toLowerCase()}`}
+              ficha={{ texto: ficha, editada: !!ficha && !!lect?.editada, onCorregir: corregirFicha }}
+              hoja={
+                hojaOtra
+                  ? {
+                      porque: lect?.hoja?.porque || 'no coincide con tus fotos',
+                      label: hojaEnCamino ? 'Armando el photobook…' : 'Rehacer el photobook',
+                      precio: hojaPrecio.data ? mxn(hojaPrecio.data.totalCents) : '—',
+                      onPress: confirmarPhotobook,
+                      disabled: hojaEnCamino || enviando || !hojaPrecio.data,
+                    }
+                  : null
+              }
+            />
+          ) : modoActivo === 'cuadricula' ? (
+            <Cuadricula q={cua} o={comun} />
+          ) : (
+            <>
+              {/* Tu producto */}
+              <View style={{ gap: 8 }}>
+                <View style={styles.producto}>
+                  <Pressable onPress={subirFoto} accessibilityRole="button" accessibilityLabel={foto ? 'Cambiar la foto del producto' : 'Sube la foto del producto'} style={styles.foto}>
+                    {foto ? <Image source={{ uri: foto }} style={StyleSheet.absoluteFill} /> : <Botella width={36} height={58} color="#C7C7C7" />}
+                    {subiendo === 'foto' ? (
+                      <View style={styles.velo}>
+                        <ActivityIndicator color={c.text} />
+                      </View>
+                    ) : null}
+                  </Pressable>
+                  <View style={styles.productoDatos}>
+                    <Text style={styles.productoEtiqueta}>TU PRODUCTO</Text>
+                    <Text style={styles.productoNombre} numberOfLines={2}>
+                      {nombre}
+                    </Text>
+                    {m?.photoUrl ? (
+                      <View style={styles.categoriaFila}>
+                        <Text style={styles.categoria} numberOfLines={1}>
+                          Categoría: <Text style={{ color: c.text }}>{cat?.name ?? '…'}</Text>
+                        </Text>
+                        <Pressable onPress={() => setVerCategorias((v) => !v)} accessibilityRole="button" accessibilityLabel="Cambiar la categoría" style={styles.cambiar}>
+                          <Text style={styles.cambiarTexto}>{verCategorias ? 'Listo' : 'Cambiar'}</Text>
+                        </Pressable>
+                      </View>
+                    ) : null}
+                    {m?.photoUrl ? (
+                      <View style={styles.angulos}>
+                        {m.refs.map((u, i) => (
+                          <View key={u} style={styles.angulo}>
+                            <Image source={{ uri: u }} style={StyleSheet.absoluteFill} accessibilityLabel={`Ángulo ${i + 2}`} />
+                            <Pressable onPress={() => quitarAngulo(u)} hitSlop={14} accessibilityRole="button" accessibilityLabel={`Quitar ángulo ${i + 2}`} style={styles.quitar}>
+                              <Svg width={9} height={9} viewBox="0 0 24 24" fill="none">
+                                <Path d="M6 6l12 12M18 6 6 18" stroke={c.text} strokeWidth={3} strokeLinecap="round" />
+                              </Svg>
+                            </Pressable>
+                          </View>
+                        ))}
+                        {m.refs.length < MAX_ANGULOS ? (
+                          <Pressable onPress={agregarAngulos} hitSlop={4} accessibilityRole="button" accessibilityLabel="Agregar otra foto del mismo producto" style={styles.mas}>
+                            {subiendo === 'angulo' ? (
+                              <ActivityIndicator size="small" color={c.textDim} />
+                            ) : (
+                              <Svg width={15} height={15} viewBox="0 0 24 24" fill="none">
+                                <Path d="M12 5v14M5 12h14" stroke={c.textDim} strokeWidth={1.9} strokeLinecap="round" />
+                              </Svg>
+                            )}
+                          </Pressable>
+                        ) : null}
+                        {!m.refs.length ? <Text style={styles.pista}>Más ángulos del mismo producto</Text> : null}
+                      </View>
+                    ) : null}
+                  </View>
+                </View>
+                {verCategorias ? (
+                  <View style={styles.chips}>
+                    {categorias.map((k) => (
+                      <Chip
+                        key={k.id}
+                        label={k.name}
+                        on={k.id === catId}
+                        mono={false}
+                        onPress={() => {
+                          setCategoryPick(k.id)
+                          setVerCategorias(false)
+                        }}
+                      />
+                    ))}
                   </View>
                 ) : null}
-              </Pressable>
-              <View style={styles.productoDatos}>
-                <Text style={styles.productoEtiqueta}>TU PRODUCTO</Text>
-                <Text style={styles.productoNombre} numberOfLines={2}>
-                  {nombre}
-                </Text>
-                {m?.photoUrl ? (
-                  <View style={styles.categoriaFila}>
-                    <Text style={styles.categoria} numberOfLines={1}>
-                      Categoría: <Text style={{ color: c.text }}>{cat?.name ?? '…'}</Text>
-                    </Text>
-                    <Pressable onPress={() => setVerCategorias((v) => !v)} accessibilityRole="button" accessibilityLabel="Cambiar la categoría" style={styles.cambiar}>
-                      <Text style={styles.cambiarTexto}>{verCategorias ? 'Listo' : 'Cambiar'}</Text>
+                {!m?.photoUrl && error ? <Text style={styles.error}>{error}</Text> : null}
+              </View>
+
+              {/* Photobook */}
+              {propias.length ? (
+                <View style={styles.hoja}>
+                  <View style={styles.hojaFila}>
+                    <Pressable
+                      onPress={photobook ? () => verPiezas([photobook.id], 0) : undefined}
+                      disabled={!photobook}
+                      accessibilityRole={photobook ? 'imagebutton' : undefined}
+                      accessibilityLabel={photobook ? 'Ver el photobook' : undefined}
+                      style={styles.hojaMini}
+                    >
+                      {photobook ? (
+                        <Image source={{ uri: photobook.url }} style={StyleSheet.absoluteFill} />
+                      ) : (
+                        <Svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke={c.textDim} strokeWidth={1.5}>
+                          {[3.5, 9.9, 16.3].flatMap((y) =>
+                            [3.5, 9.9, 16.3].map((x) => <Rect key={`${x}-${y}`} x={x} y={y} width={x > 16 ? 4.2 : 5.6} height={y > 16 ? 4.2 : 5.6} rx={1} />),
+                          )}
+                        </Svg>
+                      )}
+                    </Pressable>
+                    <Text style={styles.hojaTitulo} numberOfLines={1}>Photobook</Text>
+                    <Pressable
+                      onPress={hacerPhotobook}
+                      disabled={hojaEnCamino || enviando || !hojaPrecio.data}
+                      hitSlop={4}
+                      accessibilityRole="button"
+                      style={[styles.hojaBoton, (hojaEnCamino || enviando || !hojaPrecio.data) && { opacity: 0.45 }]}
+                    >
+                      <Text style={styles.hojaBotonTexto}>{hojaEnCamino ? 'Armando el photobook…' : photobook ? 'Rehacer' : 'Crear photobook'}</Text>
+                      {!hojaEnCamino ? <Text style={styles.hojaPrecio}>{hojaPrecio.data ? mxn(hojaPrecio.data.totalCents) : '—'}</Text> : null}
+                      <View style={styles.hojaFlecha}>
+                        <Flecha size={10} color={c.bg} />
+                      </View>
                     </Pressable>
                   </View>
-                ) : null}
-                {m?.photoUrl ? (
-                  <View style={styles.angulos}>
-                    {m.refs.map((u, i) => (
-                      <View key={u} style={styles.angulo}>
-                        <Image source={{ uri: u }} style={StyleSheet.absoluteFill} accessibilityLabel={`Ángulo ${i + 2}`} />
-                        <Pressable onPress={() => quitarAngulo(u)} hitSlop={14} accessibilityRole="button" accessibilityLabel={`Quitar ángulo ${i + 2}`} style={styles.quitar}>
-                          <Svg width={9} height={9} viewBox="0 0 24 24" fill="none">
-                            <Path d="M6 6l12 12M18 6 6 18" stroke={c.text} strokeWidth={3} strokeLinecap="round" />
-                          </Svg>
-                        </Pressable>
-                      </View>
-                    ))}
-                    {m.refs.length < MAX_ANGULOS ? (
-                      <Pressable onPress={agregarAngulos} hitSlop={4} accessibilityRole="button" accessibilityLabel="Agregar otra foto del mismo producto" style={styles.mas}>
-                        {subiendo === 'angulo' ? (
-                          <ActivityIndicator size="small" color={c.textDim} />
-                        ) : (
-                          <Svg width={15} height={15} viewBox="0 0 24 24" fill="none">
-                            <Path d="M12 5v14M5 12h14" stroke={c.textDim} strokeWidth={1.9} strokeLinecap="round" />
-                          </Svg>
-                        )}
-                      </Pressable>
-                    ) : null}
-                    {!m.refs.length ? <Text style={styles.pista}>Más ángulos del mismo producto</Text> : null}
+                  <Text style={styles.hojaNota}>
+                    {photobook ? 'Nueve vistas de tu producto. Va con cada pieza, para que no se lo invente.' : 'Nueve vistas de tu producto en una hoja. Se hace una vez y sirve para siempre.'}
+                  </Text>
+                  {hojasMesa.length ? (
+                    <View style={styles.hojas}>
+                      {hojasMesa.map((h, i) => {
+                        const on = h.id === photobook?.id
+                        const nombreHoja = i === 0 ? 'El más reciente' : `Photobook ${hojasMesa.length - i}`
+                        return (
+                          <View key={h.id} style={[styles.hojaCarta, { borderColor: on ? c.accent : 'transparent' }]}>
+                            <Pressable
+                              onPress={() => verPiezas(hojasMesa.map((x) => x.id), i)}
+                              accessibilityRole="imagebutton"
+                              accessibilityLabel={`Ver ${nombreHoja} a pantalla completa`}
+                              style={styles.hojaImagen}
+                            >
+                              <Image source={{ uri: h.resultUrl! }} style={StyleSheet.absoluteFill} />
+                            </Pressable>
+                            <Text style={styles.hojaNombre}>{nombreHoja}</Text>
+                            <Pressable
+                              onPress={() => usarHoja({ id: h.id, url: h.resultUrl! })}
+                              disabled={on}
+                              hitSlop={4}
+                              accessibilityRole="button"
+                              accessibilityState={{ selected: on }}
+                              style={[styles.usar, { backgroundColor: on ? c.accent : c.bgElevated }]}
+                            >
+                              <Text style={[styles.usarTexto, { color: on ? c.bg : c.text }]}>{on ? 'En uso' : 'Usar'}</Text>
+                            </Pressable>
+                          </View>
+                        )
+                      })}
+                    </View>
+                  ) : null}
+                  <View style={styles.marcaFila}>
+                    <Text style={styles.marcaEtiqueta}>LO IDENTIFICA</Text>
+                    <TextInput
+                      value={marca}
+                      onChangeText={setMarca}
+                      onEndEditing={guardarMarca}
+                      maxLength={120}
+                      placeholder="la marca en un costado, la costura del talón…"
+                      placeholderTextColor={c.textDim}
+                      accessibilityLabel="Qué parte identifica tu producto"
+                      style={styles.marca}
+                    />
                   </View>
-                ) : null}
-              </View>
-            </View>
-            {verCategorias ? (
-              <View style={styles.chips}>
-                {categorias.map((k) => (
-                  <Chip
-                    key={k.id}
-                    label={k.name}
-                    on={k.id === catId}
-                    mono={false}
-                    onPress={() => {
-                      setCategoryPick(k.id)
-                      setVerCategorias(false)
-                    }}
-                  />
-                ))}
-              </View>
-            ) : null}
-            {!m?.photoUrl && error ? <Text style={styles.error}>{error}</Text> : null}
-          </View>
+                </View>
+              ) : null}
 
-          {/* Photobook */}
-          {propias.length ? (
-            <View style={styles.hoja}>
-              <View style={styles.hojaFila}>
-                <Pressable
-                  onPress={photobook ? () => verPiezas([photobook.id], 0) : undefined}
-                  disabled={!photobook}
-                  accessibilityRole={photobook ? 'imagebutton' : undefined}
-                  accessibilityLabel={photobook ? 'Ver el photobook' : undefined}
-                  style={styles.hojaMini}
-                >
-                  {photobook ? (
-                    <Image source={{ uri: photobook.url }} style={StyleSheet.absoluteFill} />
-                  ) : (
-                    <Svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke={c.textDim} strokeWidth={1.5}>
-                      {[3.5, 9.9, 16.3].flatMap((y) =>
-                        [3.5, 9.9, 16.3].map((x) => <Rect key={`${x}-${y}`} x={x} y={y} width={x > 16 ? 4.2 : 5.6} height={y > 16 ? 4.2 : 5.6} rx={1} />),
-                      )}
-                    </Svg>
-                  )}
-                </Pressable>
-                <Text style={styles.hojaTitulo} numberOfLines={1}>Photobook</Text>
-                <Pressable
-                  onPress={hacerPhotobook}
-                  disabled={hojaEnCamino || enviando || !hojaPrecio.data}
-                  hitSlop={4}
-                  accessibilityRole="button"
-                  style={[styles.hojaBoton, (hojaEnCamino || enviando || !hojaPrecio.data) && { opacity: 0.45 }]}
-                >
-                  <Text style={styles.hojaBotonTexto}>{hojaEnCamino ? 'Armando el photobook…' : photobook ? 'Rehacer' : 'Crear photobook'}</Text>
-                  {!hojaEnCamino ? <Text style={styles.hojaPrecio}>{hojaPrecio.data ? mxn(hojaPrecio.data.totalCents) : '—'}</Text> : null}
-                  <View style={styles.hojaFlecha}>
-                    <Flecha size={10} color={c.bg} />
+              {hojaOtra ? (
+                <View style={styles.aviso}>
+                  <Text style={styles.avisoTexto}>
+                    Tu photobook es de otro producto <Text style={{ color: c.textMuted }}>({lect?.hoja?.porque || 'no coincide con tus fotos'})</Text>. No lo usamos hasta que hagas uno nuevo.
+                  </Text>
+                </View>
+              ) : null}
+
+              {/* ¿Qué buscas? */}
+              {conversa ? (
+                <View style={{ gap: 8 }}>
+                  <View style={styles.pideFila}>
+                    <TextInput
+                      value={pide}
+                      onChangeText={setPide}
+                      placeholder="¿Qué buscas? Ej. para San Valentín, fondo rojo"
+                      placeholderTextColor={c.textDim}
+                      maxLength={300}
+                      editable={!pensando}
+                      returnKeyType="send"
+                      onSubmitEditing={enviarPide}
+                      accessibilityLabel="Cuéntanos qué buscas"
+                      style={styles.pide}
+                    />
+                    <Pressable
+                      onPress={enviarPide}
+                      disabled={pensando || !pide.trim()}
+                      hitSlop={4}
+                      accessibilityRole="button"
+                      accessibilityLabel="Ajustar las ideas"
+                      style={[styles.enviar, (pensando || !pide.trim()) && { opacity: 0.45 }]}
+                    >
+                      <Flecha size={16} color={c.bg} />
+                    </Pressable>
                   </View>
-                </Pressable>
-              </View>
-              <Text style={styles.hojaNota}>
-                {photobook ? 'Nueve vistas de tu producto. Va con cada pieza, para que no se lo invente.' : 'Nueve vistas de tu producto en una hoja. Se hace una vez y sirve para siempre.'}
-              </Text>
-              {hojasMesa.length ? (
-                <View style={styles.hojas}>
-                  {hojasMesa.map((h, i) => {
-                    const on = h.id === photobook?.id
-                    const nombreHoja = i === 0 ? 'El más reciente' : `Photobook ${hojasMesa.length - i}`
-                    return (
-                      <View key={h.id} style={[styles.hojaCarta, { borderColor: on ? c.accent : 'transparent' }]}>
-                        <Pressable
-                          onPress={() => verPiezas(hojasMesa.map((x) => x.id), i)}
-                          accessibilityRole="imagebutton"
-                          accessibilityLabel={`Ver ${nombreHoja} a pantalla completa`}
-                          style={styles.hojaImagen}
-                        >
-                          <Image source={{ uri: h.resultUrl! }} style={StyleSheet.absoluteFill} />
-                        </Pressable>
-                        <Text style={styles.hojaNombre}>{nombreHoja}</Text>
-                        <Pressable
-                          onPress={() => usarHoja({ id: h.id, url: h.resultUrl! })}
-                          disabled={on}
-                          hitSlop={4}
-                          accessibilityRole="button"
-                          accessibilityState={{ selected: on }}
-                          style={[styles.usar, { backgroundColor: on ? c.accent : c.bgElevated }]}
-                        >
-                          <Text style={[styles.usarTexto, { color: on ? c.bg : c.text }]}>{on ? 'En uso' : 'Usar'}</Text>
-                        </Pressable>
+                  {pedidos.length ? (
+                    <View style={styles.pedidos}>
+                      {pedidos.slice(-3).map((t, i) => (
+                        <View key={`${i}-${t}`} style={styles.pedido}>
+                          <Text style={styles.pedidoTexto}>{t}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  ) : null}
+                  {respuesta ? <Text style={[styles.respuesta, !!ideasError && !pensando && { color: c.accent2 }]}>{respuesta}</Text> : null}
+                </View>
+              ) : null}
+
+              {/* What the screen is doing with the photo: real phases, not a show. */}
+              {leyendo ? (
+                <View style={styles.pasos}>
+                  {fases.map(([label, hecho, activo, d]) => (
+                    <Pulso key={label} activo={activo}>
+                      <View style={styles.paso}>
+                        <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
+                          <Path d={hecho ? 'M5 12.5 10 17 19 7' : d} stroke={hecho || activo ? c.text : '#5A5A5A'} strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" />
+                        </Svg>
+                        <Text style={[styles.pasoTexto, { color: hecho || activo ? c.text : '#5A5A5A', fontWeight: activo ? '500' : '400' }]}>{label}</Text>
                       </View>
+                    </Pulso>
+                  ))}
+                </View>
+              ) : null}
+
+              {/* Variantes */}
+              {!leyendo && m?.photoUrl ? (
+                <View style={{ gap: 10 }}>
+                  <View style={styles.titulo2Fila}>
+                    <Text style={styles.titulo2}>Variantes</Text>
+                    <Text style={styles.cuantas}>
+                      {chosen.length} de {opciones.length}
+                    </Text>
+                  </View>
+                  <Text style={styles.variantesNota}>Cada variante es una composición distinta, no la misma foto repetida.</Text>
+                  {opciones.map((o) => {
+                    const on = onSet.has(o.id)
+                    return (
+                      <Pressable
+                        key={o.id}
+                        onPress={() => toggleVariant(o.id)}
+                        accessibilityRole="checkbox"
+                        accessibilityState={{ checked: on }}
+                        style={[styles.variante, { backgroundColor: on ? c.bgOverlay : c.bgRaised, borderColor: on ? c.accent : c.border }]}
+                      >
+                        <View style={[styles.caja, { backgroundColor: on ? c.accent : 'transparent', borderColor: on ? c.accent : c.borderStrong }]}>
+                          <Svg width={14} height={14} viewBox="0 0 24 24" fill="none" opacity={on ? 1 : 0}>
+                            <Path d="M5 12.5 10 17 19 7" stroke={c.bg} strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" />
+                          </Svg>
+                        </View>
+                        <View style={styles.varianteTextos}>
+                          <Text style={styles.varianteNombre}>{o.name}</Text>
+                          <Text style={styles.varianteDesc}>{o.desc}</Text>
+                          {o.comp ? <Text style={styles.varianteComp}>{o.comp}</Text> : null}
+                        </View>
+                      </Pressable>
                     )
                   })}
+                  {conversa ? (
+                    <Pressable onPress={() => void pedirIdeas()} disabled={pensando} accessibilityRole="button" style={[styles.otras, pensando && { opacity: 0.45 }]}>
+                      <Svg width={15} height={15} viewBox="0 0 24 24" fill="none">
+                        <Path d="M20 12a8 8 0 1 1-2.34-5.66M20 4v4h-4" stroke={c.text} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+                      </Svg>
+                      <Text style={styles.otrasTexto}>{pensando ? 'Pensando…' : 'Otras ideas'}</Text>
+                    </Pressable>
+                  ) : null}
                 </View>
               ) : null}
-              <View style={styles.marcaFila}>
-                <Text style={styles.marcaEtiqueta}>LO IDENTIFICA</Text>
-                <TextInput
-                  value={marca}
-                  onChangeText={setMarca}
-                  onEndEditing={guardarMarca}
-                  maxLength={120}
-                  placeholder="la marca en un costado, la costura del talón…"
-                  placeholderTextColor={c.textDim}
-                  accessibilityLabel="Qué parte identifica tu producto"
-                  style={styles.marca}
-                />
-              </View>
-            </View>
-          ) : null}
 
-          {hojaOtra ? (
-            <View style={styles.aviso}>
-              <Text style={styles.avisoTexto}>
-                Tu photobook es de otro producto <Text style={{ color: c.textMuted }}>({lect?.hoja?.porque || 'no coincide con tus fotos'})</Text>. No lo usamos hasta que hagas uno nuevo.
-              </Text>
-            </View>
-          ) : null}
-
-          {/* ¿Qué buscas? */}
-          {conversa ? (
-            <View style={{ gap: 8 }}>
-              <View style={styles.pideFila}>
-                <TextInput
-                  value={pide}
-                  onChangeText={setPide}
-                  placeholder="¿Qué buscas? Ej. para San Valentín, fondo rojo"
-                  placeholderTextColor={c.textDim}
-                  maxLength={300}
-                  editable={!pensando}
-                  returnKeyType="send"
-                  onSubmitEditing={enviarPide}
-                  accessibilityLabel="Cuéntanos qué buscas"
-                  style={styles.pide}
-                />
-                <Pressable
-                  onPress={enviarPide}
-                  disabled={pensando || !pide.trim()}
-                  hitSlop={4}
-                  accessibilityRole="button"
-                  accessibilityLabel="Ajustar las ideas"
-                  style={[styles.enviar, (pensando || !pide.trim()) && { opacity: 0.45 }]}
-                >
-                  <Flecha size={16} color={c.bg} />
-                </Pressable>
-              </View>
-              {pedidos.length ? (
-                <View style={styles.pedidos}>
-                  {pedidos.slice(-3).map((t, i) => (
-                    <View key={`${i}-${t}`} style={styles.pedido}>
-                      <Text style={styles.pedidoTexto}>{t}</Text>
+              {m?.photoUrl ? (
+                <>
+                  {/* Ajustes: the formats are picked; quality, count and a locked look are facts. */}
+                  <View style={{ gap: 10 }}>
+                    <Text style={styles.titulo2}>Ajustes</Text>
+                    <View style={styles.chips}>
+                      {ASPECTOS.map((a) => (
+                        <Chip key={a} label={a} on={aspects.includes(a)} onPress={() => toggleAspect(a)} />
+                      ))}
+                      <Chip label="2K · borrador" on />
+                      <Chip label={plural(chosen.length, 'variante', 'variantes')} on />
+                      {m.estilo ? <Chip label={`Estilo: ${m.estilo.label}`} on /> : null}
                     </View>
-                  ))}
-                </View>
-              ) : null}
-              {respuesta ? <Text style={[styles.respuesta, !!ideasError && !pensando && { color: c.accent2 }]}>{respuesta}</Text> : null}
-            </View>
-          ) : null}
-
-          {/* What the screen is doing with the photo: real phases, not a show. */}
-          {leyendo ? (
-            <View style={styles.pasos}>
-              {fases.map(([label, hecho, activo, d]) => (
-                <Pulso key={label} activo={activo}>
-                  <View style={styles.paso}>
-                    <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
-                      <Path d={hecho ? 'M5 12.5 10 17 19 7' : d} stroke={hecho || activo ? c.text : '#5A5A5A'} strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" />
-                    </Svg>
-                    <Text style={[styles.pasoTexto, { color: hecho || activo ? c.text : '#5A5A5A', fontWeight: activo ? '500' : '400' }]}>{label}</Text>
                   </View>
-                </Pulso>
-              ))}
-            </View>
-          ) : null}
 
-          {/* Variantes */}
-          {!leyendo && m?.photoUrl ? (
-            <View style={{ gap: 10 }}>
-              <View style={styles.titulo2Fila}>
-                <Text style={styles.titulo2}>Variantes</Text>
-                <Text style={styles.cuantas}>
-                  {chosen.length} de {opciones.length}
-                </Text>
-              </View>
-              <Text style={styles.variantesNota}>Cada variante es una composición distinta, no la misma foto repetida.</Text>
-              {opciones.map((o) => {
-                const on = onSet.has(o.id)
-                return (
+                  {/* Board Main: the prompt written by hand, citing her pieces and photos — pink, it goes on to another screen. */}
                   <Pressable
-                    key={o.id}
-                    onPress={() => toggleVariant(o.id)}
-                    accessibilityRole="checkbox"
-                    accessibilityState={{ checked: on }}
-                    style={[styles.variante, { backgroundColor: on ? c.bgOverlay : c.bgRaised, borderColor: on ? c.accent : c.border }]}
+                    onPress={() => router.push({ pathname: '/referencias', params: { mesa: m.id } })}
+                    accessibilityRole="button"
+                    accessibilityLabel="Escribir el prompt con referencias"
+                    style={({ pressed }) => [styles.escribir, pressed && { opacity: 0.85 }]}
                   >
-                    <View style={[styles.caja, { backgroundColor: on ? c.accent : 'transparent', borderColor: on ? c.accent : c.borderStrong }]}>
-                      <Svg width={14} height={14} viewBox="0 0 24 24" fill="none" opacity={on ? 1 : 0}>
-                        <Path d="M5 12.5 10 17 19 7" stroke={c.bg} strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" />
+                    <View style={styles.escribirIcono}>
+                      <Svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke={c.accent} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+                        <Path d="M4 20h4l10-10-4-4L4 16v4ZM13.5 6.5l4 4" />
                       </Svg>
                     </View>
-                    <View style={styles.varianteTextos}>
-                      <Text style={styles.varianteNombre}>{o.name}</Text>
-                      <Text style={styles.varianteDesc}>{o.desc}</Text>
-                      {o.comp ? <Text style={styles.varianteComp}>{o.comp}</Text> : null}
+                    <View style={{ flex: 1, gap: 1 }}>
+                      <Text style={styles.escribirTitulo}>O escríbelo tú, con referencias</Text>
+                      <Text style={styles.escribirNota}>
+                        Tus piezas y tus fotos, citadas con <Text style={styles.arroba}>@</Text>
+                      </Text>
+                    </View>
+                    <View style={styles.escribirFlecha}>
+                      <Svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke={c.bg} strokeWidth={2.25} strokeLinecap="round" strokeLinejoin="round">
+                        <Path d="M12 19V5M5 12l7-7 7 7" />
+                      </Svg>
                     </View>
                   </Pressable>
-                )
-              })}
-              {conversa ? (
-                <Pressable onPress={() => void pedirIdeas()} disabled={pensando} accessibilityRole="button" style={[styles.otras, pensando && { opacity: 0.45 }]}>
-                  <Svg width={15} height={15} viewBox="0 0 24 24" fill="none">
-                    <Path d="M20 12a8 8 0 1 1-2.34-5.66M20 4v4h-4" stroke={c.text} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
-                  </Svg>
-                  <Text style={styles.otrasTexto}>{pensando ? 'Pensando…' : 'Otras ideas'}</Text>
-                </Pressable>
+
+                  {/* The price, said before the tap. */}
+                  <View style={{ gap: 12 }}>
+                    <View style={styles.cuentaFila}>
+                      <Text style={styles.desglose}>{precio.data ? desglose(precio.data.lines) : `${n} × —`}</Text>
+                      <Text style={[styles.nota, !!nota && { color: c.accent2 }]}>{nota ?? 'Se descuenta de tu saldo al terminar, sólo lo que llegue.'}</Text>
+                    </View>
+                    <BotonGenerar label={ctaLabel} total={precio.data ? mxn(precio.data.totalCents) : '—'} onPress={generar} disabled={disabled} />
+                    {escena.length ? (
+                      <Pressable onPress={() => setVista('results')} accessibilityRole="button" style={styles.verPiezas}>
+                        <Text style={styles.verPiezasTexto}>Ver lo que salió aquí · {plural(escena.length, 'pieza', 'piezas')}</Text>
+                      </Pressable>
+                    ) : null}
+                  </View>
+                </>
               ) : null}
-            </View>
-          ) : null}
-
-          {m?.photoUrl ? (
-            <>
-              {/* Ajustes: the formats are picked; quality, count and a locked look are facts. */}
-              <View style={{ gap: 10 }}>
-                <Text style={styles.titulo2}>Ajustes</Text>
-                <View style={styles.chips}>
-                  {ASPECTOS.map((a) => (
-                    <Chip key={a} label={a} on={aspects.includes(a)} onPress={() => toggleAspect(a)} />
-                  ))}
-                  <Chip label="2K · borrador" on />
-                  <Chip label={plural(chosen.length, 'variante', 'variantes')} on />
-                  {m.estilo ? <Chip label={`Estilo: ${m.estilo.label}`} on /> : null}
-                </View>
-              </View>
-
-              {/* The price, said before the tap. */}
-              <View style={{ gap: 12 }}>
-                <View style={styles.cuentaFila}>
-                  <Text style={styles.desglose}>{precio.data ? desglose(precio.data.lines) : `${n} × —`}</Text>
-                  <Text style={[styles.nota, !!nota && { color: c.accent2 }]}>{nota ?? 'Se descuenta de tu saldo al terminar, sólo lo que llegue.'}</Text>
-                </View>
-                <BotonGenerar label={ctaLabel} total={precio.data ? mxn(precio.data.totalCents) : '—'} onPress={generar} disabled={disabled} />
-                {escena.length ? (
-                  <Pressable onPress={() => setVista('results')} accessibilityRole="button" style={styles.verPiezas}>
-                    <Text style={styles.verPiezasTexto}>Ver lo que salió aquí · {plural(escena.length, 'pieza', 'piezas')}</Text>
-                  </Pressable>
-                ) : null}
-              </View>
             </>
-          ) : null}
+          )}
         </View>
       </ScrollView>
     </Marco>
@@ -972,6 +1087,12 @@ const styles = StyleSheet.create({
   varianteNombre: { fontSize: 16, fontWeight: '500', color: c.text },
   varianteDesc: { fontSize: 13, color: c.textMuted },
   varianteComp: { fontFamily: FONT.mono, fontSize: 11, lineHeight: 15.4, color: c.textDim },
+  escribir: { flexDirection: 'row', alignItems: 'center', gap: 11, minHeight: 58, paddingHorizontal: 14, borderRadius: 16, borderWidth: 1, borderColor: c.borderStrong, backgroundColor: c.bgRaised },
+  escribirIcono: { width: 30, height: 30, borderRadius: 999, backgroundColor: c.bgOverlay, alignItems: 'center', justifyContent: 'center' },
+  escribirTitulo: { fontSize: 15, fontWeight: '500', color: c.text },
+  escribirNota: { fontSize: 12, color: c.textDim },
+  arroba: { fontFamily: FONT.mono, color: c.accent2 },
+  escribirFlecha: { width: 30, height: 30, borderRadius: 999, backgroundColor: c.accent2, alignItems: 'center', justifyContent: 'center' },
   otras: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, minHeight: 44, borderRadius: 12, borderWidth: 1, borderStyle: 'dashed', borderColor: c.borderStrong },
   otrasTexto: { fontSize: 14, color: c.text },
 
