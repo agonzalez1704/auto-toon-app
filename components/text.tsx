@@ -23,6 +23,9 @@ export const FONT = {
     medium: 'Geist_500Medium',
     semibold: 'Geist_600SemiBold',
     bold: 'Geist_700Bold',
+    /** Prices, counts and codes, as the boards set them in Geist Mono. */
+    mono: 'GeistMono_400Regular',
+    monoMedium: 'GeistMono_500Medium',
 } as const
 
 /**

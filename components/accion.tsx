@@ -1,6 +1,6 @@
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native'
 import Svg, { Path } from 'react-native-svg'
-import { Text } from '@/components/text'
+import { FONT, Text } from '@/components/text'
 import { theme } from '@/constants/theme'
 
 /**
@@ -54,6 +54,6 @@ export function Accion({
 const styles = StyleSheet.create({
   boton: { minHeight: 48, borderRadius: 999, borderWidth: 1, paddingLeft: 18, paddingRight: 6, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10 },
   label: { fontSize: 15, fontWeight: '600' },
-  detalle: { fontSize: 13, fontFamily: 'SpaceMono' },
+  detalle: { fontSize: 13, fontFamily: FONT.mono },
   flecha: { width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center' },
 })

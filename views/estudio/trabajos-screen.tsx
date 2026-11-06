@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Alert, FlatList, Image, Pressable, RefreshControl, StyleSheet, View } from 'react-native'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Text } from '@/components/text'
+import { FONT, Text } from '@/components/text'
 import { Accion } from '@/components/accion'
 import { theme } from '@/constants/theme'
 import { cancelarPedido, verTrabajos, type EstadoPieza, type Trabajo } from '@/lib/estudio'
@@ -105,12 +105,12 @@ const styles = StyleSheet.create({
   nombre: { fontSize: 15, fontWeight: '600', color: c.text },
   estado: { fontSize: 13 },
   meta: { fontSize: 12.5, color: c.textDim },
-  mono: { fontFamily: 'SpaceMono', color: c.textMuted },
+  mono: { fontFamily: FONT.mono, color: c.textMuted },
   pasos: { flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 2 },
   paso: { width: 8, height: 8, borderRadius: 4 },
   detalle: { gap: 8, paddingTop: 10, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: c.border },
   lineaDetalle: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   detalleTexto: { flex: 1, fontSize: 13, color: c.textMuted },
-  detalleMeta: { fontSize: 12, color: c.textDim, fontFamily: 'SpaceMono' },
+  detalleMeta: { fontSize: 12, color: c.textDim, fontFamily: FONT.mono },
   vacio: { fontSize: 14, color: c.textDim, padding: 24, textAlign: 'center' },
 })

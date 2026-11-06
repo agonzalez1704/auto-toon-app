@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native'
 import { useFonts } from 'expo-font'
 import { Geist_400Regular, Geist_500Medium, Geist_600SemiBold, Geist_700Bold } from '@expo-google-fonts/geist'
+import { GeistMono_400Regular, GeistMono_500Medium } from '@expo-google-fonts/geist-mono'
 import { Stack, useRouter, useSegments } from 'expo-router'
 import * as SplashScreen from 'expo-splash-screen'
 import { ClerkProvider, ClerkLoaded, useAuth } from '@clerk/clerk-expo'
@@ -212,6 +213,8 @@ export default function RootLayout() {
     Geist_400Regular,
     Geist_500Medium,
     Geist_600SemiBold,
+    GeistMono_400Regular,
+    GeistMono_500Medium,
     Geist_700Bold,
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   })
@@ -259,6 +262,8 @@ export default function RootLayout() {
                   name="grid-upscale"
                   options={{ headerShown: false, presentation: 'modal' }}
                 />
+                <Stack.Screen name="mesas" options={{ headerShown: false, presentation: 'modal' }} />
+                <Stack.Screen name="visor" options={{ headerShown: false, presentation: 'fullScreenModal', animation: 'fade' }} />
                 <Stack.Screen
                   name="image-viewer"
                   options={{ headerShown: false, presentation: 'modal', animation: 'fade' }}

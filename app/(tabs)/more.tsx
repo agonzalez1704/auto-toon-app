@@ -99,12 +99,12 @@ interface Feature {
 
 const FEATURES: Feature[] = [
   {
-    key: 'campanas',
-    title: 'Campañas',
-    description: 'Tus campañas y sus piezas, como en la web',
-    icon: AssetsIcon,
+    key: 'probador',
+    title: 'Probador',
+    description: 'Ropa en tus modelos',
+    icon: ModelFactoryIcon,
     iconTintColor: theme.colors.accentSoft,
-    route: '/campanas',
+    route: '/wardrobe',
   },
   {
     key: 'trabajos',

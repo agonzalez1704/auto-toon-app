@@ -3,7 +3,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRouter } from 'expo-router'
 import { useQuery } from '@tanstack/react-query'
 import Svg, { Path } from 'react-native-svg'
-import { Text } from '@/components/text'
+import { FONT, Text } from '@/components/text'
 import { theme } from '@/constants/theme'
 import { listarMesas, mxn, verSaldo, type MesaResumen } from '@/lib/estudio'
 
@@ -97,7 +97,7 @@ const styles = StyleSheet.create({
   cabecera: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4 },
   titulo: { fontSize: 28, fontWeight: '700', color: c.text, letterSpacing: -0.5 },
   saldo: { minHeight: 36, paddingHorizontal: 14, borderRadius: 999, borderWidth: 1, borderColor: c.border, justifyContent: 'center' },
-  saldoTexto: { fontSize: 13, color: c.text, fontFamily: 'SpaceMono' },
+  saldoTexto: { fontSize: 13, color: c.text, fontFamily: FONT.mono },
   lista: { paddingHorizontal: 16, paddingBottom: 32, gap: 10 },
   bajada: { fontSize: 14, lineHeight: 20, color: c.textMuted, marginBottom: 12 },
   nueva: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 14, borderRadius: 16, borderWidth: 1, borderStyle: 'dashed', borderColor: c.borderStrong, marginBottom: 10 },

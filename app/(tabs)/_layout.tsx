@@ -42,40 +42,35 @@ export default function TabLayout() {
           name="index"
           options={{
             title: 'Crear',
-            tabBarIcon: Platform.select({
-              ios: { type: 'sfSymbol', name: 'square.grid.2x2.fill' },
-              default: { type: 'sfSymbol', name: 'square.grid.2x2.fill' },
-            }) as any,
+            tabBarIcon: { type: 'sfSymbol', name: 'wand.and.stars' } as any,
+          }}
+        />
+        <Tabs.Screen
+          name="campanas"
+          options={{
+            title: 'Campañas',
+            tabBarIcon: { type: 'sfSymbol', name: 'square.stack.3d.up' } as any,
           }}
         />
         <Tabs.Screen
           name="biblioteca"
           options={{
             title: 'Biblioteca',
-            tabBarIcon: Platform.select({
-              ios: { type: 'sfSymbol', name: 'photo.on.rectangle.angled' },
-              default: { type: 'sfSymbol', name: 'photo.on.rectangle.angled' },
-            }) as any,
+            tabBarIcon: { type: 'sfSymbol', name: 'square.grid.2x2' } as any,
           }}
         />
         <Tabs.Screen
-          name="wardrobe"
+          name="saldo"
           options={{
-            title: 'Probador',
-            tabBarIcon: Platform.select({
-              ios: { type: 'sfSymbol', name: 'tshirt.fill' },
-              default: { type: 'sfSymbol', name: 'tshirt.fill' },
-            }) as any,
+            title: 'Saldo',
+            tabBarIcon: { type: 'sfSymbol', name: 'creditcard' } as any,
           }}
         />
         <Tabs.Screen
           name="more"
           options={{
             title: 'Más',
-            tabBarIcon: Platform.select({
-              ios: { type: 'sfSymbol', name: 'ellipsis.circle.fill' },
-              default: { type: 'sfSymbol', name: 'ellipsis.circle.fill' },
-            }) as any,
+            tabBarIcon: { type: 'sfSymbol', name: 'ellipsis.circle' } as any,
           }}
         />
       </Tabs>

@@ -1,7 +1,5 @@
 /**
- * Route entry — thin re-export.
- *
- * Crear es la pantalla de entrada: las mesas, como en la web (una por producto).
- * El Crear de agosto (el director) sigue en Más → «Director» mientras tanto.
+ * Crear, as on the board «Main»: the mesa she's on (or a new one), with the product switcher on top that opens
+ * Mesas. `?mesa=<id>` picks one; `?mesa=nueva` starts from a photo.
  */
-export { default } from '@/views/estudio/mesas-screen'
+export { default } from '@/views/estudio/mesa-screen'

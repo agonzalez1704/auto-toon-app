@@ -113,7 +113,7 @@ export default function AccountScreen() {
 
           {/* Menu Items */}
           <View style={styles.menuGroup}>
-            <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/account/saldo')} activeOpacity={0.7}>
+            <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/saldo')} activeOpacity={0.7}>
               <View style={[styles.menuIconWrap, { backgroundColor: 'rgba(212,255,61,0.12)' }]}>
                 <CoinSmallIcon />
               </View>

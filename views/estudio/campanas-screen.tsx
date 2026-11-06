@@ -1,7 +1,7 @@
 import { ActivityIndicator, FlatList, Image, Pressable, RefreshControl, StyleSheet, useWindowDimensions, View } from 'react-native'
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router'
 import { useQuery } from '@tanstack/react-query'
-import { Text } from '@/components/text'
+import { FONT, Text } from '@/components/text'
 import { theme } from '@/constants/theme'
 import { abrirCampana, listarCampanas, lista, mxn, terminada, type CampanaResumen, type PiezaCampana } from '@/lib/estudio'
 
@@ -132,7 +132,7 @@ const styles = StyleSheet.create({
   titulo: { fontSize: 22, fontWeight: '700', color: c.text, letterSpacing: -0.3 },
   nombre: { fontSize: 15, fontWeight: '600', color: c.text },
   meta: { fontSize: 12.5, color: c.textDim },
-  cobrado: { fontFamily: 'SpaceMono', color: c.accent2 },
+  cobrado: { fontFamily: FONT.mono, color: c.accent2 },
   pieza: { borderRadius: 12, overflow: 'hidden', backgroundColor: c.bgElevated },
   centro: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 12 },
   fallo: { fontSize: 13, color: c.accent2, textAlign: 'center' },

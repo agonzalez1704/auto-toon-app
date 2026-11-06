@@ -5,7 +5,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import * as ImagePicker from 'expo-image-picker'
 import Svg, { Path } from 'react-native-svg'
-import { Text, TextInput } from '@/components/text'
+import { FONT, Text, TextInput } from '@/components/text'
 import { Accion } from '@/components/accion'
 import { theme } from '@/constants/theme'
 import { uploadImage } from '@/lib/upload'
@@ -376,7 +376,7 @@ const styles = StyleSheet.create({
   h2: { fontSize: 18, fontWeight: '600', color: c.text, marginTop: 12 },
   bajada: { fontSize: 14, lineHeight: 20, color: c.textMuted, marginBottom: 8 },
   tarjeta: { padding: 12, borderRadius: 16, borderWidth: 1, borderColor: c.border, backgroundColor: c.bgRaised, gap: 10 },
-  etiqueta: { fontSize: 11, letterSpacing: 0.6, color: c.textDim, fontFamily: 'SpaceMono' },
+  etiqueta: { fontSize: 11, letterSpacing: 0.6, color: c.textDim, fontFamily: FONT.mono },
   fila: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   foto: { width: 72, height: 90, borderRadius: 10, backgroundColor: c.bgElevated },
   masFoto: { width: 72, height: 90, borderRadius: 10, borderWidth: 1, borderStyle: 'dashed', borderColor: c.borderStrong, alignItems: 'center', justifyContent: 'center' },

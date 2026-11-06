@@ -1,6 +1,6 @@
 import { Alert, Platform, RefreshControl, ScrollView, StyleSheet, View } from 'react-native'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Text } from '@/components/text'
+import { FONT, Text } from '@/components/text'
 import { Accion } from '@/components/accion'
 import { theme } from '@/constants/theme'
 import { mxn, verSaldo } from '@/lib/estudio'
@@ -79,7 +79,7 @@ const styles = StyleSheet.create({
   error: { fontSize: 13, color: c.accent2, marginTop: 6 },
   fila: { flexDirection: 'row', gap: 10, marginTop: 16 },
   dato: { flex: 1, padding: 14, borderRadius: 14, borderWidth: 1, borderColor: c.border, backgroundColor: c.bgRaised, gap: 4 },
-  datoValor: { fontSize: 16, color: c.text, fontFamily: 'SpaceMono' },
+  datoValor: { fontSize: 16, color: c.text, fontFamily: FONT.mono },
   datoNombre: { fontSize: 12, color: c.textDim, lineHeight: 16 },
   nota: { fontSize: 13, lineHeight: 19, color: c.textMuted, marginTop: 4 },
 })

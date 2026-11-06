@@ -12,7 +12,6 @@ export default function AccountLayout() {
       }}
     >
       <Stack.Screen name="index" options={{ title: 'Cuenta' }} />
-      <Stack.Screen name="saldo" options={{ title: 'Saldo' }} />
       <Stack.Screen name="pricing" options={{ title: 'Planes' }} />
       <Stack.Screen name="credits" options={{ title: 'Comprar créditos' }} />
     </Stack>
