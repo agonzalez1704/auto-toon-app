@@ -144,7 +144,7 @@ const c = theme.colors
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: c.bg },
   contenido: { paddingHorizontal: 16, paddingTop: 16, paddingBottom: 120, gap: 10 },
-  titulo: { fontSize: 24, fontWeight: '600', letterSpacing: -0.48, color: c.text, marginBottom: 6 },
+  titulo: { fontFamily: FONT.display, fontSize: 34, lineHeight: 36, textTransform: 'uppercase', color: c.text, marginBottom: 6 },
   perfil: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 76, padding: 12, borderRadius: 16, borderWidth: 1, borderColor: c.border, backgroundColor: c.bgRaised },
   avatar: { width: 48, height: 48, borderRadius: 24, overflow: 'hidden', backgroundColor: c.bgOverlay, alignItems: 'center', justifyContent: 'center' },
   inicial: { fontSize: 18, fontWeight: '600', color: c.text },

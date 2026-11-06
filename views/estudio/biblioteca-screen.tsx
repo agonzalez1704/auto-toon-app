@@ -342,7 +342,7 @@ function Tile({ p, h, tone, on, n, abierta, onPress, onPila }: { p: P; h: number
       <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={p.name} accessibilityState={{ selected: on }} style={[styles.tile, { height: h, backgroundColor: tone, borderColor: on ? c.accent : 'transparent' }]}>
         {img ? <Image source={{ uri: img }} style={StyleSheet.absoluteFill} contentFit="cover" recyclingKey={p.id} transition={120} /> : <Botella />}
         <View style={styles.anillo}>
-          <View style={[styles.punto8, { backgroundColor: p.isPublic ? '#4ADE80' : 'rgba(255,255,255,0.35)' }]} />
+          <View style={[styles.punto8, { backgroundColor: p.isPublic ? theme.colors.text : 'rgba(255,255,255,0.35)' }]} />
         </View>
         {p.ancla ? <Estilo /> : null}
         {p.video ? (
@@ -418,7 +418,7 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: c.bg },
   cabecera: { gap: 12, paddingHorizontal: 16, paddingTop: 16 },
   fila: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
-  titulo: { margin: 0, fontWeight: '600', fontSize: 24, letterSpacing: -0.48, color: c.text },
+  titulo: { margin: 0, fontFamily: FONT.display, fontSize: 34, lineHeight: 36, textTransform: 'uppercase', color: c.text },
   acciones: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   redondo: { width: 44, height: 44, borderRadius: 999, borderWidth: 1, borderColor: c.border, backgroundColor: c.bgRaised, alignItems: 'center', justifyContent: 'center' },
   enCurso: { height: 44, paddingHorizontal: 14, borderRadius: 999, borderWidth: 1, borderColor: c.border, backgroundColor: c.bgRaised, flexDirection: 'row', alignItems: 'center', gap: 6 },
@@ -480,6 +480,6 @@ const styles = StyleSheet.create({
   recrearTexto: { fontSize: 14, fontWeight: '600', color: c.bg },
   copiar: { flexGrow: 1, flexBasis: 0, minHeight: 44, borderRadius: 999, borderWidth: 1, borderColor: c.border, backgroundColor: c.bgElevated, alignItems: 'center', justifyContent: 'center' },
   copiarTexto: { fontSize: 14, color: c.text },
-  galeria: { minHeight: 44, borderRadius: 999, borderWidth: 1, borderColor: '#4ADE80', backgroundColor: '#12201A', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 12 },
+  galeria: { minHeight: 44, borderRadius: 999, borderWidth: 1, borderColor: theme.colors.text, backgroundColor: theme.colors.bgElevated, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 12 },
   galeriaTexto: { fontSize: 14, fontWeight: '500', color: '#86EFAC' },
 })

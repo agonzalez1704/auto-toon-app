@@ -7,7 +7,7 @@ type GlassTier = 'sm' | 'md' | 'lg' | 'xl'
 
 interface GlassCardProps {
   tier?: GlassTier
-  tint?: 'neutral' | 'violet' | 'cyan'
+  tint?: 'neutral' | 'alto'
   radius?: number
   highlight?: boolean
   /** Children render directly inside outer view — pass flex/padding via style */
@@ -24,14 +24,12 @@ const TIER_INTENSITY: Record<GlassTier, number> = {
 
 const TINT_FILL: Record<NonNullable<GlassCardProps['tint']>, string> = {
   neutral: theme.glass.tint,
-  violet: theme.glass.tintViolet,
-  cyan: theme.glass.tintCyan,
+  alto: theme.glass.tintHigh,
 }
 
 const FALLBACK_FILL: Record<NonNullable<GlassCardProps['tint']>, string> = {
   neutral: theme.glass.fallback,
-  violet: theme.glass.fallbackViolet,
-  cyan: 'rgba(8,80,90,0.7)',
+  alto: theme.glass.fallbackHigh,
 }
 
 /**

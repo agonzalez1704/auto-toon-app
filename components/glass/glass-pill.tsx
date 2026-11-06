@@ -19,7 +19,7 @@ export function GlassPill({ active, radius, style, children }: GlassPillProps) {
   return (
     <GlassCard
       tier="sm"
-      tint={active ? 'violet' : 'neutral'}
+      tint={active ? 'alto' : 'neutral'}
       radius={radius ?? theme.radius.pill}
       highlight={!active}
       style={[styles.pill, active && styles.pillActive, style]}

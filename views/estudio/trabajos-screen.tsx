@@ -8,7 +8,7 @@ import { Image } from 'expo-image'
 import { cancelarPedido, miniatura, verTrabajos, type EstadoPieza, type Trabajo } from '@/lib/estudio'
 
 /** The step colours of the web's Trabajos board. */
-const COLOR: Record<EstadoPieza, string> = { ok: '#4ADE80', run: theme.colors.text, q: theme.colors.borderStrong, fail: theme.colors.accent2, cancel: theme.colors.textDim }
+const COLOR: Record<EstadoPieza, string> = { ok: theme.colors.text, run: theme.colors.text, q: theme.colors.borderStrong, fail: theme.colors.accent2, cancel: theme.colors.textDim }
 
 /**
  * Trabajos, as on the web (board «Trabajos»): each request with its pieces, its state and what it cost. Looking is

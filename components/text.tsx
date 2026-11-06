@@ -26,6 +26,8 @@ export const FONT = {
     /** Prices, counts and codes, as the boards set them in Geist Mono. */
     mono: 'GeistMono_400Regular',
     monoMedium: 'GeistMono_500Medium',
+    /** Thought: capitals only, for screen titles and big figures — never buttons or running text. */
+    display: 'Thought',
 } as const
 
 /**

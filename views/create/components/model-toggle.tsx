@@ -67,7 +67,7 @@ export function ModelToggle({
               <AspectRatioIcon
                 w={ratio.w}
                 h={ratio.h}
-                color={active ? theme.palette.violet : 'rgba(255,255,255,0.5)'}
+                color={active ? theme.colors.accent : 'rgba(255,255,255,0.5)'}
               />
               <Text style={[styles.aspectPillText, active && styles.aspectPillTextActive]}>
                 {ratio.value}

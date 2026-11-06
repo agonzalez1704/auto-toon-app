@@ -532,7 +532,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.spacing.lg,
     paddingVertical: theme.spacing.md,
     borderRadius: theme.radius.md,
-    backgroundColor: theme.palette.violet,
+    backgroundColor: theme.colors.bgOverlay,
     justifyContent: 'center',
     minHeight: 44,
   },
@@ -561,7 +561,7 @@ const styles = StyleSheet.create({
   confirmBtn: {
     paddingVertical: theme.spacing.lg,
     borderRadius: theme.radius.md,
-    backgroundColor: theme.palette.violet,
+    backgroundColor: theme.colors.bgOverlay,
     alignItems: 'center',
     justifyContent: 'center',
     minHeight: 52,

@@ -22,7 +22,10 @@ import { useSignUpStore } from '@/stores/use-signup-store'
 WebBrowser.maybeCompleteAuthSession()
 
 const C = theme.colors
-const SOFT = '#C7C7C7' // the board's label grey
+// The door is the shop window (as the web's Acceso): red, white and the lime. On the red every small
+// text is white — grey can't be read there — and an error is ink, since pink can't either.
+const SOFT = C.text
+const LINEA = 'rgba(253,253,255,0.4)'
 const HERO = require('@/assets/images/acceso-hero.jpg')
 const RESEND_S = 60
 /** Where this device remembers the 18+ box was ticked, same key as the web's localStorage. */
@@ -216,7 +219,7 @@ export function Acceso() {
       >
         <View pointerEvents="none" style={[s.hero, { height: 340 + top - 24 }]}>
           <Image source={HERO} style={StyleSheet.absoluteFill} contentFit="cover" contentPosition={{ left: '50%', top: '30%' }} />
-          <LinearGradient colors={['rgba(10,10,10,0.35)', 'rgba(10,10,10,0)', C.bg]} locations={[0, 0.35, 1]} style={StyleSheet.absoluteFill} />
+          <LinearGradient colors={['rgba(10,10,10,0.35)', 'rgba(228,38,0,0)', C.rojo]} locations={[0, 0.35, 1]} style={StyleSheet.absoluteFill} />
         </View>
 
         <View style={s.header}>
@@ -346,7 +349,7 @@ export function Acceso() {
 
             <View style={s.row}>
               <Pressable style={s.textBtn} onPress={resend} disabled={wait > 0 || busy} accessibilityRole="button" accessibilityState={{ disabled: wait > 0 || busy }}>
-                <Text style={[s.textBtnText, { color: wait > 0 ? C.textDim : C.text }]}>
+                <Text style={[s.textBtnText, { color: wait > 0 ? 'rgba(253,253,255,0.75)' : C.text }]}>
                   {wait > 0 ? 'Reenviar en ' : 'Reenviar código'}
                   {wait > 0 ? <Text style={s.mono}>{`${Math.floor(wait / 60)}:${String(wait % 60).padStart(2, '0')}`}</Text> : null}
                 </Text>
@@ -393,19 +396,19 @@ export function Acceso() {
 }
 
 const s = StyleSheet.create({
-  root: { flex: 1, backgroundColor: C.bg },
+  root: { flex: 1, backgroundColor: C.rojo },
   page: { flexGrow: 1, paddingHorizontal: 20 },
   hero: { position: 'absolute', left: 0, right: 0, top: 0, overflow: 'hidden' },
 
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  brand: { fontSize: 14, fontWeight: '600', color: C.text },
+  brand: { fontFamily: FONT.display, fontSize: 22, lineHeight: 22, textTransform: 'uppercase', color: C.text },
   stepLabel: { fontFamily: FONT.mono, fontSize: 11, color: SOFT },
 
   section: { gap: 16, marginTop: 196 },
   intro: { gap: 8 },
   eyebrow: { fontFamily: FONT.mono, fontSize: 10, letterSpacing: 0.8, textTransform: 'uppercase', color: SOFT },
-  h1: { fontSize: 30, fontWeight: '600', lineHeight: 33, letterSpacing: -0.9, color: C.text },
-  lead: { fontSize: 14, lineHeight: 21, color: C.textMuted },
+  h1: { fontFamily: FONT.display, fontSize: 44, lineHeight: 44, textTransform: 'uppercase', color: C.text },
+  lead: { fontSize: 14, lineHeight: 21, color: C.text },
   leadEmail: { fontFamily: FONT.mono, fontSize: 13, color: C.text },
   stack: { gap: 10 },
 
@@ -419,17 +422,17 @@ const s = StyleSheet.create({
   oauthText: { fontSize: 15, fontWeight: '500', color: C.text },
 
   divider: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  rule: { flex: 1, height: 1, backgroundColor: C.border },
-  dividerText: { fontSize: 12, color: C.textDim },
+  rule: { flex: 1, height: 1, backgroundColor: LINEA },
+  dividerText: { fontSize: 12, color: C.text },
 
   field: { gap: 6 },
-  fieldLabel: { fontSize: 13, color: C.textMuted },
+  fieldLabel: { fontSize: 13, color: C.text },
   input: { minHeight: 50, paddingHorizontal: 16, borderRadius: 14, borderWidth: 1, borderColor: C.border, backgroundColor: C.bgRaised, color: C.text, fontSize: 16 },
   primary: { minHeight: 52, borderRadius: 999, backgroundColor: C.accent, alignItems: 'center', justifyContent: 'center' },
   primaryText: { fontSize: 16, fontWeight: '600', color: C.bg },
-  note: { fontSize: 12.5, lineHeight: 19, color: C.textDim },
+  note: { fontSize: 12.5, lineHeight: 19, color: C.text },
   center: { textAlign: 'center' },
-  noteError: { color: C.accent2 },
+  noteError: { color: C.bg },
 
   digits: { flexDirection: 'row', gap: 8 },
   digit: { flex: 1, height: 60, borderRadius: 14, borderWidth: 1, backgroundColor: C.bgRaised, alignItems: 'center', justifyContent: 'center' },
@@ -444,10 +447,10 @@ const s = StyleSheet.create({
   foot: { marginTop: 'auto', paddingTop: 24, gap: 12 },
   funnel: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   funnelStep: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  funnelDot: { width: 18, height: 18, borderRadius: 999, borderWidth: 1, borderColor: C.borderStrong, alignItems: 'center', justifyContent: 'center' },
+  funnelDot: { width: 18, height: 18, borderRadius: 999, borderWidth: 1, borderColor: 'rgba(253,253,255,0.5)', alignItems: 'center', justifyContent: 'center' },
   funnelDotOn: { backgroundColor: C.accent, borderColor: C.accent },
-  funnelN: { fontFamily: FONT.mono, fontSize: 10, color: C.textDim },
-  funnelLabel: { fontSize: 11.5, color: C.textDim },
-  funnelLine: { flex: 1, height: 1, backgroundColor: C.border },
-  small: { fontSize: 12, lineHeight: 18, color: C.textDim },
+  funnelN: { fontFamily: FONT.mono, fontSize: 10, color: C.text },
+  funnelLabel: { fontSize: 11.5, color: C.text },
+  funnelLine: { flex: 1, height: 1, backgroundColor: LINEA },
+  small: { fontSize: 12, lineHeight: 18, color: C.text },
 })

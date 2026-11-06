@@ -217,6 +217,9 @@ export default function RootLayout() {
     GeistMono_500Medium,
     Geist_700Bold,
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
+    // The display face (screen titles, big figures, the sign-in headline). Personal-use licence today:
+    // buy the commercial one before release.
+    Thought: require('../assets/fonts/Thought.otf'),
   })
 
   useEffect(() => {

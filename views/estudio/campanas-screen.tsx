@@ -100,7 +100,7 @@ function Vista({ id: pedida, onPick }: { id?: string; onPick: (id: string) => vo
     return (
       <View style={styles.etapa}>
         <View style={styles.riel}>
-          <View style={[styles.punto, { backgroundColor: s.done ? '#12201A' : now ? '#1F1F1F' : 'transparent', borderColor: s.done ? VERDE_OK : now ? c.accent : '#333333' }]}>
+          <View style={[styles.punto, { backgroundColor: s.done ? '#1A1A1A' : now ? '#1F1F1F' : 'transparent', borderColor: s.done ? VERDE_OK : now ? c.accent : '#333333' }]}>
             <Text style={[styles.marca, { color: s.done ? VERDE_OK : now ? c.text : c.textDim }]}>{s.done ? '✓' : String(i + 1)}</Text>
           </View>
           <View style={[styles.linea, { backgroundColor: i === e!.stages.length - 1 ? 'transparent' : s.done ? VERDE_OK : c.border }]} />
@@ -344,7 +344,7 @@ function Sigue({ on, titulo, texto, nota, onAhoraNo }: { on: string; titulo: str
 }
 
 // The board's conic-gradient(transparent 0 70%, pink 82%, green 92%, transparent 100%), as thin wedges.
-const VERDE_OK = '#4ADE80'
+const VERDE_OK = theme.colors.text
 const mezcla = (t: number) =>
   '#' + [1, 3, 5].map((o) => Math.round(parseInt(theme.colors.accent2.slice(o, o + 2), 16) * (1 - t) + parseInt(theme.colors.accent.slice(o, o + 2), 16) * t).toString(16).padStart(2, '0')).join('')
 const CONO = Array.from({ length: 30 }, (_, i) => {

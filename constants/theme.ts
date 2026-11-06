@@ -5,27 +5,13 @@
  */
 
 // ── Brand palette ──────────────────────────────────────────────────────
-// Primary:   violet  (brand identity, primary CTA)
-// Secondary: fuchsia (analogous accent — bridges violet→pink, glass-friendly)
-// Tertiary:  emerald (functional/success only)
+// «Dos calmos, uno fuerte» (2026-11): the studio is ink and white and the photo
+// sets the colour; the shop window (sign-in) is red. The lime is the action that
+// stays on the screen, the pink what was charged or goes on to another screen.
+// The old violet / fuchsia / cyan / amber are gone.
 export const palette = {
-  // Primary
-  violet: '#7C3AED',
-  violetLight: '#A78BFA',
-  violetSoft: '#8B5CF6',
-  violetDeep: '#5B21B6',
-
-  // Secondary (NEW — fuchsia, 23° hue distance from violet)
-  fuchsia: '#D946EF',
-  fuchsiaLight: '#E879F9',
-  fuchsiaDeep: '#A21CAF',
-
-  // Supporting
-  indigo: '#6366F1',
-  cyan: '#06B6D4',
-  cyanLight: '#22D3EE',
-  emerald: '#10B981',
-  amber: '#F59E0B',
+  // The shop window's field (sign-in), as the web's landing and Acceso.
+  rojo: '#E42600',
 
   // Editorial warm-slate scale — neutral, lets content provide the color
   bg: '#0A0A0A',         // app deep bg — the web studio's black (redesign 2026-11)
@@ -72,11 +58,9 @@ export const colors = {
   accent2Soft: 'rgba(255,61,138,0.14)',
   accent2Border: 'rgba(255,61,138,0.32)',
 
-  // Tertiary / informational
-  info: '#22D3EE',
-  infoSoft: 'rgba(34,211,238,0.12)',
+  // The shop window's red (sign-in only: the studio never shows it).
+  rojo: palette.rojo,
 
-  success: '#4ADE80',
   warning: '#D4FF3D',
   danger: '#FB7185',
 } as const
@@ -84,17 +68,11 @@ export const colors = {
 // ── Brand gradients (tight hue ramps for natural liquid-glass feel) ──
 // Rule: keep hue distance ≤45° for organic look.
 export const gradients = {
-  // Primary brand — violet → fuchsia (23° hue, signature gradient)
   // The redesign is monochrome: the colour comes from the images; the one accent is the green.
   brand: ['#D4FF3D', '#B8E62E'] as const,
   brandSoft: ['rgba(212,255,61,0.92)', 'rgba(184,230,46,0.82)'] as const,
   // Wider brand ramp for hero / splash
   brandWide: ['#1A1A1A', '#0A0A0A', '#0A0A0A'] as const,
-  // Mono violet ramp
-  violet: [palette.violet, palette.violetSoft] as const,
-  violetDeep: [palette.violetDeep, palette.violet] as const,
-  // Mono fuchsia ramp
-  fuchsia: [palette.fuchsia, palette.fuchsiaLight] as const,
   // Bento card scrims — neutral dark gradient so user's photo provides color
   fashion: ['rgba(10,10,10,0.45)', 'rgba(10,10,10,0.95)'] as const,
   relight: ['rgba(10,10,10,0.45)', 'rgba(10,10,10,0.95)'] as const,
@@ -170,13 +148,11 @@ export const glass = {
   tintLow: 'rgba(255,255,255,0.04)',
   tint: 'rgba(255,255,255,0.07)',
   tintHigh: 'rgba(255,255,255,0.12)',
-  tintViolet: 'rgba(124,58,237,0.22)',
-  tintCyan: 'rgba(6,182,212,0.16)',
 
   // Fallback fills (when expo-blur not installed)
-  // Translucent enough to feel glass-y over violet bg, opaque enough to read.
-  fallback: 'rgba(40,32,77,0.55)',
-  fallbackViolet: 'rgba(91,33,182,0.55)',
+  // Translucent enough to feel glass-y over the ink, opaque enough to read.
+  fallback: 'rgba(20,20,20,0.78)',
+  fallbackHigh: 'rgba(40,40,40,0.78)',
 
   // Highlight borders — top edge bright, bottom subtle (natural specular)
   borderTop: 'rgba(255,255,255,0.18)',

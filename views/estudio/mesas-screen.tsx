@@ -207,7 +207,7 @@ const styles = StyleSheet.create({
   pressed: { opacity: 0.85 },
   cabecera: { gap: 12, paddingTop: 16, paddingHorizontal: 16, paddingBottom: 10 },
   tituloFila: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
-  titulo: { fontSize: 24, fontWeight: '600', letterSpacing: -0.48, color: c.text },
+  titulo: { fontFamily: FONT.display, fontSize: 34, lineHeight: 36, textTransform: 'uppercase', color: c.text },
   cerrar: { width: 40, height: 40, borderRadius: 999, borderWidth: 1, borderColor: c.border, backgroundColor: c.bgRaised, alignItems: 'center', justifyContent: 'center' },
   bajada: { fontSize: 13.5, lineHeight: 20.25, color: c.textMuted },
   lista: { gap: 10, paddingTop: 4, paddingHorizontal: 16 },

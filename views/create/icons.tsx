@@ -12,9 +12,9 @@ import Svg, {
 } from 'react-native-svg'
 import { theme } from '@/constants/theme'
 
-const VIOLET = theme.palette.violet
-const VIOLET_LIGHT = theme.palette.violetLight
-const CYAN = theme.palette.cyan
+const TRAZO = theme.colors.text
+const TRAZO_SUAVE = theme.colors.textMuted
+const TRAZO_TENUE = theme.colors.textDim
 
 // ── Aspect ratio rectangle ──────────────────────────────────────────────
 
@@ -41,9 +41,9 @@ export function AspectRatioIcon({ w, h, color = '#fff' }: { w: number; h: number
 export function InstagramIcon() {
   return (
     <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
-      <Rect x="2" y="2" width="20" height="20" rx="5" fill="none" stroke={VIOLET} strokeWidth="2" />
-      <Circle cx="12" cy="12" r="5" fill="none" stroke={VIOLET} strokeWidth="2" />
-      <Circle cx="17.5" cy="6.5" r="1.5" fill={VIOLET} />
+      <Rect x="2" y="2" width="20" height="20" rx="5" fill="none" stroke={TRAZO} strokeWidth="2" />
+      <Circle cx="12" cy="12" r="5" fill="none" stroke={TRAZO} strokeWidth="2" />
+      <Circle cx="17.5" cy="6.5" r="1.5" fill={TRAZO} />
     </Svg>
   )
 }
@@ -54,7 +54,7 @@ export function SparkleGoalIcon() {
       <SvgPath
         d="M12 2L14.09 8.26L20 9.27L15.55 13.97L16.91 20L12 16.9L7.09 20L8.45 13.97L4 9.27L9.91 8.26L12 2Z"
         fill="none"
-        stroke={CYAN}
+        stroke={TRAZO_TENUE}
         strokeWidth="2"
         strokeLinejoin="round"
       />
@@ -65,11 +65,11 @@ export function SparkleGoalIcon() {
 export function PaletteIcon() {
   return (
     <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
-      <Circle cx="12" cy="12" r="10" fill="none" stroke={VIOLET_LIGHT} strokeWidth="2" />
-      <Circle cx="8" cy="10" r="1.5" fill={VIOLET} />
-      <Circle cx="12" cy="7" r="1.5" fill={CYAN} />
-      <Circle cx="16" cy="10" r="1.5" fill={VIOLET_LIGHT} />
-      <Circle cx="14" cy="15" r="1.5" fill={VIOLET} />
+      <Circle cx="12" cy="12" r="10" fill="none" stroke={TRAZO_SUAVE} strokeWidth="2" />
+      <Circle cx="8" cy="10" r="1.5" fill={TRAZO} />
+      <Circle cx="12" cy="7" r="1.5" fill={TRAZO_TENUE} />
+      <Circle cx="16" cy="10" r="1.5" fill={TRAZO_SUAVE} />
+      <Circle cx="14" cy="15" r="1.5" fill={TRAZO} />
     </Svg>
   )
 }
@@ -77,10 +77,10 @@ export function PaletteIcon() {
 export function PosterIcon() {
   return (
     <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
-      <Rect x="3" y="3" width="18" height="18" rx="2" fill="none" stroke={VIOLET} strokeWidth="2" />
+      <Rect x="3" y="3" width="18" height="18" rx="2" fill="none" stroke={TRAZO} strokeWidth="2" />
       <SvgPath
         d="M3 15l5-5 4 4 3-3 6 6"
-        stroke={VIOLET}
+        stroke={TRAZO}
         strokeWidth="2"
         strokeLinecap="round"
       />
@@ -91,8 +91,8 @@ export function PosterIcon() {
 export function FoodIcon() {
   return (
     <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
-      <Circle cx="12" cy="14" r="8" fill="none" stroke={VIOLET_LIGHT} strokeWidth="2" />
-      <SvgPath d="M12 6V2M8 7l-2-3M16 7l2-3" stroke={VIOLET_LIGHT} strokeWidth="2" strokeLinecap="round" />
+      <Circle cx="12" cy="14" r="8" fill="none" stroke={TRAZO_SUAVE} strokeWidth="2" />
+      <SvgPath d="M12 6V2M8 7l-2-3M16 7l2-3" stroke={TRAZO_SUAVE} strokeWidth="2" strokeLinecap="round" />
     </Svg>
   )
 }
@@ -103,10 +103,10 @@ export function CameraGoalIcon() {
       <SvgPath
         d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"
         fill="none"
-        stroke={CYAN}
+        stroke={TRAZO_TENUE}
         strokeWidth="2"
       />
-      <Circle cx="12" cy="13" r="4" fill="none" stroke={CYAN} strokeWidth="2" />
+      <Circle cx="12" cy="13" r="4" fill="none" stroke={TRAZO_TENUE} strokeWidth="2" />
     </Svg>
   )
 }
@@ -117,11 +117,11 @@ export function CubeGoalIcon() {
       <SvgPath
         d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"
         fill="none"
-        stroke={CYAN}
+        stroke={TRAZO_TENUE}
         strokeWidth="2"
         strokeLinejoin="round"
       />
-      <SvgPath d="M3.27 6.96L12 12l8.73-5.04M12 22V12" fill="none" stroke={CYAN} strokeWidth="2" strokeLinejoin="round" />
+      <SvgPath d="M3.27 6.96L12 12l8.73-5.04M12 22V12" fill="none" stroke={TRAZO_TENUE} strokeWidth="2" strokeLinejoin="round" />
     </Svg>
   )
 }
@@ -188,7 +188,7 @@ export function CloseIcon({ size = 20, color = 'rgba(255,255,255,0.6)' }: { size
   )
 }
 
-export function SettingsIcon({ color = VIOLET }: { color?: string }) {
+export function SettingsIcon({ color = TRAZO }: { color?: string }) {
   return (
     <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
       <SvgPath
