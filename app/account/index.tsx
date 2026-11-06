@@ -13,6 +13,8 @@ import Svg, {
 import { useSubscriptionStore } from '@/stores/use-subscription-store'
 import { useCreditsStore } from '@/stores/use-credits-store'
 import { useAIConsentStore } from '@/stores/use-ai-consent-store'
+import { useQuery } from '@tanstack/react-query'
+import { mxn, verSaldo } from '@/lib/estudio'
 
 const BRAND = '#FF3D8A'
 const BRAND_CYAN = '#141414'
@@ -64,6 +66,7 @@ export default function AccountScreen() {
   const { signOut } = useAuth()
   const { plan } = useSubscriptionStore()
   const { balance } = useCreditsStore()
+  const saldo = useQuery({ queryKey: ['saldo'], queryFn: verSaldo })
 
   const fadeAnim = useRef(new Animated.Value(0)).current
   useEffect(() => {
@@ -110,6 +113,19 @@ export default function AccountScreen() {
 
           {/* Menu Items */}
           <View style={styles.menuGroup}>
+            <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/account/saldo')} activeOpacity={0.7}>
+              <View style={[styles.menuIconWrap, { backgroundColor: 'rgba(212,255,61,0.12)' }]}>
+                <CoinSmallIcon />
+              </View>
+              <View style={styles.menuTextWrap}>
+                <Text style={styles.menuLabel}>Saldo</Text>
+                <Text style={styles.menuValue}>{saldo.data ? `${mxn(saldo.data.saldoCents)} disponibles` : '...'}</Text>
+              </View>
+              <ChevronRight />
+            </TouchableOpacity>
+
+            <View style={styles.menuDivider} />
+
             <TouchableOpacity
               style={styles.menuItem}
               onPress={() => router.push('/account/pricing')}
@@ -119,8 +135,8 @@ export default function AccountScreen() {
                 <CreditCardIcon />
               </View>
               <View style={styles.menuTextWrap}>
-                <Text style={styles.menuLabel}>Subscription</Text>
-                <Text style={styles.menuValue}>{planLabel} Plan</Text>
+                <Text style={styles.menuLabel}>Suscripción</Text>
+                <Text style={styles.menuValue}>Plan {planLabel}</Text>
               </View>
               <ChevronRight />
             </TouchableOpacity>
@@ -136,9 +152,9 @@ export default function AccountScreen() {
                 <CoinSmallIcon />
               </View>
               <View style={styles.menuTextWrap}>
-                <Text style={styles.menuLabel}>Credits</Text>
+                <Text style={styles.menuLabel}>Créditos (Director)</Text>
                 <Text style={styles.menuValue}>
-                  {balance !== null ? `${balance} available` : '...'}
+                  {balance !== null ? `${balance} disponibles` : '...'}
                 </Text>
               </View>
               <ChevronRight />
@@ -156,7 +172,7 @@ export default function AccountScreen() {
             activeOpacity={0.7}
           >
             <LogoutIcon />
-            <Text style={styles.signOutText}>Sign Out</Text>
+            <Text style={styles.signOutText}>Cerrar sesión</Text>
           </TouchableOpacity>
         </Animated.ScrollView>
       </SafeAreaView>

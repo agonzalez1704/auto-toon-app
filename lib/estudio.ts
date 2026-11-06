@@ -140,6 +140,9 @@ export const reintentarPieza = async (id: string) => (await api.post<Apartado>('
 
 // --- money ---
 export const verSaldo = async () => (await api.get<Saldo>('/api/saldo')).data
+/** A StoreKit balance purchase, verified with Apple and credited once (the app finishes the transaction after). */
+export const acreditarSaldoApple = async (o: { transactionId: string; productId: string }) =>
+  (await api.post<{ ok: true; saldoCents: number; yaEstaba: boolean }>('/api/iap/apple/saldo', o)).data
 
 /** «$1,234.50». */
 export const mxn = (cents: number) => `$${(cents / 100).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`

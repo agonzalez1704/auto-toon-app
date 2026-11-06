@@ -47,7 +47,8 @@
     },
     "plugins": [
       "expo-router",
-      "expo-iap"
+      "expo-iap",
+      "./plugins/with-ios-16"
     ],
     "experiments": {
       "typedRoutes": true
