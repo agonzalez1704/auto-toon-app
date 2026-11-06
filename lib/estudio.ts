@@ -1,4 +1,5 @@
 import api from './api'
+import { CONFIG } from './config'
 
 /**
  * The web studio over REST (plan docs/plans/2026-11-05-paridad-web.md): mesas, Crear's ideas, the job queue
@@ -109,6 +110,9 @@ export interface Saldo {
 
 // --- mesas ---
 export const listarMesas = async () => (await api.get<{ mesas: MesaResumen[] }>('/api/mesas')).data.mesas
+/** The same list with «Aquí estás» on the mesa Crear shows (the server marks the last one touched otherwise). */
+export const listarMesasDesde = async (actual: string | null) =>
+  (await api.get<{ mesas: MesaResumen[] }>('/api/mesas', { params: actual ? { actual } : {} })).data.mesas
 export const abrirMesa = async (id: string) => (await api.get<{ mesa: MesaAbierta }>(`/api/mesas/${encodeURIComponent(id)}`)).data.mesa
 export const crearMesa = async (c: CambioMesa) => (await api.post<{ ok: true; id: string }>('/api/mesas', c)).data.id
 export const guardarMesa = async (id: string, c: CambioMesa) => (await api.patch<{ ok: true; id: string }>(`/api/mesas/${encodeURIComponent(id)}`, c)).data.id
@@ -234,3 +238,19 @@ export interface Campana {
 }
 export const listarCampanas = async () => (await api.get<{ campanas: CampanaResumen[] }>('/api/campanas')).data.campanas
 export const abrirCampana = async (id: string) => (await api.get<{ campana: Campana }>(`/api/campanas/${encodeURIComponent(id)}`)).data.campana
+
+/** next/image's own widths (the server rejects any other). */
+const ANCHOS = [128, 256, 384, 640, 828, 1080, 1920] as const
+/**
+ * A grid-sized copy of a piece: the web's image optimizer resizes our storage's images (R2, Supabase), so a
+ * mosaic doesn't pull 2K PNGs. `ancho` is in points; it's doubled for the retina screen. Other hosts go as they are.
+ */
+export function miniatura(url: string | null | undefined, ancho: number): string | null {
+  if (!url) return null
+  if (!/^https:\/\/[^/]+\.(r2\.dev|supabase\.co|supabase\.in)\//.test(url)) return url
+  // A local dev server runs next/image unoptimized (no /_next/image): the original it is.
+  if (/\/\/(localhost|127\.|192\.168\.|10\.)/.test(CONFIG.API_BASE_URL)) return url
+  const w = ANCHOS.find((a) => a >= ancho * 2) ?? 1920
+  // q=75 is the only quality the deployment accepts (Vercel rejects others with 400).
+  return `${CONFIG.API_BASE_URL}/_next/image?url=${encodeURIComponent(url)}&w=${w}&q=75`
+}
