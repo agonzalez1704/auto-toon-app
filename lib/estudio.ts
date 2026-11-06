@@ -156,6 +156,22 @@ export interface PiezaBiblioteca {
   id: string
   name: string
   module: string
+  /** What the model was asked (the server wrote it). */
+  prompt: string
+  /** «Motor · forma · calidad», as the web's sheet shows it. */
+  meta: string
+  motor: string
+  forma: string
+  /** The images it was made from, in order. */
+  refs: string[]
+  calidad: string | null
+  orden: number | null
+  /** The request it came in, and what that charge finally took (null until captured). */
+  holdId: string | null
+  /** What ties a stack together: the product photo it was made from. */
+  grupo: string
+  /** The mesa that copies this piece's look, when one does. */
+  ancla: string | null
   aspect: Aspecto
   time: string
   day: string
