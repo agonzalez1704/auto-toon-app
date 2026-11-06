@@ -56,3 +56,16 @@ Cada fase se prueba en el simulador contra la base **local** (`pnpm dev:local` e
 - `/account` no tiene entrada desde que se quitó el dashboard: no hay cómo cerrar sesión.
 - Nadie llama `fetchSubscription()`: `plan` y `termsAccepted` se quedan en caché.
 - Cada subida se analiza dos veces (`/api/analyze-product` y `/api/create/analyze`).
+
+## Estado (2026-11-05)
+
+| Fase | Estado |
+|---|---|
+| 0 | Hecha: tokens, Geist, los dos bugs de Crear, entrada a Cuenta. |
+| 1 | Hecha (rama `feat/api-nativa` en toon-converter). Además: `GET /api/biblioteca`, `GET /api/trabajos`, `GET /api/campanas`, `GET /api/campanas/[id]`; y la carrera al crear la cuenta en el primer login (dos pedidos a la vez → P2002) quedó arreglada en `resolveUser`. |
+| 2 | Hecha: Crear con mesas. Falta probar en el simulador con la cuenta que tiene mesas. |
+| 3 | Hecha la parte de código: pantalla Saldo, recargas `com.autotoon.saldo.{100,250,500}`. **Falta crear esos tres consumibles en App Store Connect** (y su precio). |
+| 4 | Hecha: pestaña Biblioteca, Trabajos con cancelar. |
+| 5 | **Sólo lectura** (decisión mía): lista de campañas y cada campaña con sus piezas. Armar una campaña (guiada, Colección) se queda en la web mientras la sesión «Campaña completa creada desde Crear» cambia cómo se crean; copiar hoy el flujo viejo sería trabajo para tirar. |
+
+Pendiente aparte: el texto de inicio de sesión y onboarding sigue en inglés y habla de créditos.

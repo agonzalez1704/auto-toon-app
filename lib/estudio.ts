@@ -190,3 +190,31 @@ export interface Trabajo {
 }
 export const verBiblioteca = async () => (await api.get<{ piezas: PiezaBiblioteca[] }>('/api/biblioteca')).data.piezas
 export const verTrabajos = async () => (await api.get<{ jobs: Trabajo[]; running: number }>('/api/trabajos')).data
+
+// --- Campañas (`app/(estudio)/campanas/data.ts` on the web; read-only here for now) ---
+export interface CampanaResumen {
+  id: string
+  name: string
+  createdAt: string
+  piezas: number
+  portadaUrl: string | null
+}
+export interface PiezaCampana {
+  id: string
+  kind: string
+  status: string
+  resultUrl: string | null
+  videoUrl: string | null
+  aspect: Aspecto
+  priceCents: number | null
+  canceled: boolean
+}
+export interface Campana {
+  id: string
+  name: string
+  spentCents: number
+  createdAt: string
+  pieces: PiezaCampana[]
+}
+export const listarCampanas = async () => (await api.get<{ campanas: CampanaResumen[] }>('/api/campanas')).data.campanas
+export const abrirCampana = async (id: string) => (await api.get<{ campana: Campana }>(`/api/campanas/${encodeURIComponent(id)}`)).data.campana

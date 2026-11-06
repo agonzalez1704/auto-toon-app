@@ -99,6 +99,14 @@ interface Feature {
 
 const FEATURES: Feature[] = [
   {
+    key: 'campanas',
+    title: 'Campañas',
+    description: 'Tus campañas y sus piezas, como en la web',
+    icon: AssetsIcon,
+    iconTintColor: theme.colors.accentSoft,
+    route: '/campanas',
+  },
+  {
     key: 'trabajos',
     title: 'Trabajos',
     description: 'Cada pedido mientras se genera, y lo que costó',
