@@ -29,6 +29,7 @@ import {
 import { cotizarLinea, descargar, guardarHoja, pedirLinea, textoDe, verHold, type Cuerpo, type Linea, type Luz } from './crear/api'
 import { Botella, BotonGenerar, Chip, Flecha, Pulso } from './crear/partes'
 import { corriendo, LUCES, Resultados, type PiezaMesa } from './crear/resultados'
+import { useMesaAbierta } from '@/stores/use-mesa-abierta'
 
 /**
  * Crear (boards «Main» and «Resultados»): the mesa on the table — its product, photobook, the ideas made for it
@@ -84,7 +85,9 @@ export default function MesaScreen() {
   const params = useLocalSearchParams<{ mesa?: string; id?: string }>()
   const router = useRouter()
   const enTab = params.id === undefined
-  const pedida = params.mesa ?? params.id
+  // /mesa/[id] is that mesa; the tab shows the one picked (Mesas, Recrear), else a deep link's ?mesa=, else `actual`.
+  const elegida = useMesaAbierta((s) => s.id)
+  const pedida = params.id ?? elegida ?? params.mesa
   const mesas = useQuery({ queryKey: ['mesas'], queryFn: listarMesas, enabled: !pedida })
   const id = pedida ?? (mesas.data ? (mesas.data.find((m) => m.actual)?.id ?? 'nueva') : undefined)
   const mesa = useQuery({ queryKey: ['mesa', id], queryFn: () => abrirMesa(id!), enabled: !!id && id !== 'nueva' })

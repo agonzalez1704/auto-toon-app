@@ -3,6 +3,7 @@ import { ActivityIndicator, FlatList, Pressable, RefreshControl, StyleSheet, Vie
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { Image } from 'expo-image'
+import { abrirEnCrear } from '@/stores/use-mesa-abierta'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import Svg, { Path, Rect } from 'react-native-svg'
 import { FONT, Text, TextInput } from '@/components/text'
@@ -28,8 +29,7 @@ export default function MesasScreen() {
   const [nombre, setNombre] = useState('')
   const [fallo, setFallo] = useState<string | null>(null)
 
-  // POP_TO the tabs: the sheet closes and the Crear tab gets the param, wherever the stack was.
-  const irA = (mesa: string) => router.dismissTo({ pathname: '/', params: { mesa } })
+  const irA = abrirEnCrear
 
   /** The check or Enter: closes the field, and saves only when the name really changed. */
   const guardarNombre = async (m: MesaResumen) => {

@@ -4,6 +4,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useRouter } from 'expo-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Image } from 'expo-image'
+import { abrirEnCrear } from '@/stores/use-mesa-abierta'
 import * as Clipboard from 'expo-clipboard'
 import Svg, { Circle, Path, Rect } from 'react-native-svg'
 import { FONT, Text, TextInput } from '@/components/text'
@@ -127,7 +128,7 @@ export default function BibliotecaScreen() {
     try {
       const id = await crearMesa({ photoUrl: p.src, refs: [] })
       qc.invalidateQueries({ queryKey: ['mesas'] })
-      router.push({ pathname: '/', params: { mesa: id } })
+      abrirEnCrear(id)
     } catch {
       setNota('No pudimos abrir una mesa con esta imagen. Intenta otra vez.')
     } finally {

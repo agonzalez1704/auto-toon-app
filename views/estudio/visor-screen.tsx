@@ -30,6 +30,7 @@ import { ApiError } from '@/lib/api'
 import { crearMesa, lista as estaLista, mxn, terminada, verBiblioteca, type Aspecto, type PiezaBiblioteca } from '@/lib/estudio'
 import { ALTA_BRIEF, cotizarLinea, entregarZip, guardarEnFotos, pedirLinea, revisarPuertas, type LineaVisor, type Puertas } from '@/lib/visor'
 import { usePedido } from './use-pedido'
+import { abrirEnCrear } from '@/stores/use-mesa-abierta'
 
 /**
  * A piece at full screen (web board «Visor», components/pantallas/visor.tsx): swipe through the pieces it was
@@ -345,7 +346,7 @@ export default function VisorScreen() {
     try {
       const id = await crearMesa({ photoUrl: fotoP, refs: [] })
       qc.invalidateQueries({ queryKey: ['mesas'] })
-      salir({ pathname: '/', params: { mesa: id } })
+      abrirEnCrear(id)
     } catch {
       Alert.alert('No se abrió la mesa', 'No pudimos abrir una mesa con esta imagen. Intenta otra vez.')
     } finally {
