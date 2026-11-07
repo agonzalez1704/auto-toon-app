@@ -47,6 +47,8 @@ const MENSAJES: Record<string, string> = {
   verification_expired: 'Los códigos valen 10 minutos. Pide otro.',
   too_many_requests: 'Espera un minuto antes de volver a intentar.',
   form_password_pwned: INCOMPLETA,
+  form_password_incorrect: 'La contraseña no coincide. Revísala o entra con el código.',
+  strategy_for_user_invalid: 'Esta cuenta no tiene contraseña. Entra con el código que te mandamos.',
   form_param_missing: INCOMPLETA,
 }
 
@@ -73,6 +75,9 @@ export function Acceso() {
   const [mode, setMode] = useState<'in' | 'up'>('in')
   const [email, setEmail] = useState('')
   const [code, setCode] = useState('')
+  // A password, for an account that has one (App Review's demo account): the code is still the way in for everyone else.
+  const [conClave, setConClave] = useState(false)
+  const [clave, setClave] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [mayor, setMayor] = useState(false)
@@ -173,6 +178,22 @@ export function Acceso() {
       }
     } catch (err) {
       setError(mensaje(err, 'verificar'))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  /** An existing account with a password: email + password in one step, no code. */
+  const entrarConClave = async () => {
+    if (!inReady || busy || !clave) return
+    setBusy(true)
+    setError(null)
+    try {
+      const attempt = await signIn.create({ identifier: email.trim(), password: clave })
+      if (attempt.status !== 'complete') throw new Error(attempt.status ?? 'incomplete')
+      await setInActive({ session: attempt.createdSessionId })
+    } catch (err) {
+      setError(mensaje(err, 'contrasena'))
     } finally {
       setBusy(false)
     }
@@ -359,6 +380,8 @@ export function Acceso() {
                 onPress={() => {
                   setStep(1)
                   setCode('')
+                  setConClave(false)
+                  setClave('')
                   setError(null)
                 }}
                 accessibilityRole="button"
@@ -366,6 +389,39 @@ export function Acceso() {
                 <Text style={[s.textBtnText, { color: C.text }]}>Cambiar correo</Text>
               </Pressable>
             </View>
+
+            {mode === 'in' ? (
+              conClave ? (
+                <View style={s.claveBox}>
+                  <TextInput
+                    style={s.input}
+                    value={clave}
+                    onChangeText={setClave}
+                    placeholder="Tu contraseña"
+                    placeholderTextColor={C.textDim}
+                    secureTextEntry
+                    textContentType="password"
+                    autoComplete="password"
+                    autoCapitalize="none"
+                    onSubmitEditing={entrarConClave}
+                    accessibilityLabel="Contraseña"
+                  />
+                  <Pressable
+                    style={[s.primary, { opacity: busy || !clave ? 0.6 : 1 }]}
+                    onPress={entrarConClave}
+                    disabled={busy || !clave}
+                    accessibilityRole="button"
+                    accessibilityState={{ disabled: busy || !clave }}
+                  >
+                    <Text style={s.primaryText}>{busy ? 'Entrando…' : 'Entrar con contraseña'}</Text>
+                  </Pressable>
+                </View>
+              ) : (
+                <Pressable style={s.textBtn} onPress={() => setConClave(true)} accessibilityRole="button">
+                  <Text style={[s.textBtnText, { color: C.text }]}>¿Tienes contraseña?</Text>
+                </Pressable>
+              )
+            ) : null}
 
             <Text style={[s.note, error ? s.noteError : null]} accessibilityLiveRegion="polite">
               {error || '¿No llega? Revisa spam o usa Apple / Google. Nunca te pediremos el código por chat ni por teléfono.'}
@@ -440,6 +496,7 @@ const s = StyleSheet.create({
   codeInput: { ...StyleSheet.absoluteFillObject, opacity: 0 },
   row: { flexDirection: 'row', justifyContent: 'space-between' },
   textBtn: { minHeight: 44, justifyContent: 'center' },
+  claveBox: { gap: 10 },
   textBtnText: { fontSize: 13 },
   mono: { fontFamily: FONT.mono },
 

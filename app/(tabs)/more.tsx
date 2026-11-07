@@ -1,4 +1,5 @@
-import { Alert, Pressable, ScrollView, StatusBar, StyleSheet, View } from 'react-native'
+import { useState } from 'react'
+import { ActivityIndicator, Alert, Pressable, ScrollView, StatusBar, StyleSheet, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRouter } from 'expo-router'
 import { Image } from 'expo-image'
@@ -9,7 +10,7 @@ import Svg, { Circle, Path } from 'react-native-svg'
 import { FONT, Text } from '@/components/text'
 import { theme } from '@/constants/theme'
 import { CONFIG } from '@/lib/config'
-import { verTrabajos } from '@/lib/estudio'
+import { eliminarCuenta, verTrabajos } from '@/lib/estudio'
 import { useAIConsentStore } from '@/stores/use-ai-consent-store'
 
 /**
@@ -37,6 +38,31 @@ export default function MasScreen() {
           { text: 'Quitar', style: 'destructive', onPress: () => void revoke().catch(() => {}) },
         ])
       : setShowConsentModal(true)
+  const [borrando, setBorrando] = useState(false)
+  const borrar = async () => {
+    setBorrando(true)
+    try {
+      await eliminarCuenta()
+      await signOut()
+    } catch {
+      setBorrando(false)
+      Alert.alert('No pudimos eliminar tu cuenta', 'Algo falló a medio camino. Intenta de nuevo; lo que ya se borró no regresa.')
+    }
+  }
+  // Two steps on purpose: nothing of hers comes back, and the balance is lost with it.
+  const eliminar = () =>
+    Alert.alert('¿Eliminar tu cuenta?', 'Se borran tus mesas, tus fotos y videos, tus campañas, tus personas y tu saldo. No se puede deshacer.', [
+      { text: 'Conservarla', style: 'cancel' },
+      {
+        text: 'Continuar',
+        style: 'destructive',
+        onPress: () =>
+          Alert.alert('Última confirmación', 'Tu cuenta y todo lo que hiciste se eliminan ahora.', [
+            { text: 'Cancelar', style: 'cancel' },
+            { text: 'Eliminar mi cuenta', style: 'destructive', onPress: () => void borrar() },
+          ]),
+      },
+    ])
   const salir = () =>
     Alert.alert('¿Cerrar sesión?', 'Tus mesas y tu saldo te esperan cuando vuelvas a entrar.', [
       { text: 'Seguir aquí', style: 'cancel' },
@@ -92,6 +118,17 @@ export default function MasScreen() {
             <Separador />
             <Fila icono="salir" titulo="Cerrar sesión" onPress={salir} sinFlecha />
           </View>
+
+          <View style={[styles.grupo, { marginTop: 14 }]}>
+            {borrando ? (
+              <View style={[styles.fila, { justifyContent: 'center' }]}>
+                <ActivityIndicator color={c.text} />
+                <Text style={styles.meta}>Eliminando tu cuenta…</Text>
+              </View>
+            ) : (
+              <Fila icono="eliminar" titulo="Eliminar cuenta" meta="Borra tu cuenta y todo lo que hiciste" onPress={eliminar} sinFlecha />
+            )}
+          </View>
         </ScrollView>
       </SafeAreaView>
     </View>
@@ -106,6 +143,7 @@ const ICONOS = {
   ia: { d: 'M12 3 19 7v5c0 4.5-3 8.2-7 9-4-.8-7-4.5-7-9V7l7-4ZM9 12l2 2 4-4' },
   legal: { d: 'M7 3h7l5 5v13H7V3ZM14 3v5h5M10 13h6M10 17h6' },
   salir: { d: 'M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 17l-5-5 5-5M5 12h11' },
+  eliminar: { d: 'M4 7h16M10 11v6M14 11v6M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-12M9 7V4h6v3' },
 } as const satisfies Record<string, { d: string; circulo?: { cx: number; cy: number; r: number } }>
 
 function Fila({ icono, titulo, meta, onPress, punto, sinFlecha }: { icono: keyof typeof ICONOS; titulo: string; meta?: string; onPress: () => void; punto?: boolean; sinFlecha?: boolean }) {
