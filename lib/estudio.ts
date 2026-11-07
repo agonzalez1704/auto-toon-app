@@ -254,3 +254,8 @@ export function miniatura(url: string | null | undefined, ancho: number): string
   // q=75 is the only quality the deployment accepts (Vercel rejects others with 400).
   return `${CONFIG.API_BASE_URL}/_next/image?url=${encodeURIComponent(url)}&w=${w}&q=75`
 }
+
+/** «Eliminar mi cuenta» (App Store 5.1.1(v)): the server deletes everything of hers, then she is signed out. */
+export const eliminarCuenta = async () => {
+  await api.delete('/api/cuenta')
+}
