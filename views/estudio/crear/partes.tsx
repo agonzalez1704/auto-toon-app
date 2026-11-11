@@ -127,7 +127,9 @@ export function BotonGenerar({ label, total, onPress, disabled }: { label: strin
       accessibilityState={{ disabled }}
       style={({ pressed }) => [styles.generar, { opacity: disabled ? 0.45 : pressed ? 0.85 : 1 }]}
     >
-      <Text style={styles.generarTexto}>{label}</Text>
+      <Text style={[styles.generarTexto, { flexShrink: 1 }]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}>
+        {label}
+      </Text>
       <Text style={[styles.generarTexto, { opacity: 0.45 }]}>·</Text>
       <Text style={[styles.generarTexto, { fontFamily: FONT.monoMedium }]}>{total} MXN</Text>
       <View style={styles.generarFlecha}>
@@ -141,7 +143,7 @@ const styles = StyleSheet.create({
   haz: { borderRadius: 18, padding: 1, overflow: 'hidden', backgroundColor: c.border },
   chip: { minHeight: 40, paddingHorizontal: 14, borderRadius: 999, borderWidth: 1, justifyContent: 'center' },
   chipTexto: { fontSize: 13 },
-  generar: { minHeight: 56, borderRadius: 999, backgroundColor: c.accent, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingHorizontal: 12 },
+  generar: { minHeight: 56, borderRadius: 999, backgroundColor: c.accent, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingLeft: 20, paddingRight: 13 },
   generarTexto: { fontSize: 16, fontWeight: '600', color: c.bg },
   generarFlecha: { width: 30, height: 30, borderRadius: 999, backgroundColor: c.bg, alignItems: 'center', justifyContent: 'center' },
 })

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { ActivityIndicator, Alert, FlatList, Platform, Pressable, RefreshControl, StatusBar, StyleSheet, View } from 'react-native'
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
+import { SafeAreaView } from 'react-native-safe-area-context'
+import { useAltoBarra } from '@/lib/hooks/use-alto-barra'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import Svg, { Path } from 'react-native-svg'
 import { FONT, Text } from '@/components/text'
@@ -64,7 +65,7 @@ function Fila({ m }: { m: Movimiento }) {
 
 export default function SaldoScreen() {
   const qc = useQueryClient()
-  const insets = useSafeAreaInsets()
+  const barra = useAltoBarra()
   const saldo = useQuery({ queryKey: ['saldo'], queryFn: verSaldoDetalle })
   const [elegido, setElegido] = useState(APPLE_SALDO_PACKS[1].productId)
   const iap = useAppleCreditPurchase({
@@ -194,7 +195,7 @@ export default function SaldoScreen() {
             </Pressable>
           ) : null
         }
-        contentContainerStyle={[styles.lista, { paddingBottom: 16 + insets.bottom }]}
+        contentContainerStyle={[styles.lista, { paddingBottom: 16 + barra }]}
         refreshControl={<RefreshControl refreshing={saldo.isRefetching} onRefresh={() => saldo.refetch()} tintColor={c.textDim} />}
       />
     </SafeAreaView>
