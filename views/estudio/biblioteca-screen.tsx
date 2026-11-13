@@ -11,6 +11,8 @@ import { FONT, Text, TextInput } from '@/components/text'
 import { Accion } from '@/components/accion'
 import { theme } from '@/constants/theme'
 import { crearMesa, miniatura, mxn, verBiblioteca, verTrabajos, type PiezaBiblioteca } from '@/lib/estudio'
+import { crearHistoria } from '@/lib/historia/api'
+import { textoDe } from '@/views/estudio/crear/api'
 
 /**
  * Biblioteca, board «Biblioteca» (web `app/(estudio)/biblioteca/biblioteca-view.tsx`): every piece by day in a
@@ -70,6 +72,8 @@ export default function BibliotecaScreen() {
   const [copiado, setCopiado] = useState<string | null>(null)
   const [llevando, setLlevando] = useState(false)
   const [nota, setNota] = useState<string | null>(null)
+  const [haciendo, setHaciendo] = useState(false)
+  const [notaPila, setNotaPila] = useState<string | null>(null)
   const piezas = useQuery({ queryKey: ['biblioteca'], queryFn: verBiblioteca })
   const trabajos = useQuery({ queryKey: ['trabajos'], queryFn: verTrabajos, refetchInterval: (q) => (q.state.data?.running ? 10_000 : false) })
   const enCurso = trabajos.data?.running ?? 0
@@ -135,6 +139,21 @@ export default function BibliotecaScreen() {
       setLlevando(false)
     }
   }
+  // «Hacer una historia» from a stack: a scene per still, in the stack's order (the web picks them one by one in Crear).
+  const fotos = v.tomas.filter((p) => !p.video && !!p.src?.startsWith('https://')).slice(0, 12)
+  const hacerHistoria = async () => {
+    if (!fotos.length || haciendo) return
+    setHaciendo(true)
+    setNotaPila(null)
+    try {
+      const id = await crearHistoria(fotos.map((p) => p.id))
+      router.push({ pathname: '/historia', params: { id, nueva: '1' } })
+    } catch (e) {
+      setNotaPila(textoDe(e, 'No pudimos hacer la historia. Intenta otra vez.'))
+    } finally {
+      setHaciendo(false)
+    }
+  }
   const copiar = async (p: P) => {
     if (!p.prompt) return setNota('Esta pieza es de antes de la nueva versión y no guardó su prompt.')
     try {
@@ -184,6 +203,9 @@ export default function BibliotecaScreen() {
           <View style={styles.fila}>
             <Text style={styles.titulo}>Biblioteca</Text>
             <View style={styles.acciones}>
+              <Pressable onPress={() => router.push('/historia')} accessibilityRole="button" accessibilityLabel="Abrir tus historias" style={styles.enCurso}>
+                <Text style={styles.enCursoTexto}>Historias</Text>
+              </Pressable>
               {enCurso > 0 ? (
                 <Pressable onPress={() => router.push('/trabajos')} accessibilityRole="button" accessibilityLabel={`${enCurso} en curso, ver trabajos`} style={styles.enCurso}>
                   <View style={styles.punto} />
@@ -232,6 +254,20 @@ export default function BibliotecaScreen() {
           <View style={styles.compara}>
             <View style={styles.comparaFila}>
               <Text style={styles.meta}>{plural(v.tomas.length, 'toma', 'tomas')} del mismo producto</Text>
+              {fotos.length > 1 ? (
+                <Pressable onPress={hacerHistoria} disabled={haciendo} accessibilityRole="button" style={({ pressed }) => [styles.hacer, pressed && { opacity: 0.85 }]}>
+                  <Text style={styles.enCursoTexto}>{haciendo ? 'Haciendo…' : 'Hacer una historia'}</Text>
+                  <View style={styles.hacerFlecha}>
+                    {haciendo ? (
+                      <ActivityIndicator size="small" color={c.bg} />
+                    ) : (
+                      <Svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke={c.bg} strokeWidth={2.25} strokeLinecap="round" strokeLinejoin="round">
+                        <Path d="M12 19V5M5 12l7-7 7 7" />
+                      </Svg>
+                    )}
+                  </View>
+                </Pressable>
+              ) : null}
               <Pressable onPress={() => setAbierta(null)} hitSlop={8} accessibilityRole="button" accessibilityLabel="Cerrar la comparación" style={styles.cerrar}>
                 <Text style={styles.cerrarTexto}>×</Text>
               </Pressable>
@@ -241,6 +277,7 @@ export default function BibliotecaScreen() {
                 <Carta key={p.id} p={p} tone={TONES[i % TONES.length]} on={p.id === sel?.id} onPress={() => elegir(p)} />
               ))}
             </ScrollView>
+            {notaPila ? <Text style={styles.meta}>{notaPila}</Text> : null}
           </View>
         ) : null}
 
@@ -430,6 +467,8 @@ const styles = StyleSheet.create({
   filtroOn: { borderColor: c.accent, backgroundColor: c.bgOverlay },
   filtroTexto: { fontSize: 13, color: c.textMuted, fontWeight: '400' },
   filtroTextoOn: { color: c.text, fontWeight: '500' },
+  hacer: { marginLeft: 'auto', height: 34, paddingLeft: 12, paddingRight: 4, borderRadius: 999, borderWidth: 1, borderColor: c.border, backgroundColor: c.bgRaised, flexDirection: 'row', alignItems: 'center', gap: 6 },
+  hacerFlecha: { width: 26, height: 26, borderRadius: 13, backgroundColor: c.accent2, alignItems: 'center', justifyContent: 'center' },
   compara: { gap: 8, paddingHorizontal: 16, paddingTop: 8, paddingBottom: 12, backgroundColor: c.bg },
   comparaFila: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   cerrar: { width: 28, height: 28, borderRadius: 999, borderWidth: 1, borderColor: c.border, backgroundColor: c.bgRaised, alignItems: 'center', justifyContent: 'center' },
