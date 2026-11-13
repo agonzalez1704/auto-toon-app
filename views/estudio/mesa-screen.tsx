@@ -8,6 +8,7 @@ import Svg, { Path, Rect } from 'react-native-svg'
 import { FONT, Text, TextInput } from '@/components/text'
 import { theme } from '@/constants/theme'
 import { uploadImage } from '@/lib/upload'
+import { useAltoBarra } from '@/lib/hooks/use-alto-barra'
 import {
   abrirMesa,
   analizarFoto,
@@ -131,6 +132,7 @@ export default function MesaScreen() {
 }
 
 function Crear({ m, enTab, onVolver }: { m: MesaAbierta | null; enTab: boolean; onVolver?: () => void }) {
+  const barra = useAltoBarra()
   const router = useRouter()
   const qc = useQueryClient()
   const config = useQuery({ queryKey: ['crear-config'], queryFn: configCrear, staleTime: 10 * 60_000 })
@@ -604,7 +606,7 @@ function Crear({ m, enTab, onVolver }: { m: MesaAbierta | null; enTab: boolean; 
 
   return (
     <Marco>
-      <ScrollView contentContainerStyle={{ paddingBottom: 24 }} keyboardShouldPersistTaps="handled" automaticallyAdjustKeyboardInsets>
+      <ScrollView contentContainerStyle={{ paddingBottom: 24 + barra }} keyboardShouldPersistTaps="handled" automaticallyAdjustKeyboardInsets>
         <Encabezado onVolver={onVolver} />
         <View style={[styles.cuerpo, modoActivo !== 'escena' && { gap: 20 }]}>
           {/* The mesa on the table; Mesas opens over it. */}

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { FlatList, Image, Modal, Pressable, RefreshControl, StatusBar, StyleSheet, useWindowDimensions, View } from 'react-native'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
+import { useAltoBarra } from '@/lib/hooks/use-alto-barra'
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router'
 import { useQuery } from '@tanstack/react-query'
 import Animated, { Easing, useAnimatedStyle, useReducedMotion, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated'
@@ -62,6 +63,7 @@ export function CampanaScreen() {
 }
 
 function Vista({ id: pedida, onPick }: { id?: string; onPick: (id: string) => void }) {
+  const barra = useAltoBarra()
   const router = useRouter()
   const { width } = useWindowDimensions()
   const [menu, setMenu] = useState(false)
@@ -237,7 +239,7 @@ function Vista({ id: pedida, onPick }: { id?: string; onPick: (id: string) => vo
         ListHeaderComponent={cabeza}
         ListFooterComponent={pie}
         ListEmptyComponent={vacio}
-        contentContainerStyle={{ paddingBottom: 24 }}
+        contentContainerStyle={{ paddingBottom: 24 + barra }}
         refreshControl={<RefreshControl refreshing={q.isRefetching || todas.isRefetching} onRefresh={refrescar} tintColor={c.textDim} />}
       />
       <Menu

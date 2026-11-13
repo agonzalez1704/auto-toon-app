@@ -4,6 +4,7 @@ import { FONT, Text } from '@/components/text'
 import { Accion } from '@/components/accion'
 import { theme } from '@/constants/theme'
 import { lista, mxn, type Aspecto, type Pieza } from '@/lib/estudio'
+import { useAltoBarra } from '@/lib/hooks/use-alto-barra'
 import type { Luz } from './api'
 import { Botella, Chip, Haz, Pulso } from './partes'
 
@@ -69,6 +70,7 @@ export function Resultados(o: {
   sigue: Sigue | null
   error: string | null
 }) {
+  const barra = useAltoBarra()
   const h = o.hero
   const listo = h && lista(h) ? h : null
   const [aw, ah] = (h?.aspect ?? '3:4').split(':').map(Number)
@@ -96,7 +98,7 @@ export function Resultados(o: {
         </View>
       </View>
 
-      <ScrollView contentContainerStyle={styles.cuerpo}>
+      <ScrollView contentContainerStyle={[styles.cuerpo, { paddingBottom: 20 + barra }]}>
         {/* The colour behind the panel (the board's radial bleed). */}
         <Svg style={StyleSheet.absoluteFill} pointerEvents="none">
           <Defs>
