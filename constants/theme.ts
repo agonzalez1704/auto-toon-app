@@ -6,12 +6,12 @@
 
 // ── Brand palette ──────────────────────────────────────────────────────
 // «Dos calmos, uno fuerte» (2026-11): the studio is ink and white and the photo
-// sets the colour; the shop window (sign-in) is red. The lime is the action that
+// sets the colour; the shop window (sign-in) is raspberry. The lime is the action that
 // stays on the screen, the pink what was charged or goes on to another screen.
 // The old violet / fuchsia / cyan / amber are gone.
 export const palette = {
-  // The shop window's field (sign-in), as the web's landing and Acceso.
-  rojo: '#E42600',
+  // The shop window's field (sign-in), as the web's landing and Acceso: raspberry since 2026-11-14 (white reads 5.4:1).
+  frambuesa: '#D1104B',
 
   // Editorial warm-slate scale — neutral, lets content provide the color
   bg: '#0A0A0A',         // app deep bg — the web studio's black (redesign 2026-11)
@@ -59,7 +59,7 @@ export const colors = {
   accent2Border: 'rgba(255,61,138,0.32)',
 
   // The shop window's red (sign-in only: the studio never shows it).
-  rojo: palette.rojo,
+  frambuesa: palette.frambuesa,
 
   warning: '#D4FF3D',
   danger: '#FB7185',

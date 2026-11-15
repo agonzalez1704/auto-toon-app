@@ -6,7 +6,7 @@ import * as WebBrowser from 'expo-web-browser'
 import { Fragment, useEffect, useState } from 'react'
 import { Pressable, ScrollView, StatusBar, StyleSheet, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import Svg, { Path } from 'react-native-svg'
+import Svg, { Defs, Path, Pattern, Rect } from 'react-native-svg'
 import { FONT, Text, TextInput } from '@/components/text'
 import { theme } from '@/constants/theme'
 import { CONFIG } from '@/lib/config'
@@ -22,8 +22,8 @@ import { useSignUpStore } from '@/stores/use-signup-store'
 WebBrowser.maybeCompleteAuthSession()
 
 const C = theme.colors
-// The door is the shop window (as the web's Acceso): red, white and the lime. On the red every small
-// text is white — grey can't be read there — and an error is ink, since pink can't either.
+// The door is the shop window (as the web's Acceso): raspberry on a faint white grid, white and the lime. On it
+// every small text is white — grey can't be read there — and an error is ink, since pink can't either.
 const SOFT = C.text
 const LINEA = 'rgba(253,253,255,0.4)'
 const HERO = require('@/assets/images/acceso-hero.jpg')
@@ -238,9 +238,10 @@ export function Acceso() {
         automaticallyAdjustKeyboardInsets
         showsVerticalScrollIndicator={false}
       >
+        <Cuadricula />
         <View pointerEvents="none" style={[s.hero, { height: 340 + top - 24 }]}>
           <Image source={HERO} style={StyleSheet.absoluteFill} contentFit="cover" contentPosition={{ left: '50%', top: '30%' }} />
-          <LinearGradient colors={['rgba(10,10,10,0.35)', 'rgba(228,38,0,0)', C.rojo]} locations={[0, 0.35, 1]} style={StyleSheet.absoluteFill} />
+          <LinearGradient colors={['rgba(10,10,10,0.35)', 'rgba(209,16,75,0)', C.frambuesa]} locations={[0, 0.35, 1]} style={StyleSheet.absoluteFill} />
         </View>
 
         <View style={s.header}>
@@ -451,8 +452,22 @@ export function Acceso() {
   )
 }
 
+/** The board's 39 pt grid of 1 pt white lines at 9 %, behind the page (the photo covers its top). */
+function Cuadricula() {
+  return (
+    <Svg pointerEvents="none" style={StyleSheet.absoluteFill}>
+      <Defs>
+        <Pattern id="cuadricula" width={39} height={39} patternUnits="userSpaceOnUse">
+          <Path d="M0 0.5H39M0.5 0V39" stroke="rgba(253,253,255,0.09)" strokeWidth={1} />
+        </Pattern>
+      </Defs>
+      <Rect width="100%" height="100%" fill="url(#cuadricula)" />
+    </Svg>
+  )
+}
+
 const s = StyleSheet.create({
-  root: { flex: 1, backgroundColor: C.rojo },
+  root: { flex: 1, backgroundColor: C.frambuesa },
   page: { flexGrow: 1, paddingHorizontal: 20 },
   hero: { position: 'absolute', left: 0, right: 0, top: 0, overflow: 'hidden' },
 
