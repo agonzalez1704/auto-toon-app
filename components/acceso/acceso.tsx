@@ -4,7 +4,7 @@ import { Image } from 'expo-image'
 import { LinearGradient } from 'expo-linear-gradient'
 import * as WebBrowser from 'expo-web-browser'
 import { Fragment, useEffect, useState } from 'react'
-import { Pressable, ScrollView, StatusBar, StyleSheet, View } from 'react-native'
+import { Pressable, ScrollView, StatusBar, StyleSheet, useWindowDimensions, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import Svg, { Defs, Path, Pattern, Rect } from 'react-native-svg'
 import { FONT, Text, TextInput } from '@/components/text'
@@ -66,6 +66,7 @@ const abrir = (path: string) => WebBrowser.openBrowserAsync(`${CONFIG.API_BASE_U
 
 export function Acceso() {
   const insets = useSafeAreaInsets()
+  const { height } = useWindowDimensions()
   const { startSSOFlow } = useSSO()
   const { isLoaded: inReady, signIn, setActive: setInActive } = useSignIn()
   const { isLoaded: upReady, signUp, setActive: setUpActive } = useSignUp()
@@ -228,6 +229,9 @@ export function Acceso() {
   // The board is drawn without a status bar: its 24pt top sits under the notch here, the photo grows with it.
   const top = Math.max(insets.top, 24)
   const current = Math.min(code.length, 5)
+  // The photo reaches half the screen; the title sits on its last stretch, where it has faded into the raspberry.
+  const foto = Math.round(height / 2)
+  const sobreFoto = { marginTop: Math.max(196, foto - top - 120) }
 
   return (
     <View style={s.root}>
@@ -239,9 +243,9 @@ export function Acceso() {
         showsVerticalScrollIndicator={false}
       >
         <Cuadricula />
-        <View pointerEvents="none" style={[s.hero, { height: 340 + top - 24 }]}>
+        <View pointerEvents="none" style={[s.hero, { height: foto }]}>
           <Image source={HERO} style={StyleSheet.absoluteFill} contentFit="cover" contentPosition={{ left: '50%', top: '30%' }} />
-          <LinearGradient colors={['rgba(10,10,10,0.35)', 'rgba(209,16,75,0)', C.frambuesa]} locations={[0, 0.35, 1]} style={StyleSheet.absoluteFill} />
+          <LinearGradient colors={['rgba(10,10,10,0.35)', 'rgba(209,16,75,0)', C.frambuesa]} locations={[0, 0.5, 1]} style={StyleSheet.absoluteFill} />
         </View>
 
         <View style={s.header}>
@@ -250,9 +254,9 @@ export function Acceso() {
         </View>
 
         {step === 1 ? (
-          <View style={s.section}>
+          <View style={[s.section, sobreFoto]}>
             <View style={s.intro}>
-              <Text style={s.eyebrow}>Valentina · generada con Auto Toon</Text>
+              <Text style={s.eyebrow}>Generada con Auto Toon</Text>
               <Text style={s.h1}>Entra o crea tu cuenta</Text>
               <Text style={s.lead}>Una sola puerta. Si el correo es nuevo, creamos la cuenta; si no, entras.</Text>
             </View>
@@ -331,7 +335,7 @@ export function Acceso() {
             </View>
           </View>
         ) : (
-          <View style={s.section}>
+          <View style={[s.section, sobreFoto]}>
             <View style={s.intro}>
               <Text style={s.h1}>Revisa tu correo</Text>
               <Text style={s.lead}>
