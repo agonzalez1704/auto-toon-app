@@ -229,15 +229,15 @@ export function Acceso() {
   // The board is drawn without a status bar: its 24pt top sits under the notch here, the photo grows with it.
   const top = Math.max(insets.top, 24)
   const current = Math.min(code.length, 5)
-  // The photo reaches half the screen; the title sits on its last stretch, where it has faded into the raspberry.
+  // The photo reaches half the screen and only its last quarter fades into the raspberry: the title sits there.
   const foto = Math.round(height / 2)
-  const sobreFoto = { marginTop: Math.max(196, foto - top - 120) }
+  const sobreFoto = { marginTop: Math.max(196, foto - top - 100) }
 
   return (
     <View style={s.root}>
       <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
       <ScrollView
-        contentContainerStyle={[s.page, { paddingTop: top, paddingBottom: insets.bottom + 28 }]}
+        contentContainerStyle={[s.page, { paddingTop: top, paddingBottom: insets.bottom + 16 }]}
         keyboardShouldPersistTaps="handled"
         automaticallyAdjustKeyboardInsets
         showsVerticalScrollIndicator={false}
@@ -245,7 +245,7 @@ export function Acceso() {
         <Cuadricula />
         <View pointerEvents="none" style={[s.hero, { height: foto }]}>
           <Image source={HERO} style={StyleSheet.absoluteFill} contentFit="cover" contentPosition={{ left: '50%', top: '30%' }} />
-          <LinearGradient colors={['rgba(10,10,10,0.35)', 'rgba(209,16,75,0)', C.frambuesa]} locations={[0, 0.5, 1]} style={StyleSheet.absoluteFill} />
+          <LinearGradient colors={['rgba(10,10,10,0.35)', 'rgba(10,10,10,0)', 'rgba(209,16,75,0)', C.frambuesa]} locations={[0, 0.22, 0.74, 1]} style={StyleSheet.absoluteFill} />
         </View>
 
         <View style={s.header}>
@@ -283,22 +283,25 @@ export function Acceso() {
                 </Text>
               </Pressable>
 
-              {/* Tappable even before the box: tapping says why it waits (the web's aria-disabled). */}
-              <Pressable style={[s.oauth, { opacity: mayor ? 1 : 0.5 }]} onPress={() => oauth('oauth_apple')} accessibilityRole="button" accessibilityState={{ disabled: busy || !mayor }}>
-                <Svg width={18} height={18} viewBox="0 0 24 24" fill={C.text}>
-                  <Path d="M16.4 12.6c0-2.6 2.1-3.8 2.2-3.9-1.2-1.8-3.1-2-3.7-2-1.6-.2-3.1.9-3.9.9-.8 0-2-.9-3.4-.9-1.7 0-3.3 1-4.2 2.6-1.8 3.1-.5 7.8 1.3 10.3.9 1.2 1.9 2.6 3.2 2.6 1.3-.1 1.8-.8 3.3-.8s2 .8 3.4.8c1.4 0 2.3-1.3 3.1-2.5 1-1.4 1.4-2.8 1.4-2.9-.1 0-2.7-1-2.7-4.2ZM13.9 4.9c.7-.9 1.2-2 1-3.2-1 0-2.3.7-3 1.6-.7.8-1.2 2-1.1 3.1 1.2.1 2.4-.6 3.1-1.5Z" />
-                </Svg>
-                <Text style={s.oauthText}>Continuar con Apple</Text>
-              </Pressable>
-              <Pressable style={[s.oauth, { opacity: mayor ? 1 : 0.5 }]} onPress={() => oauth('oauth_google')} accessibilityRole="button" accessibilityState={{ disabled: busy || !mayor }}>
-                <Svg width={18} height={18} viewBox="0 0 48 48">
-                  <Path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
-                  <Path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" />
-                  <Path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" />
-                  <Path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
-                </Svg>
-                <Text style={s.oauthText}>Continuar con Google</Text>
-              </Pressable>
+              {/* Tappable even before the box: tapping says why it waits (the web's aria-disabled). Side by side: the
+                  half-screen photo leaves no room for two full rows. */}
+              <View style={s.oauthFila}>
+                <Pressable style={[s.oauth, { opacity: mayor ? 1 : 0.5 }]} onPress={() => oauth('oauth_apple')} accessibilityRole="button" accessibilityLabel="Continuar con Apple" accessibilityState={{ disabled: busy || !mayor }}>
+                  <Svg width={18} height={18} viewBox="0 0 24 24" fill={C.text}>
+                    <Path d="M16.4 12.6c0-2.6 2.1-3.8 2.2-3.9-1.2-1.8-3.1-2-3.7-2-1.6-.2-3.1.9-3.9.9-.8 0-2-.9-3.4-.9-1.7 0-3.3 1-4.2 2.6-1.8 3.1-.5 7.8 1.3 10.3.9 1.2 1.9 2.6 3.2 2.6 1.3-.1 1.8-.8 3.3-.8s2 .8 3.4.8c1.4 0 2.3-1.3 3.1-2.5 1-1.4 1.4-2.8 1.4-2.9-.1 0-2.7-1-2.7-4.2ZM13.9 4.9c.7-.9 1.2-2 1-3.2-1 0-2.3.7-3 1.6-.7.8-1.2 2-1.1 3.1 1.2.1 2.4-.6 3.1-1.5Z" />
+                  </Svg>
+                  <Text style={s.oauthText}>Apple</Text>
+                </Pressable>
+                <Pressable style={[s.oauth, { opacity: mayor ? 1 : 0.5 }]} onPress={() => oauth('oauth_google')} accessibilityRole="button" accessibilityLabel="Continuar con Google" accessibilityState={{ disabled: busy || !mayor }}>
+                  <Svg width={18} height={18} viewBox="0 0 48 48">
+                    <Path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
+                    <Path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" />
+                    <Path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" />
+                    <Path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
+                  </Svg>
+                  <Text style={s.oauthText}>Google</Text>
+                </Pressable>
+              </View>
             </View>
 
             <View style={s.divider}>
@@ -309,7 +312,6 @@ export function Acceso() {
 
             <View style={s.stack}>
               <View style={s.field}>
-                <Text style={s.fieldLabel}>Correo</Text>
                 <TextInput
                   style={s.input}
                   placeholder="tu@marca.com"
@@ -479,7 +481,7 @@ const s = StyleSheet.create({
   brand: { fontFamily: FONT.display, fontSize: 22, lineHeight: 22, textTransform: 'uppercase', color: C.text },
   stepLabel: { fontFamily: FONT.mono, fontSize: 11, color: SOFT },
 
-  section: { gap: 16, marginTop: 196 },
+  section: { gap: 14, marginTop: 196 },
   intro: { gap: 8 },
   eyebrow: { fontFamily: FONT.mono, fontSize: 10, letterSpacing: 0.8, textTransform: 'uppercase', color: SOFT },
   h1: { fontFamily: FONT.display, fontSize: 44, lineHeight: 44, textTransform: 'uppercase', color: C.text },
@@ -493,7 +495,8 @@ const s = StyleSheet.create({
   checkText: { flex: 1, fontSize: 13, lineHeight: 19, color: SOFT },
   link: { color: C.text, textDecorationLine: 'underline' },
 
-  oauth: { minHeight: 50, borderRadius: 999, borderWidth: 1, borderColor: C.border, backgroundColor: C.bgRaised, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10 },
+  oauthFila: { flexDirection: 'row', gap: 10 },
+  oauth: { flex: 1, minHeight: 50, borderRadius: 999, borderWidth: 1, borderColor: C.border, backgroundColor: C.bgRaised, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10 },
   oauthText: { fontSize: 15, fontWeight: '500', color: C.text },
 
   divider: { flexDirection: 'row', alignItems: 'center', gap: 12 },
@@ -501,7 +504,6 @@ const s = StyleSheet.create({
   dividerText: { fontSize: 12, color: C.text },
 
   field: { gap: 6 },
-  fieldLabel: { fontSize: 13, color: C.text },
   input: { minHeight: 50, paddingHorizontal: 16, borderRadius: 14, borderWidth: 1, borderColor: C.border, backgroundColor: C.bgRaised, color: C.text, fontSize: 16 },
   primary: { minHeight: 52, borderRadius: 999, backgroundColor: C.accent, alignItems: 'center', justifyContent: 'center' },
   primaryText: { fontSize: 16, fontWeight: '600', color: C.bg },
@@ -520,7 +522,7 @@ const s = StyleSheet.create({
   mono: { fontFamily: FONT.mono },
 
   // margin-top: auto as on the board; the padding only matters when a short screen scrolls.
-  foot: { marginTop: 'auto', paddingTop: 24, gap: 12 },
+  foot: { marginTop: 'auto', paddingTop: 18, gap: 10 },
   funnel: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   funnelStep: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   funnelDot: { width: 18, height: 18, borderRadius: 999, borderWidth: 1, borderColor: 'rgba(253,253,255,0.5)', alignItems: 'center', justifyContent: 'center' },
