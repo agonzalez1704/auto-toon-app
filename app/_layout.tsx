@@ -21,6 +21,7 @@ import { registerForPushNotifications, syncPushToken } from '@/lib/notifications
 import { TermsConsentModal } from '@/components/terms-consent-modal'
 import { AIConsentModal } from '@/components/ai-consent-modal'
 import { ExhaustionModal } from '@/components/exhaustion-modal'
+import { CapaVuelo } from '@/components/vuelo'
 import { InFlightBanner } from '@/components/in-flight-banner'
 import { useGenerationResume } from '@/lib/generation-resume'
 import { useGenerationTracker } from '@/stores/use-generation-tracker'
@@ -318,6 +319,8 @@ export default function RootLayout() {
                   options={{ headerShown: false, presentation: 'modal', animation: 'fade', gestureEnabled: false }}
                 />
               </Stack>
+              {/* Above every route: the pile that flies from Crear to Historia. */}
+              <CapaVuelo />
             </AuthGate>
           </ThemeProvider>
         </QueryClientProvider>

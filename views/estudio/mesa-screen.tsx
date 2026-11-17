@@ -35,6 +35,8 @@ import { Ecommerce, useEcommerce } from './crear/ecommerce'
 import { Pestanas, type Comun } from './crear/llegando'
 import { CATALOGO, CUADRICULA, familiaDe } from './crear/modos'
 import { useMesaAbierta } from '@/stores/use-mesa-abierta'
+import { medir, vuelo } from '@/components/vuelo'
+import { crearHistoria } from '@/lib/historia/api'
 
 /**
  * Crear (boards «Main» and «Resultados»): the mesa on the table — its product, photobook, the ideas made for it
@@ -44,6 +46,8 @@ import { useMesaAbierta } from '@/stores/use-mesa-abierta'
  * «E-commerce» and «Cuadrícula» (boards 10–12, ./crear/ecommerce and ./crear/cuadricula): same mesa, own order.
  */
 
+/** A story's limit (the web's MAX_IMAGENES, lib/historia/escenas). */
+const MAX_HISTORIA = 12
 const c = theme.colors
 const HOJA = 'Photobook'
 const ASPECTOS: Aspecto[] = ['1:1', '3:4', '9:16', '16:9']
@@ -157,6 +161,10 @@ function Crear({ m, enTab, onVolver }: { m: MesaAbierta | null; enTab: boolean; 
   const [pedidas, setPedidas] = useState<Record<string, { label: string; aspect: Aspecto; unitCents: number; holdId: string; createdAt: string }>>({})
   const [reintentadas, setReintentadas] = useState<string[]>([])
   const [heroId, setHeroId] = useState<string | null>(null)
+  // Pieces chosen for a story, in order (each opens a scene), and their tiles, for the pile to leave from.
+  const [paraHistoria, setParaHistoria] = useState<string[]>([])
+  const [haciendoHistoria, setHaciendoHistoria] = useState(false)
+  const tiles = useRef<Record<string, View | null>>({})
   const [dismissed, setDismissed] = useState<string[]>([])
   const [luzAbierta, setLuzAbierta] = useState(false)
   const [luz, setLuz] = useState<Luz>('estudiofrio')
@@ -523,6 +531,36 @@ function Crear({ m, enTab, onVolver }: { m: MesaAbierta | null; enTab: boolean; 
     verPiezas(ids, Math.max(0, ids.indexOf(id)))
   }
 
+  // «Hacer una historia» (the web's from Crear): the chosen stills gather in a pile while the story is made, and fly
+  // to their scenes when Historia opens. Taking them costs nothing; each scene is priced there.
+  const hacerHistoria = async () => {
+    const ids = paraHistoria
+    if (!ids.length || haciendoHistoria) return
+    if (ids.length > MAX_HISTORIA) return setError(`Una historia lleva hasta ${MAX_HISTORIA} imágenes y elegiste ${ids.length}. Quita ${ids.length - MAX_HISTORIA} para seguir.`)
+    const imagenes = ids.map((id) => {
+      const p = escena.find((x) => x.id === id)
+      return p && lista(p) && !p.videoUrl ? p.resultUrl : null
+    })
+    if (imagenes.some((src) => !src)) return setError('Una historia se arma sólo con imágenes. Quita los videos de tu selección.')
+    setHaciendoHistoria(true)
+    setError(null)
+    const cajas = await Promise.all(ids.map((id) => medir(tiles.current[id])))
+    // A tile off screen leaves from where the first one does: its scene still needs its place in the pile.
+    const respaldo = cajas.find((x) => x)
+    if (respaldo) vuelo.apilar(ids.map((_, i) => ({ src: imagenes[i]!, desde: cajas[i] ?? respaldo })))
+    try {
+      const id = await crearHistoria(ids)
+      vuelo.esperarPagina('Tu historia quedó guardada, pero no se abrió. La encuentras en Biblioteca, en Historias.')
+      setParaHistoria([])
+      router.push({ pathname: '/historia', params: { id, nueva: '1' } })
+    } catch (e) {
+      vuelo.devolver()
+      setError(textoDe(e, 'No pudimos hacer la historia. No se cobró nada.'))
+    } finally {
+      setHaciendoHistoria(false)
+    }
+  }
+
   // ---------- 1b · Resultados ----------
   if (vista === 'results' && escena.length) {
     const hold = vistas[vigilar.indexOf(batchHold ?? '')]?.data?.[0]?.hold
@@ -567,6 +605,14 @@ function Crear({ m, enTab, onVolver }: { m: MesaAbierta | null; enTab: boolean; 
               : null
           }
           error={error}
+          historia={{
+            ids: paraHistoria,
+            alternar: (id) => setParaHistoria((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id])),
+            registrar: (id, v) => void (tiles.current[id] = v),
+            hacer: () => void hacerHistoria(),
+            cancelar: () => setParaHistoria([]),
+            haciendo: haciendoHistoria,
+          }}
         />
       </Marco>
     )
