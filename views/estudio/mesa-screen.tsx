@@ -28,6 +28,7 @@ import {
   type Propuesta,
 } from '@/lib/estudio'
 import { cotizarLinea, descargar, guardarHoja, pedirLinea, textoDe, verHold, type Cuerpo, type Linea, type Luz } from './crear/api'
+import { cotizarLinea as cotizarReel } from '@/lib/visor'
 import { Botella, Chip, Flecha, PieContenido, PieContexto, Pulso, type Pie } from './crear/partes'
 import { corriendo, LUCES, Resultados, type PiezaMesa } from './crear/resultados'
 import { Cuadricula, useCuadricula } from './crear/cuadricula'
@@ -35,6 +36,7 @@ import { Ecommerce, useEcommerce } from './crear/ecommerce'
 import { Pestanas, type Comun } from './crear/llegando'
 import { CATALOGO, CUADRICULA, familiaDe } from './crear/modos'
 import { useMesaAbierta } from '@/stores/use-mesa-abierta'
+import { FlechaMorph, MORPH, usePresion } from '@/components/flecha'
 
 /**
  * Crear (boards «Main» and «Resultados»): the mesa on the table — its product, photobook, the ideas made for it
@@ -160,6 +162,8 @@ function Crear({ m, enTab, onVolver }: { m: MesaAbierta | null; enTab: boolean; 
   const [pedidas, setPedidas] = useState<Record<string, { label: string; aspect: Aspecto; unitCents: number; holdId: string; createdAt: string }>>({})
   const [reintentadas, setReintentadas] = useState<string[]>([])
   const [heroId, setHeroId] = useState<string | null>(null)
+  const presionHoja = usePresion()
+  const presionEscribir = usePresion()
   const [dismissed, setDismissed] = useState<string[]>([])
   const [luzAbierta, setLuzAbierta] = useState(false)
   const [luz, setLuz] = useState<Luz>('estudiofrio')
@@ -322,6 +326,24 @@ function Crear({ m, enTab, onVolver }: { m: MesaAbierta | null; enTab: boolean; 
     setDismissed((d) => [...d, sigueDe.id])
     setLuzAbierta(false)
     setHeroId(r.ids[0] ?? null)
+  }
+
+  // The reel «Sigue» offers is ordered in the viewer, with its price there too: here its price is only said.
+  const reelBase = sigueDe?.resultUrl ? { kind: 'reel' as const, count: 1 as const, refs: [sigueDe.resultUrl], aspect: sigueDe.aspect, durationS: 5 } : null
+  const reelPrecio = useQuery({ queryKey: ['cotizar-reel', reelBase], queryFn: () => cotizarReel(reelBase!), enabled: !!reelBase && vista === 'results' })
+  const [fijando, setFijando] = useState(false)
+  /** «Fijar el estilo»: the next pieces of this mesa come out with this one's light and colour. */
+  const fijarEstilo = async (p: PiezaMesa) => {
+    if (!m || !p.resultUrl || fijando) return
+    setFijando(true)
+    try {
+      await guardarMesa(m.id, { estilo: { id: p.id, url: p.resultUrl, label: p.label.slice(0, 80) } })
+      qc.setQueryData<MesaAbierta>(['mesa', m.id], (old) => (old ? { ...old, estilo: { id: p.id, url: p.resultUrl!, label: p.label } } : old))
+    } catch (e) {
+      setError(textoDe(e, 'No pudimos fijar el estilo. Intenta otra vez.'))
+    } finally {
+      setFijando(false)
+    }
   }
 
   // --- the photobook: nine views of this product in one sheet, made once, riding first with every piece after ---
@@ -555,11 +577,18 @@ function Crear({ m, enTab, onVolver }: { m: MesaAbierta | null; enTab: boolean; 
             sigueDe
               ? {
                   sobre: sigueDe.label,
+                  // The web's «siguientes», in its order: the look, the reel (pink: it goes on to the viewer), the light.
+                  pasos: [
+                    ...(m?.estilo?.id === sigueDe.id
+                      ? []
+                      : [{ id: 'estilo', titulo: 'Fíjale el estilo a esta toma', copia: 'Las siguientes salen con su luz y su color, y se ven de la misma campaña.', label: fijando ? 'Fijando…' : 'Fijar el estilo', precio: null, otra: false, morph: MORPH.estilo, go: () => void fijarEstilo(sigueDe) }]),
+                    { id: 'movimiento', titulo: 'Ponla en movimiento', copia: 'Una foto se vuelve comercial en cuanto se mueve.', label: 'Hacer el reel', precio: reelPrecio.data ? mxn(reelPrecio.data.totalCents) : null, otra: true, morph: MORPH.movimiento, go: () => verEnVisor(sigueDe.id) },
+                    { id: 'relight', titulo: '¿No te convence la luz?', copia: 'Cambia sólo la luz; la composición y el producto se quedan igual.', label: 'Hacer relight', precio: relightPrecio.data ? mxn(relightPrecio.data.totalCents) : null, otra: false, morph: MORPH.luz, go: () => setLuzAbierta(true) },
+                  ],
                   precio: relightPrecio.data ? mxn(relightPrecio.data.totalCents) : null,
                   abierto: luzAbierta,
                   luz,
                   onLuz: setLuz,
-                  onAbrir: () => setLuzAbierta(true),
                   onPedir: () => void pedirRelight(),
                   onNo: () => {
                     setLuzAbierta(false)
@@ -763,6 +792,8 @@ function Crear({ m, enTab, onVolver }: { m: MesaAbierta | null; enTab: boolean; 
                     <Text style={styles.hojaTitulo} numberOfLines={1}>Photobook</Text>
                     <Pressable
                       onPress={hacerPhotobook}
+                      onPressIn={presionHoja.onPressIn}
+                      onPressOut={presionHoja.onPressOut}
                       disabled={hojaEnCamino || enviando || !hojaPrecio.data}
                       hitSlop={4}
                       accessibilityRole="button"
@@ -771,7 +802,7 @@ function Crear({ m, enTab, onVolver }: { m: MesaAbierta | null; enTab: boolean; 
                       <Text style={styles.hojaBotonTexto}>{hojaEnCamino ? 'Armando el photobook…' : photobook ? 'Rehacer' : 'Crear photobook'}</Text>
                       {!hojaEnCamino ? <Text style={styles.hojaPrecio}>{hojaPrecio.data ? mxn(hojaPrecio.data.totalCents) : '—'}</Text> : null}
                       <View style={styles.hojaFlecha}>
-                        <Flecha size={10} color={c.bg} />
+                        <FlechaMorph icono={MORPH.photobook} activo={presionHoja.on} size={10} color={c.bg} />
                       </View>
                     </Pressable>
                   </View>
@@ -951,6 +982,8 @@ function Crear({ m, enTab, onVolver }: { m: MesaAbierta | null; enTab: boolean; 
                   {/* Board Main: the prompt written by hand, citing her pieces and photos — pink, it goes on to another screen. */}
                   <Pressable
                     onPress={() => router.push({ pathname: '/referencias', params: { mesa: m.id } })}
+                    onPressIn={presionEscribir.onPressIn}
+                    onPressOut={presionEscribir.onPressOut}
                     accessibilityRole="button"
                     accessibilityLabel="Escribir el prompt con referencias"
                     style={({ pressed }) => [styles.escribir, pressed && { opacity: 0.85 }]}
@@ -967,9 +1000,7 @@ function Crear({ m, enTab, onVolver }: { m: MesaAbierta | null; enTab: boolean; 
                       </Text>
                     </View>
                     <View style={styles.escribirFlecha}>
-                      <Svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke={c.bg} strokeWidth={2.25} strokeLinecap="round" strokeLinejoin="round">
-                        <Path d="M12 19V5M5 12l7-7 7 7" />
-                      </Svg>
+                      <FlechaMorph icono={MORPH.escribir} activo={presionEscribir.on} size={15} color={c.bg} />
                     </View>
                   </Pressable>
 

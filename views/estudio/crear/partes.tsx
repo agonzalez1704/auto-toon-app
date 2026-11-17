@@ -3,6 +3,7 @@ import { Animated, Easing, Pressable, StyleSheet, View, type StyleProp, type Vie
 import { useReducedMotion } from 'react-native-reanimated'
 import Svg, { Defs, LinearGradient, Path, Rect, Stop } from 'react-native-svg'
 import { FONT, Text } from '@/components/text'
+import { FlechaMorph, MORPH, usePresion } from '@/components/flecha'
 import { theme } from '@/constants/theme'
 
 const c = theme.colors
@@ -119,9 +120,12 @@ export function Chip({ label, on, onPress, mono = true }: { label: string; on: b
 
 /** Main's «Generar N variantes · $X MXN» with the black ↑: green, it stays on this screen. */
 export function BotonGenerar({ label, total, onPress, disabled }: { label: string; total: string; onPress: () => void; disabled: boolean }) {
+  const presion = usePresion()
   return (
     <Pressable
       onPress={onPress}
+      onPressIn={presion.onPressIn}
+      onPressOut={presion.onPressOut}
       disabled={disabled}
       accessibilityRole="button"
       accessibilityState={{ disabled }}
@@ -133,7 +137,7 @@ export function BotonGenerar({ label, total, onPress, disabled }: { label: strin
       <Text style={[styles.generarTexto, { opacity: 0.45 }]}>·</Text>
       <Text style={[styles.generarTexto, { fontFamily: FONT.monoMedium }]}>{total} MXN</Text>
       <View style={styles.generarFlecha}>
-        <Flecha size={15} color={c.accent} />
+        <FlechaMorph icono={MORPH.generar} activo={presion.on} size={15} color={c.accent} />
       </View>
     </Pressable>
   )

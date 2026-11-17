@@ -60,6 +60,8 @@ export interface CambioMesa {
   analysis?: unknown
   categoryId?: string | null
   pedidos?: string[]
+  /** The piece this mesa copies the look of (its light and colour), or null to let it go. */
+  estilo?: { id: string; url: string; label: string } | null
 }
 
 export interface Categoria {
