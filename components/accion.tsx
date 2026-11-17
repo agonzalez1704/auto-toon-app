@@ -1,5 +1,5 @@
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native'
-import Svg, { Path } from 'react-native-svg'
+import { FlechaMorph, usePresion } from '@/components/flecha'
 import { FONT, Text } from '@/components/text'
 import { theme } from '@/constants/theme'
 
@@ -15,6 +15,7 @@ export function Accion({
   lleno = false,
   disabled = false,
   cargando = false,
+  morph,
 }: {
   label: string
   /** A price or a count, in mono, after the label. */
@@ -24,13 +25,18 @@ export function Accion({
   lleno?: boolean
   disabled?: boolean
   cargando?: boolean
+  /** The icon of what the tap does: the arrow turns into it while the button is held (web `data-morph`). */
+  morph?: string
 }) {
+  const presion = usePresion()
   const color = tono === 'verde' ? theme.colors.accent : theme.colors.accent2
   const fondo = lleno ? color : theme.colors.bgRaised
   const texto = lleno ? theme.colors.bg : theme.colors.text
   return (
     <Pressable
       onPress={onPress}
+      onPressIn={presion.onPressIn}
+      onPressOut={presion.onPressOut}
       disabled={disabled || cargando}
       accessibilityRole="button"
       accessibilityState={{ disabled: disabled || cargando }}
@@ -42,9 +48,7 @@ export function Accion({
         {cargando ? (
           <ActivityIndicator size="small" color={lleno ? color : theme.colors.bg} />
         ) : (
-          <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
-            <Path d="M12 19V5M5 12l7-7 7 7" stroke={lleno ? color : theme.colors.bg} strokeWidth={2.25} strokeLinecap="round" strokeLinejoin="round" />
-          </Svg>
+          <FlechaMorph icono={morph} activo={presion.on} size={14} color={lleno ? color : theme.colors.bg} />
         )}
       </View>
     </Pressable>

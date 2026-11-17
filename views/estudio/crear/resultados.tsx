@@ -34,14 +34,29 @@ export const LUCES: { id: Luz; label: string }[] = [
 
 const REINTENTAR = 'M4 12a8 8 0 0 1 14-5M20 12a8 8 0 0 1-14 5M18 3v4h-4M6 21v-4h4'
 
-/** «Sigue» on the piece on screen: a relight, as an order — the light is picked and the price said before asking. */
+/** One next step the assistant offers (the web's «siguientes»): pink when it goes on to another screen. */
+export interface Paso {
+  id: string
+  titulo: string
+  copia: string
+  label: string
+  precio: string | null
+  otra: boolean
+  morph: string
+  go: () => void
+}
+
+/**
+ * «Sigue» on the piece on screen: the first of its next steps, and the rest under it. The relight is an order —
+ * the light is picked and the price said before asking.
+ */
 export interface Sigue {
   sobre: string
+  pasos: Paso[]
   precio: string | null
   abierto: boolean
   luz: Luz
   onLuz: (l: Luz) => void
-  onAbrir: () => void
   onPedir: () => void
   onNo: () => void
   enviando: boolean
@@ -199,39 +214,61 @@ export function Resultados(o: {
 }
 
 function TarjetaSigue({ s }: { s: Sigue }) {
-  const no = !s.precio || s.enviando
+  // The light picker is the relight's own step: open, it is what the card asks for.
+  const relight = s.pasos.find((x) => x.id === 'relight')
+  const [primero, ...despues] = s.abierto && relight ? [relight, ...s.pasos.filter((x) => x !== relight)] : s.pasos
+  if (!primero) return null
+  const pidiendoLuz = s.abierto && primero.id === 'relight'
   return (
     <Haz>
       <View style={styles.sigue}>
         <Text style={styles.sigueEtiqueta} numberOfLines={1}>
           SIGUE <Text style={styles.sigueSobre}>· sobre {s.sobre}</Text>
         </Text>
-        <Text style={styles.sigueTitulo}>De esta toma, un relight</Text>
-        <Text style={styles.sigueCopia}>{s.abierto ? 'Escoge la luz. La composición y el producto se quedan igual.' : 'La composición ya funciona; la luz todavía es de catálogo.'}</Text>
-        {s.abierto ? (
-          <>
-            <View style={styles.luces}>
-              {LUCES.map((l) => (
-                <Chip key={l.id} label={l.label} on={l.id === s.luz} onPress={() => s.onLuz(l.id)} mono={false} />
-              ))}
-            </View>
-            <Accion label={s.enviando ? 'Apartando…' : 'Pedir relight'} detalle={s.precio ?? '—'} onPress={s.onPedir} disabled={no} cargando={s.enviando} lleno />
-            <Pressable onPress={s.onNo} accessibilityRole="button" style={styles.ahoraNoSolo}>
-              <Text style={styles.ahoraNoTexto}>Ahora no</Text>
-            </Pressable>
-          </>
-        ) : (
-          <View style={styles.sigueBotones}>
-            <Pressable onPress={s.onAbrir} disabled={!s.precio} accessibilityRole="button" style={[styles.relight, !s.precio && { opacity: 0.45 }]}>
-              <Text style={styles.relightTexto}>
-                Hacer relight · <Text style={[styles.relightTexto, { fontFamily: FONT.monoMedium }]}>{s.precio ?? '—'}</Text>
-              </Text>
-            </Pressable>
-            <Pressable onPress={s.onNo} accessibilityRole="button" style={styles.ahoraNo}>
-              <Text style={styles.ahoraNoTexto}>Ahora no</Text>
-            </Pressable>
+        <Text style={styles.sigueTitulo}>{primero.titulo}</Text>
+        <Text style={styles.sigueCopia}>{pidiendoLuz ? 'Escoge la luz. La composición y el producto se quedan igual.' : primero.copia}</Text>
+        {pidiendoLuz ? (
+          <View style={styles.luces}>
+            {LUCES.map((l) => (
+              <Chip key={l.id} label={l.label} on={l.id === s.luz} onPress={() => s.onLuz(l.id)} mono={false} />
+            ))}
           </View>
-        )}
+        ) : null}
+        <View style={styles.sigueBotones}>
+          <View style={{ flex: 1 }}>
+            {pidiendoLuz ? (
+              <Accion label={s.enviando ? 'Apartando…' : 'Pedir relight'} detalle={s.precio ?? '—'} onPress={s.onPedir} disabled={!s.precio || s.enviando} cargando={s.enviando} lleno morph={primero.morph} />
+            ) : (
+              // Pink when the step goes on to another screen, the accent when it stays (AGENTS.md §1).
+              <Accion
+                label={primero.label}
+                detalle={primero.precio ?? undefined}
+                tono={primero.otra ? 'rosa' : 'verde'}
+                lleno
+                morph={primero.morph}
+                disabled={s.enviando || (primero.id !== 'estilo' && !primero.precio)}
+                onPress={primero.go}
+              />
+            )}
+          </View>
+          <Pressable onPress={s.onNo} accessibilityRole="button" style={styles.ahoraNo}>
+            <Text style={styles.ahoraNoTexto}>Ahora no</Text>
+          </Pressable>
+        </View>
+        {despues.length ? (
+          <View style={styles.despues}>
+            <Text style={styles.despuesEtiqueta}>Después</Text>
+            {despues.map((x) => (
+              <Pressable key={x.id} onPress={x.go} accessibilityRole="button" accessibilityHint={x.otra ? 'Sigue en otra pantalla' : undefined} style={({ pressed }) => [styles.despuesFila, pressed && { opacity: 0.7 }]}>
+                <View style={[styles.despuesChip, { backgroundColor: x.otra ? c.accent2 : c.accent }]} />
+                <Text style={styles.despuesTitulo} numberOfLines={1}>
+                  {x.titulo}
+                </Text>
+                {x.precio ? <Text style={styles.despuesPrecio}>{x.precio}</Text> : null}
+              </Pressable>
+            ))}
+          </View>
+        ) : null}
       </View>
     </Haz>
   )
@@ -266,10 +303,13 @@ const styles = StyleSheet.create({
   sigueCopia: { fontSize: 14, lineHeight: 21, color: c.textMuted },
   luces: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   sigueBotones: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4 },
-  relight: { flexGrow: 1, minHeight: 48, borderRadius: 999, backgroundColor: c.accent, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 12 },
-  relightTexto: { fontSize: 15, fontWeight: '600', color: c.bg },
   ahoraNo: { minHeight: 48, paddingHorizontal: 14, borderRadius: 999, alignItems: 'center', justifyContent: 'center' },
-  ahoraNoSolo: { minHeight: 44, alignItems: 'center', justifyContent: 'center' },
+  despues: { gap: 2, paddingTop: 10, marginTop: 2, borderTopWidth: 1, borderTopColor: c.border },
+  despuesEtiqueta: { fontSize: 11, fontFamily: FONT.mono, letterSpacing: 0.88, textTransform: 'uppercase', color: c.textDim, paddingBottom: 4 },
+  despuesFila: { flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 40 },
+  despuesChip: { width: 8, height: 8, borderRadius: 999 },
+  despuesTitulo: { flex: 1, fontSize: 14, color: c.text },
+  despuesPrecio: { fontSize: 13, fontFamily: FONT.mono, color: c.textMuted },
   ahoraNoTexto: { fontSize: 15, color: c.textMuted },
   error: { fontSize: 13, lineHeight: 19, color: c.accent2 },
 })
