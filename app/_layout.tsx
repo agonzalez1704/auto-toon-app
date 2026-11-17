@@ -271,6 +271,7 @@ export default function RootLayout() {
                 <Stack.Screen name="trabajos" options={{ headerShown: true }} />
                 <Stack.Screen name="wardrobe" options={{ headerShown: true }} />
                 <Stack.Screen name="campanas/[id]" options={{ headerShown: true }} />
+                <Stack.Screen name="pasarela" options={{ headerShown: false, animation: 'slide_from_right' }} />
                 <Stack.Screen name="visor" options={{ headerShown: false, presentation: 'fullScreenModal', animation: 'fade' }} />
                 <Stack.Screen
                   name="image-viewer"

@@ -189,6 +189,8 @@ export interface PiezaBiblioteca {
   campaign: boolean
   cat: 'producto' | 'persona' | 'video' | null
   antigua: boolean
+  /** The Pasarela session the piece was made in (its take opens it again). */
+  pasarelaId?: string | null
 }
 export type EstadoPieza = 'q' | 'run' | 'ok' | 'fail' | 'cancel'
 export interface Trabajo {
