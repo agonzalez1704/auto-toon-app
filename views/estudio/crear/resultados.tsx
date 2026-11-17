@@ -48,6 +48,19 @@ export interface Sigue {
 }
 
 /**
+ * Choosing pieces for a story (the web's «Seleccionar varias» → «Hacer una historia»): a long press starts it, then a
+ * tap adds or drops; the number is the scene each one opens. `registrar` keeps each tile, for the pile to leave from.
+ */
+export interface Seleccion {
+  ids: string[]
+  alternar: (id: string) => void
+  registrar: (id: string, v: View | null) => void
+  hacer: () => void
+  cancelar: () => void
+  haciendo: boolean
+}
+
+/**
  * Board «Resultados» (1b): the piece on screen big, every piece of the mesa under it, what is set aside and what
  * gets charged, and «Sigue». Tapping the big one opens the Visor.
  */
@@ -69,6 +82,7 @@ export function Resultados(o: {
   onDescargar: (url: string) => void
   sigue: Sigue | null
   error: string | null
+  historia: Seleccion
 }) {
   const barra = useAltoBarra()
   const h = o.hero
@@ -166,20 +180,32 @@ export function Resultados(o: {
             const on = p.id === h?.id
             const va = corriendo(p)
             const hecha = lista(p)
+            const sel = o.historia
+            const k = sel.ids.indexOf(p.id) + 1
+            // Only stills make scenes.
+            const elegible = hecha && !!p.resultUrl && !p.videoUrl
             return (
               <Pulso key={p.id} activo={va} ms={1600}>
                 <Pressable
-                  onPress={() => o.onHero(p.id)}
+                  ref={(v) => sel.registrar(p.id, v)}
+                  onPress={() => (sel.ids.length && elegible ? sel.alternar(p.id) : o.onHero(p.id))}
+                  onLongPress={elegible ? () => sel.alternar(p.id) : undefined}
                   accessibilityRole="button"
-                  accessibilityState={{ selected: on }}
-                  accessibilityLabel={`${p.label} · ${p.aspect}${va ? ' · generando' : ''}`}
-                  style={[styles.miniatura, { borderColor: on ? c.accent : va ? c.borderStrong : 'transparent' }]}
+                  accessibilityState={{ selected: k > 0 || on }}
+                  accessibilityLabel={`${p.label} · ${p.aspect}${va ? ' · generando' : ''}${k ? ` · escena ${k}` : ''}`}
+                  accessibilityHint={elegible && !sel.ids.length ? 'Mantén presionada para elegir varias y hacer una historia' : undefined}
+                  style={[styles.miniatura, { borderColor: k ? c.text : on ? c.accent : va ? c.borderStrong : 'transparent' }]}
                 >
                   {hecha ? (
                     <Image source={{ uri: (p.resultUrl ?? p.videoUrl)! }} style={StyleSheet.absoluteFill} resizeMode="cover" />
                   ) : (
                     <Text style={styles.miniTexto}>{va ? transcurrido(p.createdAt, o.now) : p.status === 'failed' ? 'falló' : 'en cola'}</Text>
                   )}
+                  {k ? (
+                    <View style={styles.numero}>
+                      <Text style={styles.numeroTexto}>{k}</Text>
+                    </View>
+                  ) : null}
                 </Pressable>
               </Pulso>
             )
@@ -190,6 +216,24 @@ export function Resultados(o: {
             <Text style={styles.cuentaCobro}>{o.chargeLine}</Text>
           </View>
         </View>
+
+        {o.historia.ids.length ? (
+          <View style={styles.historia}>
+            {/* Pink: it goes on to another screen. */}
+            <Accion
+              label={`Hacer una historia con ${o.historia.ids.length}`}
+              tono="rosa"
+              lleno
+              cargando={o.historia.haciendo}
+              onPress={o.historia.hacer}
+            />
+            <Pressable onPress={o.historia.cancelar} disabled={o.historia.haciendo} accessibilityRole="button" style={styles.cancelar}>
+              <Text style={styles.cancelarTexto}>Cancelar</Text>
+            </Pressable>
+          </View>
+        ) : o.piezas.some((p) => lista(p) && p.resultUrl && !p.videoUrl) ? (
+          <Text style={styles.pista}>Mantén presionada una foto para elegir varias y hacer una historia.</Text>
+        ) : null}
 
         {o.sigue ? <TarjetaSigue s={o.sigue} /> : null}
         {o.error ? <Text style={styles.error}>{o.error}</Text> : null}
@@ -254,6 +298,13 @@ const styles = StyleSheet.create({
   tool: { width: 44, height: 44, borderRadius: 999, alignItems: 'center', justifyContent: 'center' },
   miniaturas: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, alignItems: 'stretch' },
   miniatura: { width: 72, height: 96, borderRadius: 12, borderWidth: 2, backgroundColor: c.bgElevated, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
+  // The selection's number: the web's lime badge.
+  numero: { position: 'absolute', left: 4, top: 4, minWidth: 20, height: 20, paddingHorizontal: 5, borderRadius: 999, backgroundColor: c.accent, alignItems: 'center', justifyContent: 'center' },
+  numeroTexto: { fontFamily: FONT.mono, fontSize: 11, color: c.bg },
+  historia: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  cancelar: { minHeight: 48, paddingHorizontal: 12, justifyContent: 'center' },
+  cancelarTexto: { fontSize: 15, color: c.textMuted },
+  pista: { fontSize: 12.5, color: c.textDim },
   miniTexto: { fontSize: 11, fontFamily: FONT.mono, color: c.textMuted },
   cuenta: { marginLeft: 'auto', justifyContent: 'center', alignItems: 'flex-end', gap: 6 },
   cuentaLinea: { fontSize: 13, color: c.textMuted, textAlign: 'right' },

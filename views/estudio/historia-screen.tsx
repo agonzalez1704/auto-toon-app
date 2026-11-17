@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
-import { ActivityIndicator, Alert, AppState, Modal, Pressable, ScrollView, StatusBar, StyleSheet, View } from 'react-native'
+import { ActivityIndicator, Alert, AppState, InteractionManager, Modal, Pressable, ScrollView, StatusBar, StyleSheet, View } from 'react-native'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useQueries, useQuery } from '@tanstack/react-query'
@@ -12,6 +12,7 @@ import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated'
 import Svg, { Path } from 'react-native-svg'
 import { FONT, Text, TextInput } from '@/components/text'
 import { Accion } from '@/components/accion'
+import { medir, vuelo } from '@/components/vuelo'
 import { theme } from '@/constants/theme'
 import { miniatura, mxn, terminada, verPedido } from '@/lib/estudio'
 import { abrirEnCrear } from '@/stores/use-mesa-abierta'
@@ -130,6 +131,21 @@ function Editor({ h, refrescar, recienHecha }: { h: HistoriaAbierta; refrescar: 
   const [corrido, setCorrido] = useState<PasoCorrido[] | null>(null)
   const guardadoFallo = useRef(false)
   const alGuardar = useRef<(ops: Record<string, Opciones>, guardado: Borrador) => void>(() => {})
+  // Arriving by pile (from Crear): each scene's start image is still in the air, and shows when its card lands there.
+  const huecos = useRef<Record<string, View | null>>({})
+  const [enVuelo, setEnVuelo] = useState<string[]>(() => (recienHecha && vuelo.enPila() ? h.escenas.map((e) => e.id) : []))
+  useEffect(() => {
+    if (!enVuelo.length) return
+    // Once the push has settled, so the slots are where they stay.
+    const t = InteractionManager.runAfterInteractions(async () => {
+      const cajas = await Promise.all(h.escenas.map((e) => medir(huecos.current[e.id])))
+      const llega = (i: number) => setEnVuelo((v) => v.filter((x) => x !== h.escenas[i]?.id))
+      if (!vuelo.repartir(cajas, llega)) setEnVuelo([])
+    })
+    return () => t.cancel()
+    // Once, on arrival.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const [auto] = useState(() =>
     createAutoguardado<Borrador>(async (b) => {
@@ -399,6 +415,8 @@ function Editor({ h, refrescar, recienHecha }: { h: HistoriaAbierta; refrescar: 
                 subir={() => editar((b) => ({ ...b, escenas: mover(b.escenas, b.escenas.findIndex((x) => x.id === e.id), -1) }))}
                 bajar={() => editar((b) => ({ ...b, escenas: mover(b.escenas, b.escenas.findIndex((x) => x.id === e.id), 1) }))}
                 borrar={(conClip) => borrar(e, conClip)}
+                hueco={(v) => void (huecos.current[e.id] = v)}
+                enVuelo={enVuelo.includes(e.id)}
               />
             </Animated.View>
           ))}
@@ -474,6 +492,9 @@ function EscenaCard(p: {
   subir: () => void
   bajar: () => void
   borrar: (conClip: boolean) => void
+  /** The start slot, for a card of the pile to land on; hidden while it is in the air. */
+  hueco: (v: View | null) => void
+  enVuelo: boolean
 }) {
   const { e, h, o, abierta } = p
   const inicioSrc = e.inicio ? h.urls[e.inicio] : undefined
@@ -528,6 +549,8 @@ function EscenaCard(p: {
   const slots = (
     <View style={[styles.slots, { width: abierta ? '100%' : 100 }]}>
       <Slot
+        refHueco={p.hueco}
+        oculta={p.enVuelo}
         src={inicioSrc}
         etiqueta={abierta ? 'Inicio' : null}
         vacio="+ Inicio"
@@ -643,7 +666,7 @@ function EscenaCard(p: {
   )
 }
 
-function Slot(p: { src?: string; etiqueta: string | null; vacio: string; nota: string | null; esperando: boolean; onPedir?: () => void; onQuitar?: () => void; onVer?: () => void; play?: boolean }) {
+function Slot(p: { src?: string; etiqueta: string | null; vacio: string; nota: string | null; esperando: boolean; onPedir?: () => void; onQuitar?: () => void; onVer?: () => void; play?: boolean; refHueco?: (v: View | null) => void; oculta?: boolean }) {
   if (!p.src)
     return (
       <Pressable
@@ -658,8 +681,8 @@ function Slot(p: { src?: string; etiqueta: string | null; vacio: string; nota: s
       </Pressable>
     )
   return (
-    <Pressable onPress={p.onVer} disabled={!p.onVer} accessibilityRole={p.onVer ? 'button' : 'image'} accessibilityLabel={p.onVer ? 'Ver el clip' : (p.etiqueta ?? 'Imagen')} style={styles.slot}>
-      <Image source={{ uri: miniatura(p.src, 170) ?? p.src }} style={StyleSheet.absoluteFill} contentFit="cover" transition={150} />
+    <Pressable ref={p.refHueco} onPress={p.onVer} disabled={!p.onVer} accessibilityRole={p.onVer ? 'button' : 'image'} accessibilityLabel={p.onVer ? 'Ver el clip' : (p.etiqueta ?? 'Imagen')} style={styles.slot}>
+      <Image source={{ uri: miniatura(p.src, 170) ?? p.src }} style={[StyleSheet.absoluteFill, p.oculta && { opacity: 0 }]} contentFit="cover" transition={p.oculta ? 0 : 150} />
       {p.play ? (
         <View pointerEvents="none" style={styles.centro}>
           <View style={styles.play}>
