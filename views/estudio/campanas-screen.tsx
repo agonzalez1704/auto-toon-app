@@ -3,14 +3,15 @@ import { FlatList, Image, Modal, Pressable, RefreshControl, StatusBar, StyleShee
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useAltoBarra } from '@/lib/hooks/use-alto-barra'
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import Animated, { Easing, useAnimatedStyle, useReducedMotion, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated'
 import Svg, { Defs, Path, RadialGradient, Rect, Stop } from 'react-native-svg'
 import { FONT, Text } from '@/components/text'
 import { BlurViewSafe, isBlurAvailable } from '@/components/glass/blur-view-safe'
 import { theme } from '@/constants/theme'
 import api from '@/lib/api'
-import { listarCampanas, lista, mxn, terminada, type Campana, type CampanaResumen } from '@/lib/estudio'
+import { listarCampanas, lista, miniatura, mxn, terminada, type Campana, type CampanaResumen } from '@/lib/estudio'
+import { listarSesiones } from '@/lib/pasarela-api'
 
 /**
  * Campañas, as the board «Campanas» draws it: one campaign by its eight stages, its key visuals as they arrive and the
@@ -68,6 +69,7 @@ function Vista({ id: pedida, onPick }: { id?: string; onPick: (id: string) => vo
   const { width } = useWindowDimensions()
   const [menu, setMenu] = useState(false)
   const [descartadas, setDescartadas] = useState<string[]>([])
+  const qc = useQueryClient()
   const todas = useQuery({ queryKey: ['campanas'], queryFn: listarCampanas })
   const id = pedida ?? todas.data?.[0]?.id
   const q = useQuery({
@@ -79,6 +81,7 @@ function Vista({ id: pedida, onPick }: { id?: string; onPick: (id: string) => vo
   })
   const refrescar = () => {
     todas.refetch()
+    void qc.invalidateQueries({ queryKey: ['pasarela-sesiones'] })
     if (id) q.refetch()
   }
 
@@ -237,7 +240,12 @@ function Vista({ id: pedida, onPick }: { id?: string; onPick: (id: string) => vo
         keyExtractor={(s) => s.name}
         renderItem={etapa}
         ListHeaderComponent={cabeza}
-        ListFooterComponent={pie}
+        ListFooterComponent={
+          <>
+            {pie}
+            <GrupoPasarela />
+          </>
+        }
         ListEmptyComponent={vacio}
         contentContainerStyle={{ paddingBottom: 24 + barra }}
         refreshControl={<RefreshControl refreshing={q.isRefetching || todas.isRefetching} onRefresh={refrescar} tintColor={c.textDim} />}
@@ -253,6 +261,52 @@ function Vista({ id: pedida, onPick }: { id?: string; onPick: (id: string) => vo
         }}
       />
     </>
+  )
+}
+
+/**
+ * The owner's Pasarela sessions (board «Campanas»): the phone only continues them, they are made on the computer.
+ * Pasarela is owner-only for now: for anyone else the list answers 404 and the group is not drawn.
+ */
+function GrupoPasarela() {
+  const router = useRouter()
+  const q = useQuery({ queryKey: ['pasarela-sesiones'], queryFn: listarSesiones, retry: false })
+  const sesiones = q.data ?? []
+  if (!sesiones.length) return null
+  return (
+    <View style={[styles.seccion, styles.pasarela]}>
+      <View style={styles.seccionCabeza}>
+        <Text style={styles.h2}>Pasarela</Text>
+        <Text style={styles.seccionMeta}>{plural(sesiones.length, 'sesión', 'sesiones')}</Text>
+      </View>
+      <View style={styles.lista}>
+        {sesiones.map((x, i) => (
+          <Pressable
+            key={x.id}
+            onPress={() => router.push({ pathname: '/pasarela', params: { id: x.id } })}
+            accessibilityRole="button"
+            accessibilityLabel={`Abrir la sesión ${x.name}`}
+            style={({ pressed }) => [styles.sesion, i < sesiones.length - 1 && styles.sesionLinea, pressed && { backgroundColor: c.bgOverlay }]}
+          >
+            <View style={styles.sesionPortada}>{x.portadaUrl ? <Image source={{ uri: miniatura(x.portadaUrl, 44)! }} style={StyleSheet.absoluteFill} resizeMode="cover" /> : null}</View>
+            <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
+              <Text style={styles.opcionNombre} numberOfLines={1}>
+                {x.name}
+              </Text>
+              <Text style={styles.sesionMeta} numberOfLines={1}>
+                {x.plantilla ?? 'Lienzo en blanco'} · {dia(x.updatedAt)}
+              </Text>
+            </View>
+            {/* pink: it goes on to another screen */}
+            <View style={styles.sesionFlecha}>
+              <Svg width={13} height={13} viewBox="0 0 24 24" fill="none">
+                <Path d="M12 19V5M5 12l7-7 7 7" stroke={c.bg} strokeWidth={2.25} strokeLinecap="round" strokeLinejoin="round" />
+              </Svg>
+            </View>
+          </Pressable>
+        ))}
+      </View>
+    </View>
   )
 }
 
@@ -438,4 +492,12 @@ const styles = StyleSheet.create({
   opcionPortada: { width: 40, height: 50, borderRadius: 8, overflow: 'hidden', backgroundColor: c.bgOverlay },
   opcionNombre: { fontSize: 16, fontWeight: '500', color: c.text },
   hojaNota: { fontSize: 13, color: c.textDim, paddingTop: 4 },
+  // Pasarela's sessions
+  pasarela: { paddingTop: 20, paddingHorizontal: 16 },
+  lista: { borderRadius: 14, backgroundColor: c.bgRaised, borderWidth: 1, borderColor: c.border, overflow: 'hidden' },
+  sesion: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 64, paddingVertical: 8, paddingLeft: 8, paddingRight: 10 },
+  sesionLinea: { borderBottomWidth: 1, borderBottomColor: c.border },
+  sesionPortada: { width: 44, height: 58, borderRadius: 10, overflow: 'hidden', backgroundColor: c.bgElevated },
+  sesionMeta: { fontSize: 13, color: c.textDim },
+  sesionFlecha: { width: 30, height: 30, borderRadius: 999, backgroundColor: c.accent2, alignItems: 'center', justifyContent: 'center' },
 })

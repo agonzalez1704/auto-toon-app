@@ -571,6 +571,19 @@ export default function VisorScreen() {
                     </Pressable>
                   ) : null}
 
+                  {/* A Pasarela take: back to its session (made on the computer, continued here). */}
+                  {p.pasarelaId ? (
+                    <Pressable
+                      onPress={() => salir({ pathname: '/pasarela', params: { id: p.pasarelaId! } })}
+                      accessibilityRole="button"
+                      accessibilityLabel="Abrir la sesión de Pasarela"
+                      style={styles.entregar}
+                    >
+                      <Text style={styles.entregarTexto}>Abrir la sesión</Text>
+                      <Flecha lado={24} icono={12} fondo={ROSA} color={c.bg} />
+                    </Pressable>
+                  ) : null}
+
                   <View style={styles.acciones}>
                     {fotoP ? (
                       <Pressable onPress={() => void recrear()} disabled={recreando} accessibilityRole="button" accessibilityLabel="Recrear con esta composición" style={[styles.botonRosa, styles.recrear]}>
