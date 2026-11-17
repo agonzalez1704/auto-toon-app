@@ -30,6 +30,7 @@ import { ApiError } from '@/lib/api'
 import { crearMesa, lista as estaLista, mxn, terminada, verBiblioteca, type Aspecto, type PiezaBiblioteca } from '@/lib/estudio'
 import { ALTA_BRIEF, cotizarLinea, entregarZip, guardarEnFotos, pedirLinea, revisarPuertas, type LineaVisor, type Puertas } from '@/lib/visor'
 import { usePedido } from './use-pedido'
+import { listarSesiones } from '@/lib/pasarela-api'
 import { abrirEnCrear } from '@/stores/use-mesa-abierta'
 
 /**
@@ -162,6 +163,8 @@ export default function VisorScreen() {
   const insets = useSafeAreaInsets()
   const { height } = useWindowDimensions()
   const params = useLocalSearchParams<{ ids?: string; i?: string }>()
+  // Pasarela is the owner's only for now: its list answers 404 to anyone else, and then no take offers its session.
+  const pasarela = useQuery({ queryKey: ['pasarela-sesiones'], queryFn: listarSesiones, retry: false, staleTime: 5 * 60_000 })
 
   const inicial = useMemo(() => {
     try {
@@ -572,7 +575,7 @@ export default function VisorScreen() {
                   ) : null}
 
                   {/* A Pasarela take: back to its session (made on the computer, continued here). */}
-                  {p.pasarelaId ? (
+                  {p.pasarelaId && pasarela.isSuccess ? (
                     <Pressable
                       onPress={() => salir({ pathname: '/pasarela', params: { id: p.pasarelaId! } })}
                       accessibilityRole="button"
