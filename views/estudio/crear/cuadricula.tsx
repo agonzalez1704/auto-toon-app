@@ -9,7 +9,7 @@ import { miniatura, mxn, type Propuesta } from '@/lib/estudio'
 import { cotizarLinea, pasarAAlta, pedirEscenas, pedirLinea, textoDe, type Linea } from './api'
 import { Etiqueta, Llegando, ProductoResumen, plural, type Comun } from './llegando'
 import { CUADRICULA, DE_CUADRICULA, cuadriculaDe, filas, type Mandar } from './modos'
-import { BotonGenerar, Chip, Pulso } from './partes'
+import { Chip, Fijo, Pulso } from './partes'
 import { hora, transcurrido, type PiezaMesa } from './resultados'
 
 /**
@@ -237,11 +237,15 @@ export function Cuadricula({ q, o }: { q: ReturnType<typeof useCuadricula>; o: C
             </View>
             <Text style={styles.formatoNota}>las que elijas salen en 1:1 o 4:5</Text>
           </View>
-          <Text style={styles.cuenta}>
-            1 imagen × <Text style={styles.mono}>{q.grid ? mxn(q.grid.lines[0]?.unitCents ?? q.grid.totalCents) : '—'}</Text> ·{' '}
-            <Text style={{ color: nota ? c.accent2 : c.textDim }}>{nota ?? 'se descuenta de tu saldo, sólo si llega'}</Text>
-          </Text>
-          <BotonGenerar label={o.enviando ? 'Apartando…' : 'Generar cuadrícula'} total={q.grid ? mxn(q.grid.totalCents) : '—'} onPress={q.generar} disabled={q.sinPedir} />
+          <Fijo
+            desglose={`1 imagen × ${q.grid ? mxn(q.grid.lines[0]?.unitCents ?? q.grid.totalCents) : '—'}`}
+            nota={nota ?? 'Se descuenta de tu saldo, sólo si llega.'}
+            alerta={!!nota}
+            label={o.enviando ? 'Apartando…' : 'Generar cuadrícula'}
+            total={q.grid ? mxn(q.grid.totalCents) : '—'}
+            onPress={q.generar}
+            disabled={q.sinPedir}
+          />
         </View>
       </>
     )
@@ -336,14 +340,14 @@ export function Cuadricula({ q, o }: { q: ReturnType<typeof useCuadricula>; o: C
               <Chip key={f} label={f} on={q.formato === f} onPress={() => q.setFormato(f)} />
             ))}
           </View>
-          <Text style={styles.cuenta}>
-            {cuantas} × <Text style={styles.mono}>{q.alta ? mxn(q.alta.lines[0]?.unitCents ?? 0) : '—'}</Text> ·{' '}
-            <Text style={{ color: nota ? c.accent2 : c.textDim }}>{nota ?? 'se descuenta de tu saldo, sólo lo que llegue'}</Text>
-          </Text>
+
           <Text style={styles.cobrado}>
             La cuadrícula ya se cobró: <Text style={[styles.mono, { color: c.accent2 }]}>{g.unitCents ? mxn(g.unitCents) : '—'}</Text>
           </Text>
-          <BotonGenerar
+          <Fijo
+            desglose={`${cuantas} × ${q.alta ? mxn(q.alta.lines[0]?.unitCents ?? 0) : '—'}`}
+            nota={nota ?? 'Se descuenta de tu saldo, sólo lo que llegue.'}
+            alerta={!!nota}
             label={o.enviando ? 'Apartando…' : cuantas ? `Pasar ${cuantas} a alta` : 'Elige al menos una'}
             total={q.alta && cuantas ? mxn(q.alta.totalCents) : '—'}
             onPress={q.confirmar}
@@ -387,7 +391,6 @@ const styles = StyleSheet.create({
   hecho: { minHeight: 32, paddingHorizontal: 12, borderRadius: 999, borderWidth: 1, borderColor: c.borderStrong, backgroundColor: c.bgOverlay, justifyContent: 'center' },
   hechoTexto: { fontFamily: FONT.mono, fontSize: 12, color: c.text },
   formatoNota: { fontSize: 12, color: c.textDim },
-  cuenta: { paddingHorizontal: 4, fontSize: 13, color: c.textDim },
   mono: { fontFamily: FONT.mono },
   cobrado: { paddingHorizontal: 4, fontSize: 12.5, color: c.textDim },
 
