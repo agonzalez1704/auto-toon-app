@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
 import { Animated, Easing, Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native'
 import { useReducedMotion } from 'react-native-reanimated'
 import Svg, { Defs, LinearGradient, Path, Rect, Stop } from 'react-native-svg'
@@ -139,7 +139,44 @@ export function BotonGenerar({ label, total, onPress, disabled }: { label: strin
   )
 }
 
+/** A mode's price line and «Generar». */
+export type Pie = { label: string; total: string; desglose: string; nota: string; alerta: boolean; disabled: boolean; onPress: () => void }
+
+/** Set by a screen that draws the CTA in its fixed bottom, above the tab bar (the boards' sticky bottom). */
+export const PieContexto = createContext<((p: Pie | null) => void) | null>(null)
+
+/**
+ * A mode's price and «Generar», where she can always reach them: the screen draws them in its fixed bottom while
+ * this is mounted (inline when there is no such screen). Only what shows re-sends; the press goes through a ref.
+ */
+export function Fijo(p: Pie) {
+  const poner = useContext(PieContexto)
+  const accion = useRef(p.onPress)
+  accion.current = p.onPress
+  useEffect(() => {
+    poner?.({ ...p, onPress: () => accion.current() })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [poner, p.label, p.total, p.desglose, p.nota, p.alerta, p.disabled])
+  useEffect(() => () => poner?.(null), [poner])
+  return poner ? null : <PieContenido p={p} />
+}
+
+export function PieContenido({ p }: { p: Pie }) {
+  return (
+    <View style={{ gap: 10 }}>
+      <View style={styles.cuentaFila}>
+        <Text style={styles.desglose}>{p.desglose}</Text>
+        <Text style={[styles.nota, p.alerta && { color: c.accent2 }]}>{p.nota}</Text>
+      </View>
+      <BotonGenerar label={p.label} total={p.total} onPress={p.onPress} disabled={p.disabled} />
+    </View>
+  )
+}
+
 const styles = StyleSheet.create({
+  cuentaFila: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: 12, paddingHorizontal: 4 },
+  desglose: { fontFamily: FONT.mono, fontSize: 13, color: c.textDim },
+  nota: { flexShrink: 1, fontSize: 13, color: c.textDim, textAlign: 'right' },
   haz: { borderRadius: 18, padding: 1, overflow: 'hidden', backgroundColor: c.border },
   chip: { minHeight: 40, paddingHorizontal: 14, borderRadius: 999, borderWidth: 1, justifyContent: 'center' },
   chipTexto: { fontSize: 13 },

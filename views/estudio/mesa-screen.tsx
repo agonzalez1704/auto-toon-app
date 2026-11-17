@@ -28,7 +28,7 @@ import {
   type Propuesta,
 } from '@/lib/estudio'
 import { cotizarLinea, descargar, guardarHoja, pedirLinea, textoDe, verHold, type Cuerpo, type Linea, type Luz } from './crear/api'
-import { Botella, BotonGenerar, Chip, Flecha, Pulso } from './crear/partes'
+import { Botella, Chip, Flecha, PieContenido, PieContexto, Pulso, type Pie } from './crear/partes'
 import { corriendo, LUCES, Resultados, type PiezaMesa } from './crear/resultados'
 import { Cuadricula, useCuadricula } from './crear/cuadricula'
 import { Ecommerce, useEcommerce } from './crear/ecommerce'
@@ -133,6 +133,9 @@ export default function MesaScreen() {
 
 function Crear({ m, enTab, onVolver }: { m: MesaAbierta | null; enTab: boolean; onVolver?: () => void }) {
   const barra = useAltoBarra()
+  // The CTA of the mode on screen, fixed above the tab bar (the boards' sticky bottom), and how tall it is.
+  const [pieModo, setPieModo] = useState<Pie | null>(null)
+  const [altoPie, setAltoPie] = useState(0)
   const router = useRouter()
   const qc = useQueryClient()
   const config = useQuery({ queryKey: ['crear-config'], queryFn: configCrear, staleTime: 10 * 60_000 })
@@ -604,9 +607,25 @@ function Crear({ m, enTab, onVolver }: { m: MesaAbierta | null; enTab: boolean; 
         ? 'Pensando ideas…'
         : `Generar ${aspects.length > 1 ? plural(n, 'imagen', 'imágenes') : plural(n, 'variante', 'variantes')}`
 
+  const pie: Pie | null =
+    modoActivo === 'ecommerce' || modoActivo === 'cuadricula'
+      ? pieModo
+      : m?.photoUrl
+        ? {
+            label: ctaLabel,
+            total: precio.data ? mxn(precio.data.totalCents) : '—',
+            desglose: precio.data ? desglose(precio.data.lines) : `${n} × —`,
+            nota: nota ?? 'Se descuenta de tu saldo al terminar, sólo lo que llegue.',
+            alerta: !!nota,
+            disabled,
+            onPress: generar,
+          }
+        : null
+
   return (
     <Marco>
-      <ScrollView contentContainerStyle={{ paddingBottom: 24 + barra }} keyboardShouldPersistTaps="handled" automaticallyAdjustKeyboardInsets>
+      <PieContexto.Provider value={setPieModo}>
+      <ScrollView contentContainerStyle={{ paddingBottom: 24 + (pie ? altoPie : barra) }} keyboardShouldPersistTaps="handled" automaticallyAdjustKeyboardInsets>
         <Encabezado onVolver={onVolver} />
         <View style={[styles.cuerpo, modoActivo !== 'escena' && { gap: 20 }]}>
           {/* The mesa on the table; Mesas opens over it. */}
@@ -954,25 +973,26 @@ function Crear({ m, enTab, onVolver }: { m: MesaAbierta | null; enTab: boolean; 
                     </View>
                   </Pressable>
 
-                  {/* The price, said before the tap. */}
-                  <View style={{ gap: 12 }}>
-                    <View style={styles.cuentaFila}>
-                      <Text style={styles.desglose}>{precio.data ? desglose(precio.data.lines) : `${n} × —`}</Text>
-                      <Text style={[styles.nota, !!nota && { color: c.accent2 }]}>{nota ?? 'Se descuenta de tu saldo al terminar, sólo lo que llegue.'}</Text>
-                    </View>
-                    <BotonGenerar label={ctaLabel} total={precio.data ? mxn(precio.data.totalCents) : '—'} onPress={generar} disabled={disabled} />
-                    {escena.length ? (
-                      <Pressable onPress={() => setVista('results')} accessibilityRole="button" style={styles.verPiezas}>
-                        <Text style={styles.verPiezasTexto}>Ver lo que salió aquí · {plural(escena.length, 'pieza', 'piezas')}</Text>
-                      </Pressable>
-                    ) : null}
-                  </View>
+                  {/* The price and «Generar» are in the fixed bottom, said before the tap. */}
+                  {escena.length ? (
+                    <Pressable onPress={() => setVista('results')} accessibilityRole="button" style={styles.verPiezas}>
+                      <Text style={styles.verPiezasTexto}>Ver lo que salió aquí · {plural(escena.length, 'pieza', 'piezas')}</Text>
+                    </Pressable>
+                  ) : null}
                 </>
               ) : null}
             </>
           )}
         </View>
       </ScrollView>
+      </PieContexto.Provider>
+      {/* Always within reach: no scrolling to «Generar» (the boards' sticky bottom, above the tab bar). */}
+      {pie ? (
+        // Down to the edge, behind the translucent bar too, so nothing shows through under it (the boards' 86px).
+        <View onLayout={(e) => setAltoPie(e.nativeEvent.layout.height)} style={[styles.pieFijo, { paddingBottom: barra + 10 }]}>
+          <PieContenido p={pie} />
+        </View>
+      ) : null}
     </Marco>
   )
 }
@@ -1099,10 +1119,8 @@ const styles = StyleSheet.create({
   otrasTexto: { fontSize: 14, color: c.text },
 
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  cuentaFila: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: 12, paddingHorizontal: 4 },
-  desglose: { fontFamily: FONT.mono, fontSize: 13, color: c.textDim },
-  nota: { flexShrink: 1, fontSize: 13, color: c.textDim, textAlign: 'right' },
   verPiezas: { minHeight: 44, alignItems: 'center', justifyContent: 'center' },
+  pieFijo: { position: 'absolute', left: 0, right: 0, bottom: 0, paddingTop: 10, paddingHorizontal: 12, borderTopWidth: 1, borderTopColor: c.border, backgroundColor: '#0F0F0F' },
   verPiezasTexto: { fontSize: 14, fontWeight: '500', color: c.text },
   error: { fontSize: 13, lineHeight: 19, color: c.accent2 },
 })
