@@ -8,7 +8,7 @@ import { configCrear, mxn, type Aspecto } from '@/lib/estudio'
 import { cotizarLinea, pedirLinea, type Catalogo, type Linea } from './api'
 import { Etiqueta, Llegando, ProductoResumen, plural, type Comun } from './llegando'
 import { CATALOGO, DE_ENTRADA, filas, type Familia, type Fondo, type Mandar } from './modos'
-import { BotonGenerar, Chip } from './partes'
+import { Chip, Fijo } from './partes'
 import type { PiezaMesa } from './resultados'
 
 /**
@@ -251,11 +251,10 @@ export function Ecommerce({
             <Text style={styles.hechoTexto}>2K</Text>
           </View>
         </View>
-        <Text style={styles.cuenta}>
-          {q.tomas.length} × <Text style={styles.mono}>{q.precio ? mxn(q.precio.lines[0]?.unitCents ?? 0) : '—'}</Text> ·{' '}
-          <Text style={{ color: nota ? c.accent2 : c.textDim }}>{nota ?? 'se descuenta de tu saldo, sólo lo que llegue'}</Text>
-        </Text>
-        <BotonGenerar
+        <Fijo
+          desglose={`${q.tomas.length} × ${q.precio ? mxn(q.precio.lines[0]?.unitCents ?? 0) : '—'}`}
+          nota={nota ?? 'Se descuenta de tu saldo, sólo lo que llegue.'}
+          alerta={!!nota}
           label={o.enviando ? 'Apartando…' : q.tomas.length ? `Generar ${plural(q.tomas.length, 'foto', 'fotos')} de catálogo` : 'Elige al menos una toma'}
           total={q.precio ? mxn(q.precio.totalCents) : '—'}
           onPress={q.generar}
@@ -307,6 +306,4 @@ const styles = StyleSheet.create({
   formatos: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6 },
   hecho: { minHeight: 32, paddingHorizontal: 12, borderRadius: 999, borderWidth: 1, borderColor: c.borderStrong, backgroundColor: c.bgOverlay, justifyContent: 'center' },
   hechoTexto: { fontFamily: FONT.mono, fontSize: 12, color: c.text },
-  cuenta: { paddingHorizontal: 4, fontSize: 13, color: c.textDim },
-  mono: { fontFamily: FONT.mono },
 })
