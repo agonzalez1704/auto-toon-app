@@ -11,7 +11,7 @@ import { theme } from '@/constants/theme'
 import { CONFIG } from '@/lib/config'
 import { uploadImage } from '@/lib/upload'
 import { abrirMesa, lista, miniatura, mxn, terminada, verBiblioteca, type Aspecto, type MesaAbierta, type Pieza, type PiezaBiblioteca } from '@/lib/estudio'
-import { MENTION, ROLES, ROLE_COLOR, estiloImage, motorPorDefecto, photobookImage, planFor, providerBrief, readPrompt, type Motor, type Plan, type Role, type Use } from '@/lib/crear/motor'
+import { EN_LA_ROPA, MAX_IMAGENES, MENTION, ROLES, ROLE_COLOR, estiloImage, faltaParaRopa, motorPorDefecto, photobookImage, planFor, providerBrief, readPrompt, type Motor, type Plan, type Role, type Use } from '@/lib/crear/motor'
 import { textoDe, verHold } from './crear/api'
 import { hora, transcurrido } from './crear/resultados'
 import { cotizarRef, pedirRef, verElenco, type LineaRef, type Persona } from './referencias/api'
@@ -19,8 +19,8 @@ import { cotizarRef, pedirRef, verElenco, type LineaRef, type Persona } from './
 /**
  * Crear con referencias (web board «Composer», 1d; plan D11 + D9; web `app/(estudio)/crear/referencias`). Each image
  * gets an @name and the prompt points at them; lib/crear/motor (the web's rules, copied) reads the roles and picks the
- * models: GPT Image 2 keeps the person, then Nano Banana Pro puts the real product back — offered as step 2 once step 1
- * is ready (the queue has no follow-up jobs, so the screen asks for it). The mesa it opens from (param `mesa`) brings
+ * model: GPT Image 2 keeps the person, Nano Banana Pro keeps product and scene, Seedream 5.5 makes a new shot or swaps
+ * a person's clothes. One step, whatever the engine (owner, 2026-11-17). The mesa it opens from (param `mesa`) brings
  * its product photo, photobook and locked look as references. Every request is priced, confirmed, then queued.
  */
 
@@ -28,26 +28,31 @@ const c = theme.colors
 const MAX_REFS = 8
 const ASPECTS: Aspecto[] = ['3:4', '4:5', '9:16', '1:1', '16:9']
 const GRAY = '#8A8A8A'
-// The step-2 price doesn't depend on the photo; before step 1 lands, this stands in for it.
-const STAND_IN = 'https://example.com/paso-1.jpg'
-const PRODUCT_FIX =
-  'Replace the product in image 1 with the exact product from image 2: same shape, colours, materials, label and proportions. Keep the person, pose, framing, background and light exactly as they are.'
 // Without @ the engine reads roles by order, so the default names say the same.
 const DEFAULT_NAMES = ['persona', 'producto', 'entorno']
 // «Salida de fin de semana» → @salida: a mention is typed, so it has to be short.
 const CORTAS = new Set(['de', 'del', 'la', 'el', 'los', 'las', 'en', 'con', 'y', 'un', 'una', 'al'])
 /** What the mesa calls the pieces asked here. */
 const PASO1 = 'Con referencias'
-const PASO2 = 'Producto real'
 const ICONOS = `${CONFIG.API_BASE_URL}/icons`
-/** Step 1's engines as the web registry names them, with their maker's logo and what «Powered by»'s menu says. */
-const MOTOR: Record<Motor, { nombre: string; logo: string; nota: string }> = {
-  'misma-persona': { nombre: 'GPT Image 2', logo: `${ICONOS}/openai-color.svg`, nota: 'Mantiene la cara de una persona. El producto real lo pone después Nano Banana Pro.' },
-  editar: { nombre: 'Nano Banana Pro', logo: `${ICONOS}/nanobanana-color.svg`, nota: 'Respeta producto y escena tal cual. Hasta 6 referencias, 2K.' },
-  retoque: { nombre: 'Nano Banana 2', logo: `${ICONOS}/nanobanana-color.svg`, nota: 'Más rápido y más barato. 1K.' },
+/**
+ * The engines as the web registry names them, with their maker's logo, what «Powered by»'s menu says, their size,
+ * and `menu` where two share a model (web composer-view `MOTORES`).
+ */
+const MOTOR: Record<Motor, { nombre: string; logo: string; nota: string; res: string; menu?: string }> = {
+  'misma-persona': { nombre: 'GPT Image 2', logo: `${ICONOS}/openai-color.svg`, nota: 'Mantiene la cara de una persona y el producto, en un paso.', res: '1.5K' },
+  editar: { nombre: 'Nano Banana Pro', logo: `${ICONOS}/nanobanana-color.svg`, nota: 'Respeta producto y escena tal cual. Hasta 6 referencias, 2K.', res: '2K' },
+  retoque: { nombre: 'Nano Banana 2', logo: `${ICONOS}/nanobanana-color.svg`, nota: 'Más rápido y más barato. 1K.', res: '1K' },
+  seedream: { nombre: 'Seedream 5.5', logo: `${ICONOS}/bytedance-color.svg`, nota: 'Toma nueva con tus referencias. Hasta 10 referencias, 2K.', res: '2K' },
+  ropa: {
+    nombre: 'Seedream 5.5',
+    menu: 'Seedream 5.5 · cambio de ropa',
+    logo: `${ICONOS}/bytedance-color.svg`,
+    nota: 'Sobre tu foto cambia sólo la ropa: cara, pose y fondo se quedan. Hasta 10 referencias, 2K.',
+    res: '2K',
+  },
 }
-const PERSONA = MOTOR['misma-persona'].nombre
-const PRODUCTO = MOTOR.editar.nombre
+const MOTORES: Motor[] = ['misma-persona', 'editar', 'retoque', 'seedream', 'ropa']
 
 interface Ref {
   key: string
@@ -68,14 +73,8 @@ interface Hecha {
 }
 /** What a piece of this visit was asked as. */
 interface Paso {
-  step: 1 | 2
-  key: string
-  product: string | null
-  photobook: string | null
   aspect: Aspecto
   kind: Motor
-  /** Step 2: the step-1 piece it puts the product on. */
-  from?: string
 }
 type Enviado = Paso & { holdId: string; createdAt: string }
 interface Match {
@@ -102,10 +101,10 @@ function unique(base: string, taken: string[]) {
 const refsWord = (n: number) => `${n} ${n === 1 ? 'ref' : 'refs'}`
 
 function chainLine(plan: Plan | null) {
-  const persona = !plan || (plan.kind === 'misma-persona' && plan.uses.some((u) => u.role === 'CHARACTER'))
-  const que = [persona && 'misma persona', plan && refsWord(plan.refs.length)].filter(Boolean).join(', ')
-  if (plan && !plan.product) return `Un paso: ${MOTOR[plan.kind].nombre} (${que}). Se cobra al terminar, sólo si llega.`
-  return `Dos pasos: ${PERSONA} (${que}) → ${PRODUCTO} (producto real). Cada paso se cobra al terminar, sólo por lo que llegue.`
+  if (!plan) return 'Un paso. Se cobra al terminar, sólo si llega.'
+  const persona = plan.kind === 'misma-persona' && plan.uses.some((u) => u.role === 'CHARACTER')
+  const que = [plan.kind === 'ropa' ? 'cambio de ropa' : persona && 'misma persona', refsWord(plan.refs.length)].filter(Boolean).join(', ')
+  return `Un paso: ${MOTOR[plan.kind].nombre} (${que}). Se cobra al terminar, sólo si llega.`
 }
 
 /** The prompt cut where its @mentions are, so the editor can draw them (a known name as the board's chip). */
@@ -199,17 +198,17 @@ function Composer({ m, onVolver }: { m: MesaAbierta | null; onVolver: () => void
   // --- the engine (rules, no tokens) ---
   const uses = readPrompt(text, refs)
   const plan = planFor(uses, refs, motor)
+  const auto = motorPorDefecto(uses)
+  // Seedream's swap picked without a garment or a photo to keep: no plan, and the note says what is missing.
+  const falta = uses.length && (motor ?? auto) === 'ropa' ? faltaParaRopa(uses) : null
   const usedAt = (i: number) => uses.find((u) => u.index === i)
   const person = uses.some((u) => u.role === 'CHARACTER')
   const product = uses.some((u) => u.role === 'PRODUCT')
   const step1: LineaRef | null =
     plan && text.trim() ? { kind: plan.kind, count: 1, refs: plan.refs, aspect, brief: providerBrief(text, plan), estilo: estiloImage(plan), photobook: photobookImage(plan) } : null
-  const key1 = step1 ? JSON.stringify(step1) : null
   // Prices don't depend on the wording, so typing doesn't re-quote.
   const cuerpo1: LineaRef | null = plan ? { kind: plan.kind, count: 1, refs: plan.refs, aspect, brief: '·' } : null
-  const cuerpo2: LineaRef | null = plan?.product ? { kind: 'editar', count: 1, refs: [STAND_IN, plan.product], aspect, brief: '·' } : null
   const q1 = useQuery({ queryKey: ['cotizar', cuerpo1], queryFn: () => cotizarRef(cuerpo1!), enabled: !!cuerpo1 })
-  const q2 = useQuery({ queryKey: ['cotizar', cuerpo2], queryFn: () => cotizarRef(cuerpo2!), enabled: !!cuerpo2 })
 
   // --- what this visit asked for, watched until it arrives (looking is what moves it along, D13) ---
   const holds = [...new Set(Object.values(sent).map((s) => s.holdId))]
@@ -245,12 +244,6 @@ function Composer({ m, onVolver }: { m: MesaAbierta | null; onVolver: () => void
   }, [hechos.join()])
 
   const alReves = [...mine].reverse()
-  const lastOne = alReves.find((x) => x.s.step === 1)
-  // Step 2 is offered while step 1 is ready, had a product, and nothing changed since.
-  const offer =
-    !inFlight && lastOne && lista(lastOne.p) && lastOne.p.resultUrl && lastOne.s.product && lastOne.s.key === key1 && !mine.some((x) => x.s.from === lastOne.p.id)
-      ? { id: lastOne.p.id, url: lastOne.p.resultUrl, product: lastOne.s.product, photobook: lastOne.s.photobook, aspect: lastOne.s.aspect }
-      : null
   const lastReady = alReves.find((x) => lista(x.p))?.p
   const ultima = alReves[0]
   const fallo = !inFlight && ultima?.p.status === 'failed' ? ultima : null
@@ -304,7 +297,7 @@ function Composer({ m, onVolver }: { m: MesaAbierta | null; onVolver: () => void
   const session: Hecha[] = mine
     .filter((x) => lista(x.p) && x.p.resultUrl)
     .reverse()
-    .map((x) => ({ id: x.p.id, url: x.p.resultUrl!, label: x.s.step === 2 ? PASO2 : PASO1 }))
+    .map((x) => ({ id: x.p.id, url: x.p.resultUrl!, label: PASO1 }))
   const deMesa: Hecha[] = (m?.piezas ?? [])
     .filter((p) => p.status === 'ready' && p.resultUrl)
     .reverse()
@@ -367,31 +360,16 @@ function Composer({ m, onVolver }: { m: MesaAbierta | null; onVolver: () => void
 
   // --- the order: priced, confirmed, queued ---
   const mesaId = m ? { mesaId: m.id } : {}
-  const orden: { linea: LineaRef; paso: Paso; titulo: string; texto: string } | null = offer
-    ? {
-        linea: {
-          kind: 'editar',
-          count: 1,
-          refs: offer.photobook ? [offer.url, offer.product, offer.photobook] : [offer.url, offer.product],
-          aspect: offer.aspect,
-          brief: PRODUCT_FIX,
-          ...(offer.photobook ? { photobook: 3 } : {}),
-          ...mesaId,
-          labels: [PASO2],
-        },
-        paso: { step: 2, kind: 'editar', key: '', product: null, photobook: null, aspect: offer.aspect, from: offer.id },
-        titulo: 'Poner el producto real',
-        texto: `${PRODUCTO} pone tu producto real sobre el paso 1, sin deformarlo.`,
-      }
-    : step1 && plan && key1
+  const orden: { linea: LineaRef; paso: Paso; titulo: string; texto: string } | null =
+    step1 && plan
       ? {
           linea: { ...step1, ...mesaId, labels: [PASO1] },
-          paso: { step: 1, kind: plan.kind, key: key1, product: plan.product, photobook: plan.photobook, aspect },
+          paso: { kind: plan.kind, aspect },
           titulo: 'Generar con referencias',
-          texto: `${MOTOR[plan.kind].nombre} · ${refsWord(plan.refs.length)} · ${aspect}.${plan.product ? ` Cuando llegue, ${PRODUCTO} puede poner el producto real: ese paso se cotiza aparte.` : ''}`,
+          texto: `${MOTOR[plan.kind].menu ?? MOTOR[plan.kind].nombre} · ${refsWord(plan.refs.length)} · ${aspect}.`,
         }
       : null
-  const precio = offer ? q2.data : q1.data
+  const precio = q1.data
   const disabled = sending || inFlight || !orden || !precio
   const go = async () => {
     if (disabled || !orden || !precio) return
@@ -423,31 +401,29 @@ function Composer({ m, onVolver }: { m: MesaAbierta | null; onVolver: () => void
   // --- what the board says ---
   const model = (u: Use) => {
     const usado = plan?.uses.find((x) => x.index === u.index)
-    if (plan && !usado?.image) return `no entra · máx. ${plan.kind === 'misma-persona' ? 4 : 6}`
-    return (usado?.model ?? (person && u.role !== 'PRODUCT' ? PERSONA : PRODUCTO)).replace('Nano Banana', 'NB')
+    if (plan && !usado?.image) return plan.kind === 'ropa' && !EN_LA_ROPA.includes(u.role) ? 'no va en un cambio de ropa' : `no entra · máx. ${MAX_IMAGENES[plan.kind]}`
+    return (usado?.model ?? MOTOR[motor ?? auto].nombre).replace('Nano Banana', 'NB')
   }
   const chips: { label: string; on: boolean; pick?: () => void }[] = [
     { label: aspect, on: true, pick: () => setAspect(ASPECTS[(ASPECTS.indexOf(aspect) + 1) % ASPECTS.length]) },
-    { label: plan?.kind === 'retoque' ? '1K' : '2K', on: uses.length > 0 && (plan?.kind !== 'misma-persona' || product) },
+    { label: MOTOR[plan?.kind ?? 'editar'].res, on: uses.length > 0 },
     { label: 'misma persona', on: person },
     { label: 'producto real', on: product },
   ]
-  // What «Generar» runs now: step 2 alone once step 1 is back, else the plan's chain (both steps before there is one).
-  const kinds: Motor[] = offer ? ['editar'] : plan ? [...new Set<Motor>([plan.kind, ...(plan.product ? (['editar'] as const) : [])])] : ['misma-persona', 'editar']
-  const auto = motorPorDefecto(uses)
-  const error = sendError ?? uploadError ?? (q1.error || q2.error ? 'No pudimos calcular el precio. Revisa tu conexión.' : null)
+  // What «Generar» runs: the plan's one engine, or the two D9 picks between before there is a plan.
+  const kinds: Motor[] = plan ? [plan.kind] : ['misma-persona', 'editar']
+  const error = sendError ?? uploadError ?? (q1.error ? 'No pudimos calcular el precio. Revisa tu conexión.' : null)
   const nota =
     error ??
+    falta ??
     (fallo
       ? `No salió la pieza de las ${hora(fallo.p.updatedAt ?? fallo.p.createdAt)} con ${MOTOR[fallo.s.kind].nombre}. No se cobró: puedes pedirla otra vez.`
-      : offer
-        ? `Paso 1 listo: toca aquí para verlo. Luego ${PRODUCTO} pone el producto real.`
-        : lastReady && !inFlight
-          ? 'Lista: toca aquí para verla.'
-          : chainLine(plan))
-  const notaVa = !error && !fallo && !inFlight && lastReady ? () => verPiezas(offer?.id ?? lastReady.id) : undefined
+      : lastReady && !inFlight
+        ? 'Lista: toca aquí para verla.'
+        : chainLine(plan))
+  const notaVa = !error && !falta && !fallo && !inFlight && lastReady ? () => verPiezas(lastReady.id) : undefined
   const oldest = running.reduce<string | null>((a, x) => (a && a < x.p.createdAt ? a : x.p.createdAt), null)
-  const ctaLabel = sending ? 'Apartando…' : inFlight ? 'Generando' : offer ? 'Poner el producto real' : 'Generar'
+  const ctaLabel = sending ? 'Apartando…' : inFlight ? 'Generando' : 'Generar'
   const ctaPrice = inFlight && oldest ? transcurrido(oldest, now) : precio ? mxn(precio.totalCents) : '—'
   const nombresRef = new Set(refs.map((r) => r.name))
 
@@ -640,14 +616,14 @@ function Composer({ m, onVolver }: { m: MesaAbierta | null; onVolver: () => void
 
         <View style={styles.pie}>
           <Pressable onPress={notaVa} disabled={!notaVa} accessibilityRole={notaVa ? 'button' : 'text'}>
-            <Text style={[styles.nota, { color: error || fallo ? c.accent2 : GRAY }]}>{nota}</Text>
+            <Text style={[styles.nota, { color: error || fallo ? c.accent2 : falta ? c.text : GRAY }]}>{nota}</Text>
           </Pressable>
           <View style={styles.motorCaja}>
-            {/* Tapping «Powered by» picks step 1's engine; «Automático» is plan D9 reading the references. */}
+            {/* Tapping «Powered by» picks the engine; «Automático» is plan D9 reading the references. */}
             {menu ? (
               <View style={styles.menu}>
-                <Text style={styles.menuCabeza}>Modelo del paso 1</Text>
-                {([null, 'misma-persona', 'editar', 'retoque'] as const).map((k) => {
+                <Text style={styles.menuCabeza}>Modelo</Text>
+                {[null, ...MOTORES].map((k) => {
                   const on = motor === k
                   return (
                     <Pressable
@@ -662,9 +638,11 @@ function Composer({ m, onVolver }: { m: MesaAbierta | null; onVolver: () => void
                     >
                       {k ? <Image source={{ uri: MOTOR[k].logo }} style={styles.logo16} contentFit="contain" /> : null}
                       <View style={{ flex: 1, minWidth: 0, gap: 1 }}>
-                        <Text style={styles.menuNombre}>{k ? MOTOR[k].nombre : 'Automático'}</Text>
+                        <Text style={styles.menuNombre}>{k ? (MOTOR[k].menu ?? MOTOR[k].nombre) : 'Automático'}</Text>
                         <Text style={styles.menuNota}>
-                          {k ? MOTOR[k].nota : `Según tus referencias: ${MOTOR[auto].nombre}${auto === 'misma-persona' ? ', porque hay una persona.' : ', porque no hay persona.'}`}
+                          {k
+                            ? MOTOR[k].nota
+                            : `Según tus referencias: ${MOTOR[auto].nombre}${auto === 'ropa' ? ', porque hay una persona y ropa.' : auto === 'misma-persona' ? ', porque hay una persona.' : ', porque no hay persona.'}`}
                         </Text>
                       </View>
                       <Text style={styles.menuCheck}>{on ? '✓' : ''}</Text>
